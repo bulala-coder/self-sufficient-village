@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 720" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="blur2"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="blur5"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="5" seed="7"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .28"/></feComponentTransfer></filter>
+    <linearGradient id="fade" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#faf6e8" stop-opacity=".96"/><stop offset=".45" stop-color="#efe6d2" stop-opacity=".68"/><stop offset="1" stop-color="#d9caa9" stop-opacity=".72"/></linearGradient>
+    <radialGradient id="mist" cx="50%" cy="52%" r="65%"><stop offset="0" stop-color="#fffff6" stop-opacity=".86"/><stop offset=".52" stop-color="#fffff6" stop-opacity=".42"/><stop offset="1" stop-color="#fffff6" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1600" height="720" fill="url(#fade)"/>
+  <rect width="1600" height="720" filter="url(#paper)" opacity=".42"/>
+
+  <!-- far mountains -->
+  <g opacity=".30" filter="url(#blur5)">
+    <path d="M-60 370 C40 310 70 245 148 300 C225 355 262 203 352 248 C442 292 470 150 585 210 C700 270 750 205 823 238 C930 285 970 128 1080 205 C1185 278 1220 190 1308 240 C1390 288 1440 220 1660 310 L1660 720 L-60 720 Z" fill="#34453d"/>
+    <path d="M-40 400 C110 340 176 260 270 330 C355 390 410 260 510 300 C600 337 620 222 740 266 C850 306 910 230 1010 285 C1120 348 1190 244 1284 296 C1376 350 1460 275 1660 370 L1660 720 L-40 720 Z" fill="#243a31" opacity=".55"/>
+  </g>
+
+  <!-- mid mountains with wash edges -->
+  <g opacity=".54" filter="url(#blur2)">
+    <path d="M-80 485 C60 430 126 345 212 418 C292 486 342 242 455 340 C552 424 600 185 718 320 C830 448 896 270 1018 340 C1132 406 1196 232 1332 344 C1440 434 1512 318 1680 424 L1680 720 L-80 720 Z" fill="#20352d"/>
+    <path d="M-80 520 C78 470 150 410 250 458 C344 503 410 375 520 425 C640 478 700 354 835 435 C945 501 1025 388 1155 446 C1280 500 1375 410 1680 490 L1680 720 L-80 720 Z" fill="#162b24" opacity=".58"/>
+  </g>
+
+  <!-- forest islands -->
+  <g opacity=".73" fill="#1b3028" filter="url(#blur2)">
+    <path d="M-30 560 C110 528 196 545 300 580 C210 604 80 602 -30 590 Z"/>
+    <path d="M1120 548 C1210 500 1374 510 1535 568 C1440 605 1255 616 1120 584 Z"/>
+    <path d="M1055 572 C1100 540 1162 540 1220 568 C1166 591 1100 590 1055 578 Z" opacity=".8"/>
+  </g>
+
+  <!-- trees right -->
+  <g stroke="#142a23" stroke-width="4" stroke-linecap="round" opacity=".70" fill="none">
+    <path d="M1268 548 C1260 515 1263 488 1284 452"/>
+    <path d="M1284 452 C1240 468 1220 488 1190 512"/>
+    <path d="M1284 452 C1320 468 1354 488 1384 510"/>
+    <path d="M1338 558 C1334 522 1348 496 1376 470"/>
+    <path d="M1376 470 C1340 478 1318 498 1292 520"/>
+    <path d="M1376 470 C1416 482 1440 504 1468 530"/>
+  </g>
+
+  <!-- pavilion -->
+  <g opacity=".55" stroke="#142a23" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1370 515 L1428 488 L1490 515"/>
+    <path d="M1390 512 L1390 565 M1470 512 L1470 565 M1428 500 L1428 565"/>
+    <path d="M1382 565 L1480 565"/>
+  </g>
+
+  <!-- mist veils -->
+  <rect width="1600" height="720" fill="url(#mist)"/>
+  <g opacity=".5" filter="url(#blur5)">
+    <path d="M-80 390 C260 340 420 430 740 372 C1030 318 1200 368 1680 330" stroke="#fffcef" stroke-width="52" fill="none"/>
+    <path d="M-120 505 C250 478 440 530 740 492 C1080 450 1240 506 1680 470" stroke="#fffcef" stroke-width="58" fill="none" opacity=".8"/>
+  </g>
+
+  <!-- river / water -->
+  <g opacity=".75">
+    <path d="M-60 585 C260 548 390 600 610 568 C820 538 920 570 1120 548 C1330 524 1470 560 1660 535 L1660 720 L-60 720 Z" fill="#c3cbb8" opacity=".34"/>
+    <path d="M20 610 C220 600 360 622 560 603" stroke="#31463b" stroke-opacity=".18" stroke-width="3" fill="none"/>
+    <path d="M710 612 C900 598 1070 612 1290 590" stroke="#31463b" stroke-opacity=".15" stroke-width="3" fill="none"/>
+    <path d="M120 660 C420 640 640 672 880 648" stroke="#31463b" stroke-opacity=".12" stroke-width="3" fill="none"/>
+  </g>
+
+  <!-- boat -->
+  <g transform="translate(520 595) rotate(-4)" opacity=".78" stroke="#10231d" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 26 C56 44 124 44 180 24 C126 62 50 62 0 26 Z" fill="#1c3028" fill-opacity=".08"/>
+    <path d="M72 20 L78 -28 M78 -28 C95 -12 102 4 102 22"/>
+    <path d="M78 -20 C58 -18 44 -8 36 10"/>
+    <path d="M140 24 L184 -12"/>
+  </g>
+
+  <!-- birds -->
+  <g stroke="#10231d" stroke-width="4" fill="none" stroke-linecap="round" opacity=".72">
+    <path d="M1040 108 q13 -11 26 0 q13 -11 26 0"/>
+    <path d="M1160 82 q10 -8 20 0 q10 -8 20 0"/>
+    <path d="M1260 128 q9 -7 18 0 q9 -7 18 0"/>
+    <path d="M970 145 q7 -6 14 0 q7 -6 14 0"/>
+  </g>
+
+  <!-- bamboo corner -->
+  <g transform="translate(1390 570)" opacity=".35" stroke="#10231d" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M0 120 C18 70 24 20 20 -30"/>
+    <path d="M26 108 C48 70 60 20 54 -18"/>
+    <path d="M20 24 C-10 12 -24 0 -42 -18 M25 52 C0 58 -18 68 -38 88 M55 35 C82 20 108 6 128 -20 M52 70 C78 74 100 90 125 110"/>
+  </g>
+</svg>
