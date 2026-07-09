@@ -1,0 +1,99 @@
+import React, { useMemo, useState } from 'react'
+import { Sprout, Home, ListChecks, TreePine, HeartPulse, BookOpen, BarChart3, RotateCcw, UserRound, ShieldCheck, Package, Leaf } from 'lucide-react'
+import Welcome from './components/Welcome.jsx'
+import Onboarding from './components/Onboarding.jsx'
+import Dashboard from './components/Dashboard.jsx'
+import TaskList from './components/TaskList.jsx'
+import SkillTree from './components/SkillTree.jsx'
+import SelfScore from './components/SelfScore.jsx'
+import HealthSafety from './components/HealthSafety.jsx'
+import Preparedness from './components/Preparedness.jsx'
+import Inventory from './components/Inventory.jsx'
+import Plants from './components/Plants.jsx'
+import Journal from './components/Journal.jsx'
+import VillageElder from './components/VillageElder.jsx'
+import { getTasks } from './data/tasks.js'
+import { decideRoute } from './data/routes.js'
+
+const STORAGE_KEY = 'self_sufficient_village_v1'
+const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, inventory: [], plants: [] }
+
+function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState } catch { return defaultState } }
+function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
+
+const navItems = [
+  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['preparedness','備災',ShieldCheck], ['inventory','庫存',Package], ['plants','種植',Leaf], ['skills','技能樹',TreePine], ['score','自足度',BarChart3], ['health','急救',HeartPulse], ['journal','日誌',BookOpen], ['elder','村長',UserRound]
+]
+
+export default function App() {
+  const [state, setState] = useState(loadState)
+  const [page, setPage] = useState('dashboard')
+  const tasks = useMemo(() => getTasks(state.routeType), [state.routeType])
+  const completedCount = Object.keys(state.completed || {}).length
+
+  function update(next) { const newState = typeof next === 'function' ? next(state) : next; setState(newState); saveState(newState) }
+  function start() { update({ ...state, started: true }) }
+  function finishOnboarding(profile) { const routeType = decideRoute(profile); update({ ...state, onboarded: true, profile, routeType, started: true }) }
+  function togglePreparedness(itemId) {
+    update({ ...state, preparedness: { ...(state.preparedness || {}), [itemId]: !state.preparedness?.[itemId] } })
+  }
+  function addInventoryItem(item) {
+    update({ ...state, inventory: [{ ...item, id: Date.now() }, ...(state.inventory || [])] })
+  }
+  function deleteInventoryItem(itemId) {
+    update({ ...state, inventory: (state.inventory || []).filter((item) => item.id !== itemId) })
+  }
+  function addPlant(plant) {
+    update({ ...state, plants: [{ ...plant, id: Date.now(), lastWateredAt: '' }, ...(state.plants || [])] })
+  }
+  function deletePlant(plantId) {
+    update({ ...state, plants: (state.plants || []).filter((plant) => plant.id !== plantId) })
+  }
+  function waterPlant(plantId) {
+    const today = new Date().toISOString().slice(0, 10)
+    update({ ...state, plants: (state.plants || []).map((plant) => plant.id === plantId ? { ...plant, lastWateredAt: today } : plant) })
+  }
+
+  function completeTask(task, reflection) {
+    if (state.completed?.[task.id]) return
+    const entry = { id: Date.now(), taskId: task.id, title: task.title, category: task.category, reflection, date: new Date().toLocaleDateString('zh-TW') }
+    update({ ...state, completed: { ...state.completed, [task.id]: true }, journal: [entry, ...state.journal], xp: state.xp + task.xp })
+  }
+  function reset() {
+    if (confirm('確定要清除本機資料，重新開始嗎？')) { localStorage.removeItem(STORAGE_KEY); setState(defaultState); setPage('dashboard') }
+  }
+
+  if (!state.started) return <Welcome onStart={start} />
+  if (!state.onboarded) return <Onboarding onFinish={finishOnboarding} />
+
+  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, waterPlant }
+
+  return <div className="ink-page min-h-screen pb-28">
+    <header className="ink-header sticky top-0 z-20">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="ink-logo w-12 h-12 rounded-2xl grid place-items-center"><Sprout size={25}/></div>
+          <div><h1 className="ink-title font-black text-2xl">自足村</h1><p className="text-sm text-[#8b7455] font-semibold">Self-Sufficient Village｜生活手冊</p></div>
+        </div>
+        <button className="btn-secondary text-sm" onClick={reset}><RotateCcw size={14} className="inline mr-1"/>重新開始</button>
+      </div>
+    </header>
+    <main className="max-w-6xl mx-auto px-4 py-6">
+      {page === 'dashboard' && <Dashboard {...commonProps}/>} 
+      {page === 'tasks' && <TaskList {...commonProps}/>} 
+      {page === 'preparedness' && <Preparedness {...commonProps}/>} 
+      {page === 'inventory' && <Inventory {...commonProps}/>} 
+      {page === 'plants' && <Plants {...commonProps}/>} 
+      {page === 'skills' && <SkillTree {...commonProps}/>} 
+      {page === 'score' && <SelfScore {...commonProps}/>} 
+      {page === 'health' && <HealthSafety/>} 
+      {page === 'journal' && <Journal entries={state.journal}/>} 
+      {page === 'elder' && <VillageElder state={state}/>} 
+    </main>
+    <nav className="ink-nav fixed bottom-0 inset-x-0">
+      <div className="max-w-6xl mx-auto grid grid-cols-5 sm:grid-cols-10 gap-1 px-2 py-2">
+        {navItems.map(([id,label,Icon]) => <button key={id} onClick={() => setPage(id)} className={`rounded-2xl py-2 text-xs flex flex-col items-center gap-1 transition ${page===id?'bg-[#24483a] text-[#fff9ea] shadow-soft':'text-[#6f5b43] hover:text-[#24483a]'}`}><Icon size={18}/>{label}</button>)}
+      </div>
+    </nav>
+  </div>
+}
