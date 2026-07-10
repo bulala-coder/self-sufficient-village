@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Sprout, Home, ListChecks, HeartPulse, BarChart3, RotateCcw, ShieldCheck, Package, Leaf, ClipboardCheck } from 'lucide-react'
+import { Sprout, Home, ListChecks, HeartPulse, Calculator, RotateCcw, ShieldCheck, Package, Leaf, ClipboardCheck } from 'lucide-react'
 import Welcome from './components/Welcome.jsx'
 import Onboarding from './components/Onboarding.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -11,19 +11,20 @@ import Preparedness from './components/Preparedness.jsx'
 import Inventory from './components/Inventory.jsx'
 import Plants from './components/Plants.jsx'
 import Drills from './components/Drills.jsx'
+import Calculators from './components/Calculators.jsx'
 import Journal from './components/Journal.jsx'
 import VillageElder from './components/VillageElder.jsx'
 import { getTasks } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
 
 const STORAGE_KEY = 'self_sufficient_village_v1'
-const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, inventory: [], plants: [], drills: {} }
+const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, inventory: [], plants: [], drills: {}, calculators: {} }
 
 function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState } catch { return defaultState } }
 function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
 
 const navItems = [
-  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['preparedness','備災',ShieldCheck], ['inventory','庫存',Package], ['plants','生產',Leaf], ['drills','演練',ClipboardCheck], ['score','評分',BarChart3], ['health','醫療',HeartPulse]
+  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['preparedness','備災',ShieldCheck], ['inventory','庫存',Package], ['plants','生產',Leaf], ['drills','演練',ClipboardCheck], ['calculators','計算',Calculator], ['health','醫療',HeartPulse]
 ]
 
 export default function App() {
@@ -64,6 +65,9 @@ export default function App() {
       }
     })
   }
+  function updateCalculator(calculatorId, values) {
+    update({ ...state, calculators: { ...(state.calculators || {}), [calculatorId]: values } })
+  }
 
   function completeTask(task, reflection) {
     if (state.completed?.[task.id]) return
@@ -77,7 +81,7 @@ export default function App() {
   if (!state.started) return <Welcome onStart={start} />
   if (!state.onboarded) return <Onboarding onFinish={finishOnboarding} />
 
-  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, waterPlant, toggleDrillItem }
+  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, waterPlant, toggleDrillItem, updateCalculator }
 
   return <div className="ink-page min-h-screen pb-28">
     <header className="ink-header sticky top-0 z-20">
@@ -96,6 +100,7 @@ export default function App() {
       {page === 'inventory' && <Inventory {...commonProps}/>} 
       {page === 'plants' && <Plants {...commonProps}/>} 
       {page === 'drills' && <Drills {...commonProps}/>} 
+      {page === 'calculators' && <Calculators {...commonProps}/>} 
       {page === 'skills' && <SkillTree {...commonProps}/>} 
       {page === 'score' && <SelfScore {...commonProps}/>} 
       {page === 'health' && <HealthSafety/>} 

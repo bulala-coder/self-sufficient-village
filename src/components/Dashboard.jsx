@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertTriangle, BarChart3, ClipboardCheck, Droplets, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
+import { AlertTriangle, BarChart3, Calculator, ClipboardCheck, Droplets, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
 
 const routeLabels = {
@@ -240,6 +240,11 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
           <button onClick={() => setPage('drills')}>
             <ClipboardCheck size={18} />
             <span>情境演練</span>
+          </button>
+
+          <button onClick={() => setPage('calculators')}>
+            <Calculator size={18} />
+            <span>硬核計算器</span>
           </button>
 
           <button onClick={() => setPage('health')}>
