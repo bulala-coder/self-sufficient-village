@@ -2,6 +2,7 @@ import React from 'react'
 import { AlertTriangle, BarChart3, Calculator, ClipboardCheck, Droplets, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary } from './Inventory.jsx'
+import { getRecommendedTask } from '../data/tasks.js'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -11,15 +12,6 @@ const routeLabels = {
   riverside_valley: '溪谷風險環境',
   island_resilience: '離島補給環境',
   family_nature_education: '家庭訓練環境',
-}
-
-const gapTasks = {
-  water: '完成 3 天飲水需求與儲水檢查',
-  food: '建立 72 小時免冷藏食物',
-  power: '測試手電筒與行動電源',
-  medical: '建立急救箱與常備藥清單',
-  animals: '建立動物 7 天補給與轉送計畫',
-  evacuation: '建立紙本緊急聯絡與撤離路線',
 }
 
 function scoreTitle(score) {
@@ -111,8 +103,8 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const score = readinessScore({ statuses, state, tasks, completedCount })
   const drillSummary = getDrillCompletion(state.drills || {})
   const supplySummary = getInventorySummary(state.inventory || [])
+  const recommendedMission = getRecommendedTask(tasks, state)
   const title = scoreTitle(score)
-  const mission = highestGap ? gapTasks[highestGap.key] : '執行 72 小時斷水斷電壓力測試'
 
   return (
     <div className="muji-dashboard space-y-5 pb-32">
@@ -212,16 +204,22 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             <span>今日硬核任務</span>
           </div>
 
-          <h2 className="mt-4">{mission}</h2>
+          <h2 className="mt-4">{recommendedMission?.task.title || '執行 72 小時斷水斷電壓力測試'}</h2>
+          {recommendedMission && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="badge">{recommendedMission.task.relatedGap}</span>
+              <span className="badge">Level {recommendedMission.task.riskLevel}</span>
+            </div>
+          )}
           <p>
-            只做可驗證項目：盤點、測試、記錄、補缺口。不把希望寄託在臨場反應。
+            {recommendedMission?.reason || '只做可驗證項目：盤點、測試、記錄、補缺口。不把希望寄託在臨場反應。'}
           </p>
 
           <button
             className="muji-primary mt-4"
-            onClick={() => setPage(highestGap?.key === 'evacuation' ? 'preparedness' : 'preparedness')}
+            onClick={() => setPage('tasks')}
           >
-            進入備災清單
+            進入任務系統
           </button>
         </section>
       </section>

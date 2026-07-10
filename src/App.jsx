@@ -14,7 +14,7 @@ import Drills from './components/Drills.jsx'
 import Calculators from './components/Calculators.jsx'
 import Journal from './components/Journal.jsx'
 import VillageElder from './components/VillageElder.jsx'
-import { getTasks } from './data/tasks.js'
+import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
 
 const STORAGE_KEY = 'self_sufficient_village_v1'
@@ -31,7 +31,7 @@ export default function App() {
   const [state, setState] = useState(loadState)
   const [page, setPage] = useState('dashboard')
   const tasks = useMemo(() => getTasks(state.routeType), [state.routeType])
-  const completedCount = Object.keys(state.completed || {}).length
+  const completedCount = Object.keys(getCompletedMap(state.completed)).length
 
   function update(next) { const newState = typeof next === 'function' ? next(state) : next; setState(newState); saveState(newState) }
   function start() { update({ ...state, started: true }) }
@@ -70,9 +70,10 @@ export default function App() {
   }
 
   function completeTask(task, reflection) {
-    if (state.completed?.[task.id]) return
-    const entry = { id: Date.now(), taskId: task.id, title: task.title, category: task.category, reflection, date: new Date().toLocaleDateString('zh-TW') }
-    update({ ...state, completed: { ...state.completed, [task.id]: true }, journal: [entry, ...state.journal], xp: state.xp + task.xp })
+    const completedMap = getCompletedMap(state.completed)
+    if (completedMap[task.id]) return
+    const entry = { id: Date.now(), taskId: task.id, title: task.title, category: taskSystemLabels[task.system] || task.category || '任務', reflection, date: new Date().toLocaleDateString('zh-TW') }
+    update({ ...state, completed: { ...completedMap, [task.id]: true }, journal: [entry, ...(state.journal || [])], xp: state.xp + task.xp })
   }
   function reset() {
     if (confirm('確定要清除本機資料，重新開始嗎？')) { localStorage.removeItem(STORAGE_KEY); setState(defaultState); setPage('dashboard') }

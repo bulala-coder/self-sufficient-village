@@ -1,399 +1,424 @@
-const baseTasks = [
+export const taskSystems = [
+  ['all', '全部'],
+  ['water', '水系統'],
+  ['food', '食物系統'],
+  ['power', '電力通訊'],
+  ['medical', '醫療急救'],
+  ['animal', '動物照護'],
+  ['terrain', '地形風險'],
+  ['evacuation', '撤離規劃'],
+  ['longterm', '長期自給']
+]
+
+export const taskSystemLabels = Object.fromEntries(taskSystems)
+
+const missionTasks = [
   {
-    title: '估算家中 3 天飲水需求',
-    category: '家庭備災',
-    purpose: '先知道家中至少需要準備多少飲用水，建立最基本的生活韌性。',
-    materials: '紙筆、手機計算機、家中人數資料',
-    steps: [
-      '寫下家中人數與寵物／動物數量。',
-      '先用每人每天至少 2 公升飲用水估算。',
-      '乘以 3 天，得到最低飲水儲備量。',
-      '檢查家中目前實際有多少可飲用水。',
-      '寫下還缺多少。'
-    ],
-    completion: '完成一份「3 天飲水需求與目前缺口」紀錄。',
-    safety: '飲水安全很重要。來路不明、久放、異味或受污染的水，不建議直接飲用。',
-    xp: 20,
-    minutes: 15
+    id: 'water-72h-baseline',
+    title: '建立 72 小時飲水基準',
+    system: 'water',
+    riskLevel: 5,
+    estimatedMinutes: 25,
+    purpose: '用家庭人數與動物數量建立最低飲水線，不靠臨時採買。',
+    tools: ['紙本紀錄', '計算器', '現有飲水庫存'],
+    steps: ['列出成人、兒童與動物數量。', '成人每日 3L、兒童每日 2L、動物依體型估算。', '乘以 3 天得到最低值。', '盤點現有可飲用水。', '寫下缺口與補足日期。'],
+    completion: '完成一份 72 小時飲水需求、現有水量與缺口紀錄。',
+    failureConditions: ['只估算人類，未納入動物。', '沒有實際盤點家中水量。', '使用來路不明或保存狀態不明的水。'],
+    relatedDrills: ['water-24h', 'family-72h', 'earthquake-72h'],
+    relatedGap: '飲水準備缺口',
+    xp: 40
   },
   {
-    title: '盤點家中現有食物',
-    category: '食物保存',
-    purpose: '了解目前家中食物可以支撐幾天，避免真正需要時才發現不足。',
-    materials: '紙筆、手機、家中食物櫃、冰箱',
-    steps: [
-      '打開食物櫃、冰箱與冷凍庫。',
-      '列出米、麵、罐頭、乾貨、冷凍食品、即食食品。',
-      '標記哪些不需冷藏、哪些停電後會快速壞掉。',
-      '估算家中食物大約可吃幾天。',
-      '寫下最需要補充的 3 項。'
-    ],
-    completion: '完成一份家庭食物盤點清單。',
-    safety: '過期、發霉、膨罐、異味或保存不明的食物不要勉強食用。',
-    xp: 20,
-    minutes: 20
+    id: 'water-ration-plan',
+    title: '建立停水時的用水分配表',
+    system: 'water',
+    riskLevel: 4,
+    estimatedMinutes: 30,
+    purpose: '把飲用、洗手、清潔、沖廁與動物用水分級，避免停水後失控消耗。',
+    tools: ['紙筆', '家庭用水清單', '儲水容器位置'],
+    steps: ['列出所有用水項目。', '標記必需、可縮減、可暫停。', '設定每日飲水不可挪用量。', '規劃清潔與沖廁替代方式。', '把分配表貼在儲水區。'],
+    completion: '完成一張停水 24 小時用水分配表。',
+    failureConditions: ['沒有保留飲水優先權。', '未考慮衛生與動物需求。', '分配表沒有放在可見位置。'],
+    relatedDrills: ['water-24h'],
+    relatedGap: '停水分配缺口',
+    xp: 35
   },
   {
-    title: '建立家庭急救箱基本清單',
-    category: '健康急救',
-    purpose: '讓家中在小外傷或等待醫療協助前，有基本安全準備。',
-    materials: '紙筆、現有藥箱或收納盒',
-    steps: [
-      '檢查家中是否有生理食鹽水、紗布、繃帶、醫療膠帶。',
-      '檢查是否有手套、口罩、體溫計、剪刀、冰敷袋。',
-      '列出個人常用藥與慢性病藥物。',
-      '寫下附近診所、急診與緊急聯絡人。',
-      '標記缺少的項目。'
-    ],
-    completion: '完成一份家庭急救箱缺口清單。',
-    safety: '本任務只做準備，不提供診斷或用藥建議。嚴重症狀請立即就醫。',
-    xp: 20,
-    minutes: 20
+    id: 'water-backup-purification',
+    title: '建立備用取水與淨水方案',
+    system: 'water',
+    riskLevel: 5,
+    estimatedMinutes: 35,
+    purpose: '確認停水延長時的補水來源與安全處理方式，但不鼓勵冒險取水。',
+    tools: ['地圖', '淨水器或煮沸設備清單', '乾淨容器'],
+    steps: ['列出安全補水來源。', '標記不可冒險前往的位置。', '確認容器乾淨且可加蓋。', '列出淨水、煮沸或消毒流程。', '寫下停止取水條件。'],
+    completion: '完成備用取水來源、處理流程與停止條件。',
+    failureConditions: ['把溪流、海水或污染水源當作直接飲水。', '沒有容器清潔策略。', '未設定天候或夜間停止條件。'],
+    relatedDrills: ['water-24h', 'mountain-rain', 'remote-7d'],
+    relatedGap: '備用水源缺口',
+    xp: 45
   },
   {
-    title: '整理照明與行動電源',
-    category: '水與能源',
-    purpose: '停電時最先需要的是照明、通訊與基本電力。',
-    materials: '手電筒、頭燈、行動電源、充電線、電池',
-    steps: [
-      '找出家中所有手電筒、頭燈或緊急照明。',
-      '確認是否能正常開啟。',
-      '把行動電源充滿。',
-      '把常用充電線集中放在固定位置。',
-      '寫下還缺少的電池或設備。'
-    ],
-    completion: '完成一個「停電照明與充電位置」。',
-    safety: '不要在密閉空間使用燃燒式照明。蠟燭與火源有火災風險。',
-    xp: 20,
-    minutes: 15
+    id: 'food-72h-shelf-stable',
+    title: '建立 72 小時免冷藏食物',
+    system: 'food',
+    riskLevel: 5,
+    estimatedMinutes: 30,
+    purpose: '建立斷電時仍可直接食用或簡單加熱的最低食物線。',
+    tools: ['食物櫃', '保存期限標籤', '庫存頁'],
+    steps: ['列出家中免冷藏食物。', '以成人每日 3 份、兒童每日 2 份估算。', '排除需要冷藏或複雜烹調的食物。', '標記保存期限。', '寫下缺口清單。'],
+    completion: '完成 72 小時免冷藏食物份數與缺口紀錄。',
+    failureConditions: ['把冷凍或冷藏食物算入核心 72 小時。', '未檢查保存期限。', '沒有開罐器或加熱備案。'],
+    relatedDrills: ['family-72h', 'earthquake-72h'],
+    relatedGap: '食物準備缺口',
+    xp: 40
   },
   {
-    title: '建立緊急聯絡人清單',
-    category: '風險應對',
-    purpose: '遇到停電、受傷、交通中斷或動物緊急狀況時，能快速聯絡需要的人。',
-    materials: '手機、紙本卡片',
-    steps: [
-      '列出家人或同住者電話。',
-      '列出附近可信任鄰居或朋友。',
-      '列出附近診所、急診、消防隊、派出所。',
-      '若有動物，列出常用獸醫院與 24 小時急診獸醫。',
-      '把清單存手機，也寫一份紙本。'
-    ],
-    completion: '完成一份手機版與紙本緊急聯絡清單。',
-    safety: '緊急電話與醫療資訊要定期更新，避免需要時失效。',
-    xp: 20,
-    minutes: 20
+    id: 'food-7d-rotation',
+    title: '建立 7 天食物輪替清單',
+    system: 'food',
+    riskLevel: 3,
+    estimatedMinutes: 35,
+    purpose: '把庫存變成會輪替的系統，避免過期、重複購買與假性安全感。',
+    tools: ['食物庫存', '標籤', '行事曆'],
+    steps: ['盤點 7 天可食用食物。', '依保存期限排序。', '標記本月需消耗品。', '設定補貨下限。', '把輪替日期寫入日曆。'],
+    completion: '完成一份 7 天食物輪替表與補貨下限。',
+    failureConditions: ['只列品名，沒有期限。', '沒有設定補貨下限。', '動物食物被混入人類食物份數。'],
+    relatedDrills: ['remote-7d'],
+    relatedGap: '食物輪替缺口',
+    xp: 35
   },
   {
-    title: '種一盆可食植物',
-    category: '種植',
-    purpose: '用最小規模開始練習照顧食物來源。',
-    materials: '盆器、培養土、蔥根或香草苗、水',
-    steps: [
-      '選擇蔥、九層塔、薄荷、地瓜葉等低門檻植物。',
-      '確認盆器有排水孔。',
-      '放入培養土並種下植物。',
-      '澆水到土壤濕潤但不積水。',
-      '記錄放置位置與日照狀況。'
-    ],
-    completion: '完成一盆可食植物，並記錄種植日期。',
-    safety: '不要採食不明植物。使用容器種植時要避免積水孳生蚊蟲。',
-    xp: 25,
-    minutes: 30
+    id: 'food-fridge-priority',
+    title: '建立停電後冰箱食物處理順序',
+    system: 'food',
+    riskLevel: 4,
+    estimatedMinutes: 25,
+    purpose: '停電後先處理高風險食材，降低食安風險與浪費。',
+    tools: ['冰箱', '紙筆', '保冷袋或冰磚清單'],
+    steps: ['列出冷藏與冷凍食物。', '標記最容易腐敗的食材。', '設定停電後不頻繁開冰箱。', '安排優先食用或丟棄順序。', '寫下不可食用判斷。'],
+    completion: '完成冰箱停電處理順序與丟棄標準。',
+    failureConditions: ['把異味、膨包或溫度失控食物勉強食用。', '停電後頻繁開冰箱。', '沒有考慮冷藏藥品。'],
+    relatedDrills: ['power-12h', 'coastal-typhoon'],
+    relatedGap: '停電食物處理缺口',
+    xp: 35
   },
   {
-    title: '做一次 7 天生活回顧',
-    category: '反思',
-    purpose: '確認自己這週真正增加了哪些生活能力，而不是只看任務數字。',
-    materials: 'App 日誌或紙筆',
-    steps: [
-      '回顧這週完成的任務。',
-      '寫下最有用的一件事。',
-      '寫下最困難的一件事。',
-      '寫下家中目前最需要補強的項目。',
-      '選出下週最重要的一個行動。'
-    ],
-    completion: '完成一篇 7 天回顧日誌。',
-    safety: '不要追求一次做到完美。自足生活是逐步累積，不是壓力比賽。',
-    xp: 15,
-    minutes: 15
+    id: 'power-12h-lighting-test',
+    title: '測試 12 小時照明能力',
+    system: 'power',
+    riskLevel: 4,
+    estimatedMinutes: 30,
+    purpose: '確認夜間停電時有安全照明與動線，不依賴手機手電筒。',
+    tools: ['手電筒', '頭燈', '電池', '夜間動線'],
+    steps: ['集中所有照明設備。', '逐一開機測試。', '確認備用電池或充電狀態。', '在夜間動線放置照明。', '記錄可用設備與缺口。'],
+    completion: '完成 12 小時照明設備測試與放置點。',
+    failureConditions: ['只靠手機照明。', '沒有備用電池。', '使用高火災風險照明。'],
+    relatedDrills: ['power-12h', 'family-72h'],
+    relatedGap: '電力照明缺口',
+    xp: 40
   },
   {
-    title: '建立動物／寵物備災清單',
-    category: '動物照護',
-    purpose: '讓家中動物在停電、颱風、交通中斷時也有基本照護準備。',
-    materials: '飼料、飲水、藥物紀錄、外出籠、獸醫院資訊',
-    steps: [
-      '列出家中所有動物種類與數量。',
-      '確認至少 3–7 天飼料與飲水。',
-      '整理平常用藥與病史紀錄。',
-      '確認外出籠、牽繩、尿布墊或墊料。',
-      '寫下常用獸醫院與急診獸醫資訊。'
-    ],
-    completion: '完成一份動物／寵物備災清單。',
-    safety: '不同物種需求差異很大，尤其鳥、兔、爬蟲、貓狗不可混用藥物。',
-    xp: 25,
-    minutes: 25
+    id: 'power-charging-strategy',
+    title: '建立手機與行動電源充電策略',
+    system: 'power',
+    riskLevel: 3,
+    estimatedMinutes: 25,
+    purpose: '確保斷電時通訊設備有明確充電順序與省電規則。',
+    tools: ['手機', '行動電源', '充電線', '硬核計算器'],
+    steps: ['列出所有手機與通訊設備。', '盤點行動電源容量。', '設定每日充電次數上限。', '啟用省電模式策略。', '固定充電線位置。'],
+    completion: '完成斷電 72 小時充電策略。',
+    failureConditions: ['行動電源未充滿。', '充電線分散找不到。', '沒有省電規則。'],
+    relatedDrills: ['power-12h', 'remote-7d'],
+    relatedGap: '通訊充電缺口',
+    xp: 35
   },
   {
-    title: '盤點家中基本工具',
-    category: '工具技能',
-    purpose: '知道家中是否具備最基本的修繕與應急工具。',
-    materials: '家中工具箱或收納區',
-    steps: [
-      '找出螺絲起子、鉗子、剪刀、美工刀、膠帶。',
-      '檢查是否有手套、手電筒、捲尺、束帶。',
-      '把尖銳工具集中收納。',
-      '標記已損壞、缺電池或生鏽工具。',
-      '列出最需要補的 3 件工具。'
-    ],
-    completion: '完成一份家庭工具盤點清單。',
-    safety: '刀具與尖銳工具要遠離兒童與動物。不要進行高風險電力或結構修繕。',
-    xp: 20,
-    minutes: 20
+    id: 'power-paper-data-pack',
+    title: '建立無網路紙本資料包',
+    system: 'power',
+    riskLevel: 4,
+    estimatedMinutes: 40,
+    purpose: '在無電、無網路、手機故障時仍能取得關鍵資訊。',
+    tools: ['紙本資料夾', '筆', '地圖', '重要電話'],
+    steps: ['列印或手寫重要聯絡人。', '準備住家周邊地圖。', '加入醫療、動物、撤離資訊。', '放入重要文件影本。', '放在固定防潮位置。'],
+    completion: '完成一份無網路紙本資料包。',
+    failureConditions: ['只存在手機內。', '資料未更新。', '包含敏感資訊但未妥善收納。'],
+    relatedDrills: ['earthquake-72h', 'family-72h'],
+    relatedGap: '無網路資料缺口',
+    xp: 45
   },
   {
-    title: '規劃颱風前 24 小時檢查',
-    category: '風險應對',
-    purpose: '把颱風前準備變成清楚清單，不臨時慌張。',
-    materials: '紙筆、手機天氣資訊',
-    steps: [
-      '檢查陽台、窗邊、屋外是否有會被風吹走的物品。',
-      '確認排水孔與排水溝沒有被堵住。',
-      '補充飲水與簡單食物。',
-      '把手機、行動電源充滿。',
-      '確認家人、動物與緊急聯絡方式。'
-    ],
-    completion: '完成一份颱風前 24 小時檢查清單。',
-    safety: '不要在風雨變強後外出檢查。高處、海邊、溪邊與山區都要避免冒險。',
-    xp: 25,
-    minutes: 20
+    id: 'medical-first-aid-kit',
+    title: '建立家庭急救箱',
+    system: 'medical',
+    riskLevel: 5,
+    estimatedMinutes: 35,
+    purpose: '讓小外傷與等待救援期間有基本處置物資，但不替代醫療判斷。',
+    tools: ['急救箱', '手套', '紗布', '生理食鹽水', '醫療膠帶'],
+    steps: ['盤點現有急救用品。', '排除過期或污染品。', '補齊手套、紗布、繃帶、清潔用品。', '固定收納位置。', '標記下次檢查日期。'],
+    completion: '完成急救箱清單、缺口與固定位置。',
+    failureConditions: ['使用過期耗材。', '把急救箱放在兒童或動物可翻找位置。', '把任務內容當作醫療診斷。'],
+    relatedDrills: ['earthquake-72h', 'family-72h'],
+    relatedGap: '醫療急救缺口',
+    xp: 45
   },
   {
-    title: '建立家中用水地圖',
-    category: '水與能源',
-    purpose: '知道家中哪些地方最需要水，停水時才知道怎麼分配。',
-    materials: '紙筆、住家平面印象',
-    steps: [
-      '列出飲用、煮飯、洗手、沖廁、清潔、動物飲水。',
-      '標記哪些是必要用水，哪些可以暫停。',
-      '確認家中可儲水容器位置。',
-      '估算停水一天時的最低需求。',
-      '寫下節水做法。'
-    ],
-    completion: '完成一份家中用水需求清單。',
-    safety: '儲水容器要保持乾淨並加蓋，避免污染與蚊蟲。',
-    xp: 20,
-    minutes: 20
+    id: 'medical-medication-list',
+    title: '建立常備藥與慢性病用藥清單',
+    system: 'medical',
+    riskLevel: 5,
+    estimatedMinutes: 30,
+    purpose: '避免補給中斷時遺漏關鍵用藥、劑量、期限與就醫資訊。',
+    tools: ['藥袋', '處方資訊', '紙本卡片'],
+    steps: ['列出所有常備藥與慢性病用藥。', '記錄用途、劑量、期限與開立院所。', '標記需要冷藏的藥品。', '建立補藥提前量。', '放入紙本資料包。'],
+    completion: '完成常備藥與慢性病用藥清單。',
+    failureConditions: ['自行調整處方。', '沒有保存期限。', '未標記冷藏藥品。'],
+    relatedDrills: ['power-12h', 'remote-7d'],
+    relatedGap: '常備藥缺口',
+    xp: 45
   },
   {
-    title: '整理一個固定備災角落',
-    category: '家庭備災',
-    purpose: '讓重要物資有固定位置，真正需要時找得到。',
-    materials: '收納箱、標籤、已盤點物資',
-    steps: [
-      '選一個乾燥、容易拿取的位置。',
-      '放入手電筒、行動電源、基本食物、飲水、急救用品。',
-      '貼上標籤。',
-      '告訴家人或同住者位置。',
-      '設定每月檢查一次。'
-    ],
-    completion: '完成一個家庭備災角落。',
-    safety: '不要把藥品、電池、尖銳工具放在兒童或動物容易碰到的位置。',
-    xp: 30,
-    minutes: 30
+    id: 'medical-remote-transfer-plan',
+    title: '建立偏遠地區就醫與轉送計畫',
+    system: 'medical',
+    riskLevel: 5,
+    estimatedMinutes: 45,
+    purpose: '在交通中斷、夜間或天候惡化時，提前知道就醫與轉送選項。',
+    tools: ['地圖', '醫療院所資訊', '緊急聯絡人'],
+    steps: ['列出最近診所、急診與藥局。', '估算平時與惡劣天候車程。', '列出無法自行移動時的聯絡方式。', '設定停止自行移動條件。', '把資料放進紙本包。'],
+    completion: '完成醫療就醫、轉送與停止移動條件表。',
+    failureConditions: ['夜間或豪雨仍計畫冒險移動。', '沒有替代聯絡人。', '未考慮動物或小孩照護安排。'],
+    relatedDrills: ['mountain-rain', 'remote-7d'],
+    relatedGap: '醫療轉送缺口',
+    xp: 50
   },
   {
-    title: '觀察植物是否缺水',
-    category: '種植',
-    purpose: '學會用觀察判斷植物狀態，而不是固定亂澆水。',
-    materials: '家中植物或附近安全植物',
-    steps: [
-      '觀察葉片是否下垂、乾捲或變黃。',
-      '用手指測試表土乾濕。',
-      '拿起盆器感受重量。',
-      '記錄澆水前後差異。',
-      '連續觀察 3 天。'
-    ],
-    completion: '完成一份植物缺水觀察紀錄。',
-    safety: '不要觸摸不明、有刺、有汁液或可能過敏的植物。',
-    xp: 15,
-    minutes: 15
+    id: 'animal-7d-supply',
+    title: '建立動物 7 天補給',
+    system: 'animal',
+    riskLevel: 4,
+    estimatedMinutes: 30,
+    purpose: '把動物飼料、飲水、墊料與藥物納入家庭補給，不讓牠們變成臨場缺口。',
+    tools: ['飼料', '飲水估算', '藥物紀錄', '庫存頁'],
+    steps: ['列出家中動物種類與數量。', '估算 7 天飼料與飲水。', '檢查藥物與墊料。', '標記保存期限。', '寫下補貨下限。'],
+    completion: '完成動物 7 天補給清單與補貨下限。',
+    failureConditions: ['只準備人類物資。', '不同物種混用食物或藥物。', '未納入飲水。'],
+    relatedDrills: ['family-72h', 'remote-7d'],
+    relatedGap: '動物補給缺口',
+    xp: 40
   },
   {
-    title: '規劃一週不浪費菜單',
-    category: '食物保存',
-    purpose: '先用現有食材規劃飲食，減少浪費並提高食物掌控感。',
-    materials: '冰箱、食物櫃、紙筆',
-    steps: [
-      '列出即將過期或需要先吃的食材。',
-      '規劃 3–5 餐使用這些食材。',
-      '把可冷凍或可保存的先處理。',
-      '列出真正需要購買的項目。',
-      '避免重複購買已有食材。'
-    ],
-    completion: '完成一份一週簡易菜單。',
-    safety: '變質、異味、發霉的食物不要為了不浪費而食用。',
-    xp: 20,
-    minutes: 25
+    id: 'animal-evac-carrier',
+    title: '建立動物撤離籠與轉送方案',
+    system: 'animal',
+    riskLevel: 5,
+    estimatedMinutes: 35,
+    purpose: '確認撤離時能安全移動動物，且有不能同行時的轉送備案。',
+    tools: ['外出籠', '牽繩', '運輸袋', '可信任照護者名單'],
+    steps: ['檢查外出籠尺寸與狀態。', '固定撤離用品位置。', '列出可短期照護的人。', '寫下動物不可前往地點限制。', '建立轉送聯絡流程。'],
+    completion: '完成動物撤離籠檢查與轉送方案。',
+    failureConditions: ['撤離籠尺寸不合。', '未考慮動物壓力與逃脫風險。', '沒有備援照護者。'],
+    relatedDrills: ['typhoon-24h', 'earthquake-72h'],
+    relatedGap: '動物撤離缺口',
+    xp: 45
   },
   {
-    title: '建立家庭 72 小時清單',
-    category: '家庭備災',
-    purpose: '整合飲水、食物、照明、醫療、聯絡與動物用品。',
-    materials: '前面任務紀錄',
-    steps: [
-      '確認 3 天飲水。',
-      '確認 3 天食物。',
-      '確認照明與電力。',
-      '確認急救箱與常用藥。',
-      '確認動物用品與緊急聯絡資訊。'
-    ],
-    completion: '完成一份家庭 72 小時備災清單。',
-    safety: '備災不是囤積恐慌，而是讓生活在突發狀況下更穩定。',
-    xp: 35,
-    minutes: 30
+    id: 'animal-medical-card',
+    title: '建立動物緊急醫療資訊卡',
+    system: 'animal',
+    riskLevel: 3,
+    estimatedMinutes: 25,
+    purpose: '讓獸醫或代照護者能快速知道物種、病史、用藥與禁忌。',
+    tools: ['紙本卡片', '疫苗紀錄', '獸醫資訊'],
+    steps: ['記錄每隻動物名字、物種、年齡。', '列出疾病、過敏與用藥。', '加入獸醫院與急診電話。', '附上飲食與照護禁忌。', '放入外出籠資料袋。'],
+    completion: '完成每隻動物的緊急醫療資訊卡。',
+    failureConditions: ['沒有用藥劑量或禁忌。', '只存在手機內。', '獸醫資訊過期。'],
+    relatedDrills: ['family-72h', 'remote-7d'],
+    relatedGap: '動物醫療資訊缺口',
+    xp: 35
   },
   {
-    title: '做一次簡單食物保存練習',
-    category: '食物保存',
-    purpose: '理解保存食物的衛生、容器與時間觀念。',
-    materials: '乾淨容器、適合保存的食材、標籤',
-    steps: [
-      '選擇低風險食材，例如切好的蔬菜冷凍或簡單醃漬。',
-      '清潔雙手、砧板、容器。',
-      '少量製作，不一次大量嘗試。',
-      '貼上日期標籤。',
-      '記錄保存狀況。'
-    ],
-    completion: '完成一次少量食物保存，並標記日期。',
-    safety: '發酵、醃漬與保存食物有食安風險；異味、膨脹、發霉都不要食用。',
-    xp: 30,
-    minutes: 40
+    id: 'terrain-mountain-rain-table',
+    title: '建立山區豪雨撤離判斷表',
+    system: 'terrain',
+    riskLevel: 5,
+    estimatedMinutes: 45,
+    purpose: '用明確條件決定提前撤離或停止移動，避免在豪雨中冒險。',
+    tools: ['地圖', '氣象警戒資訊', '紙本判斷表'],
+    steps: ['確認土石流、落石或道路中斷資訊來源。', '列出主要與替代路線。', '設定提前撤離條件。', '設定夜間或豪雨停止移動條件。', '告知家人判斷表位置。'],
+    completion: '完成山區豪雨撤離與停止移動判斷表。',
+    failureConditions: ['把任務當成外出勘查。', '沒有停止條件。', '未確認替代道路。'],
+    relatedDrills: ['mountain-rain'],
+    relatedGap: '山區豪雨風險缺口',
+    xp: 50
   },
   {
-    title: '建立附近資源清單',
-    category: '農村規劃',
-    purpose: '自足不是所有事都自己來，知道附近資源同樣重要。',
-    materials: '手機地圖、紙筆',
-    steps: [
-      '找出附近超市、五金行、藥局、診所。',
-      '若有動物，找出獸醫院。',
-      '找出最近避難所或公所資訊。',
-      '列出可求助的朋友或鄰居。',
-      '把資訊整理到一份清單。'
-    ],
-    completion: '完成一份附近生活資源清單。',
-    safety: '不要公開分享個人住址或他人聯絡資訊，注意隱私。',
-    xp: 20,
-    minutes: 25
+    id: 'terrain-coastal-typhoon-check',
+    title: '建立海邊颱風暴潮檢查表',
+    system: 'terrain',
+    riskLevel: 5,
+    estimatedMinutes: 40,
+    purpose: '針對強風、暴潮、鹽害與冷藏食物處理建立提前檢查清單。',
+    tools: ['潮汐資訊', '固定工具', '撤離路線'],
+    steps: ['確認潮汐與暴潮資訊來源。', '列出強風固定項目。', '標記不可靠近海岸的警戒線。', '規劃冷藏食物處理順序。', '確認撤離路線與集合點。'],
+    completion: '完成海邊颱風暴潮檢查表。',
+    failureConditions: ['風雨中外出固定物品。', '靠近海岸、消波塊或浪區觀察。', '未處理鹽害與防潮。'],
+    relatedDrills: ['coastal-typhoon', 'typhoon-24h'],
+    relatedGap: '海邊颱風風險缺口',
+    xp: 50
   },
   {
-    title: '檢查住家排水與積水點',
-    category: '生活技能',
-    purpose: '降低大雨、颱風與蚊蟲孳生風險。',
-    materials: '手機拍照、紙筆',
-    steps: [
-      '檢查陽台、浴室、廚房、屋外排水孔。',
-      '觀察是否有落葉、泥沙或雜物阻塞。',
-      '找出容易積水的盆器或容器。',
-      '記錄需要清理的位置。',
-      '安排安全清理時間。'
-    ],
-    completion: '完成一份排水與積水點檢查。',
-    safety: '不要在暴雨、颱風或高處危險位置清理。必要時找專業人員。',
-    xp: 20,
-    minutes: 20
+    id: 'terrain-flood-risk-map',
+    title: '建立河邊或低窪地淹水風險圖',
+    system: 'terrain',
+    riskLevel: 5,
+    estimatedMinutes: 40,
+    purpose: '把低窪、排水、河岸與撤離方向畫出來，降低豪雨誤判。',
+    tools: ['地圖', '紙筆', '地方淹水資訊'],
+    steps: ['標出住家、低窪點與排水不良處。', '標出河岸、地下道或易淹道路。', '查詢地方淹水警戒資訊來源。', '畫出避開低窪的路線。', '設定不涉水通行原則。'],
+    completion: '完成住家周邊淹水風險圖與避開路線。',
+    failureConditions: ['把涉水通行列為可接受方案。', '只靠記憶沒有圖。', '未設定撤離方向。'],
+    relatedDrills: ['typhoon-24h'],
+    relatedGap: '淹水風險缺口',
+    xp: 50
   },
   {
-    title: '建立 30 天後的優先目標',
-    category: '長期規劃',
-    purpose: '把自足生活從零散任務變成可持續的方向。',
-    materials: '任務完成紀錄、日誌',
-    steps: [
-      '回顧目前完成的任務。',
-      '選出最有用的 3 件事。',
-      '選出最需要補強的 3 件事。',
-      '設定下個月只專注一個主題。',
-      '寫下每週可投入時間。'
-    ],
-    completion: '完成一份 30 天後優先目標。',
-    safety: '不要同時開太多計畫。能持續的小行動比一次做很多更重要。',
-    xp: 25,
-    minutes: 20
+    id: 'evac-family-rally-points',
+    title: '建立家庭集合點',
+    system: 'evacuation',
+    riskLevel: 4,
+    estimatedMinutes: 30,
+    purpose: '在通訊失效或家人分散時，仍有固定集合與備援地點。',
+    tools: ['地圖', '紙本聯絡卡', '家人共識'],
+    steps: ['設定住家附近集合點。', '設定跨區備援集合點。', '寫下到達條件與等待時間。', '把地點寫進紙本卡。', '讓家人確認。'],
+    completion: '完成家庭主要與備援集合點紀錄。',
+    failureConditions: ['集合點在危險區。', '只有一個集合點。', '家人未確認。'],
+    relatedDrills: ['earthquake-72h', 'family-72h'],
+    relatedGap: '家庭集合缺口',
+    xp: 40
+  },
+  {
+    id: 'evac-bag-weight-check',
+    title: '建立撤離包重量檢查',
+    system: 'evacuation',
+    riskLevel: 4,
+    estimatedMinutes: 25,
+    purpose: '確認撤離包重量不會讓移動能力崩潰，尤其有小孩或動物時。',
+    tools: ['體重計', '撤離包', '硬核計算器'],
+    steps: ['量測使用者體重。', '量測撤離包重量。', '計算負重比例。', '標記必需與可移除物品。', '重新打包並記錄重量。'],
+    completion: '完成撤離包重量比例與調整紀錄。',
+    failureConditions: ['超過 20% 仍當作可接受。', '未考慮抱小孩或動物。', '只看物品完整，不看機動性。'],
+    relatedDrills: ['family-72h', 'mountain-rain'],
+    relatedGap: '撤離機動性缺口',
+    xp: 40
+  },
+  {
+    id: 'evac-documents-cash-pack',
+    title: '建立重要文件與現金包',
+    system: 'evacuation',
+    riskLevel: 4,
+    estimatedMinutes: 35,
+    purpose: '在斷電、無網路或撤離時保留身分、醫療、保險與基本支付能力。',
+    tools: ['防水袋', '文件影本', '現金', '紙本清單'],
+    steps: ['整理身分、保險、醫療與住家文件影本。', '準備小額現金。', '加入家人與動物資訊卡。', '放入防水袋。', '設定每季檢查。'],
+    completion: '完成重要文件與現金包。',
+    failureConditions: ['只存在雲端。', '沒有防水保護。', '放置位置無人知道。'],
+    relatedDrills: ['typhoon-24h', 'earthquake-72h', 'remote-7d'],
+    relatedGap: '文件與現金缺口',
+    xp: 45
+  },
+  {
+    id: 'longterm-food-production-log',
+    title: '建立基礎食物生產紀錄',
+    system: 'longterm',
+    riskLevel: 2,
+    estimatedMinutes: 30,
+    purpose: '把種植從興趣變成可追蹤的食物生產能力。',
+    tools: ['種植紀錄', '盆器或菜畦', '日期標籤'],
+    steps: ['選擇蔥、九層塔、薄荷或地瓜葉等低門檻植物。', '記錄位置、日照與種植日期。', '設定澆水與觀察頻率。', '記錄第一次收成或失敗原因。', '決定下一個改善項。'],
+    completion: '完成至少一筆可食植物生產紀錄。',
+    failureConditions: ['採食不明植物。', '沒有日期與位置紀錄。', '把一次失敗當作系統失敗。'],
+    relatedDrills: [],
+    relatedGap: '食物生產缺口',
+    xp: 30
+  },
+  {
+    id: 'longterm-tools-repair-list',
+    title: '建立工具與修繕清單',
+    system: 'longterm',
+    riskLevel: 3,
+    estimatedMinutes: 35,
+    purpose: '確認家庭有基礎修繕能力，但不碰高風險電力、瓦斯或結構作業。',
+    tools: ['工具箱', '手套', '標籤', '修繕紀錄'],
+    steps: ['盤點螺絲起子、鉗子、膠帶、束帶、手套。', '標記損壞、生鏽或缺電池工具。', '列出可自行處理的小修繕。', '列出必須找專業者的項目。', '設定工具固定位置。'],
+    completion: '完成工具盤點、缺口與不可自行處理清單。',
+    failureConditions: ['嘗試高風險電力、瓦斯或結構維修。', '尖銳工具未安全收納。', '沒有專業支援清單。'],
+    relatedDrills: ['typhoon-24h'],
+    relatedGap: '修繕工具缺口',
+    xp: 35
+  },
+  {
+    id: 'longterm-30d-improvement-plan',
+    title: '建立 30 天補給改善計畫',
+    system: 'longterm',
+    riskLevel: 3,
+    estimatedMinutes: 30,
+    purpose: '把水、食物、電力、醫療與撤離缺口排成 30 天內可完成的改善序列。',
+    tools: ['任務紀錄', '庫存摘要', '備災清單'],
+    steps: ['列出目前三個最高缺口。', '每個缺口指定一個可驗證行動。', '安排每週檢查點。', '設定不購買也能完成的改善項。', '月底回顧結果。'],
+    completion: '完成一份 30 天補給改善計畫。',
+    failureConditions: ['同時開太多目標。', '只列購物清單沒有驗證行動。', '沒有回顧日期。'],
+    relatedDrills: ['family-72h', 'remote-7d'],
+    relatedGap: '長期改善缺口',
+    xp: 35
   }
 ]
 
-const branchTasks = {
-  mountain_living: [
-    {
-      title: '畫出山區撤離路線',
-      category: '地形風險',
-      purpose: '山區遇到豪雨、落石、道路中斷時，要先知道往哪裡走。',
-      materials: '手機地圖、紙筆',
-      steps: ['標出住處位置。', '標出主要道路。', '標出替代道路。', '標出安全集合點。', '寫下不能通行時的聯絡方式。'],
-      completion: '完成一張山區撤離路線草圖。',
-      safety: '不要在豪雨、夜間、濃霧或道路不明時冒險移動。',
-      xp: 30,
-      minutes: 30
-    }
-  ],
-  coastal_living: [
-    {
-      title: '建立潮汐與強風觀察習慣',
-      category: '地形風險',
-      purpose: '海邊生活要先理解潮汐、風浪與颱風風險。',
-      materials: '可信賴氣象或潮汐資訊來源',
-      steps: ['查詢今日滿潮與乾潮。', '記錄風向與風速。', '確認住家周圍易受風影響物品。', '寫下颱風前需要固定的物品。'],
-      completion: '完成一份海邊潮汐與強風觀察紀錄。',
-      safety: '不要因為任務而靠近危險海岸、消波塊、夜間海邊或大浪區域。',
-      xp: 30,
-      minutes: 25
-    }
-  ],
-  riverside_valley: [
-    {
-      title: '標記淹水與溪水暴漲風險點',
-      category: '地形風險',
-      purpose: '溪谷與河邊最重要的是不要低估水位變化。',
-      materials: '手機地圖、紙筆',
-      steps: ['標出住家附近低窪處。', '標出河邊或溪邊距離。', '記錄雨後容易積水位置。', '寫下撤離方向。'],
-      completion: '完成一份河邊／溪谷風險點紀錄。',
-      safety: '溪水暴漲速度可能很快，不要在豪雨後靠近溪流。',
-      xp: 30,
-      minutes: 25
-    }
-  ],
-  island_resilience: [
-    {
-      title: '建立離島 7 天物資檢查',
-      category: '地形風險',
-      purpose: '離島與偏遠地區要預先考慮船班、補給與醫療距離。',
-      materials: '食物、水、藥品、飼料、電力備援清單',
-      steps: ['盤點 7 天食物。', '盤點 7 天飲水。', '確認常用藥與急救用品。', '確認動物飼料。', '寫下船班中斷時的備案。'],
-      completion: '完成一份離島 7 天物資檢查表。',
-      safety: '偏遠地區更要提早就醫與補給，不要等到中斷後才處理。',
-      xp: 35,
-      minutes: 35
-    }
-  ]
+export function getCompletedMap(completed = {}) {
+  if (Array.isArray(completed)) {
+    return completed.reduce((map, item) => {
+      if (typeof item === 'string') map[item] = true
+      if (item?.id) map[item.id] = true
+      if (item?.taskId) map[item.taskId] = true
+      return map
+    }, {})
+  }
+
+  if (completed && typeof completed === 'object') return completed
+  return {}
 }
 
-export function getTasks(routeType = 'balcony_beginner') {
-  const tasks = baseTasks.map((task, i) => ({
-    id: `base-${i + 1}`,
-    day: i + 1,
-    ...task
-  }))
+export function isTaskCompleted(completed, taskId) {
+  return Boolean(getCompletedMap(completed)[taskId])
+}
 
-  const branches = branchTasks[routeType] || []
-  branches.forEach((task, idx) => {
-    tasks[10 + idx] = {
-      id: `${routeType}-${idx + 1}`,
-      day: 11 + idx,
-      ...task
+export function getRecommendedTask(tasks = missionTasks, state = {}) {
+  const completed = getCompletedMap(state.completed)
+  const preparedness = state.preparedness || {}
+  const unfinished = (task) => task && !completed[task.id]
+  const firstUnfinished = (system) => tasks.find((task) => task.system === system && unfinished(task))
+
+  const rules = [
+    [!preparedness.water, 'water', '飲水準備缺口', '先建立最低飲水線，其他補給才有意義。'],
+    [!preparedness.food, 'food', '食物準備缺口', '補給中斷時，免冷藏食物是 72 小時核心。'],
+    [!(preparedness.light && preparedness.power), 'power', '電力照明缺口', '先確認夜間照明、通訊與充電能力。'],
+    [!(preparedness.firstaid || preparedness.medicine), 'medical', '醫療急救缺口', '等待醫療協助前，家庭急救與用藥資料必須可用。'],
+    [!preparedness.animals, 'animal', '動物照護缺口', '動物補給與撤離不能到最後一刻才處理。'],
+    [!(preparedness.contacts && preparedness.documents), 'evacuation', '撤離規劃缺口', '無網路或撤離時，紙本聯絡與文件會直接影響決策。']
+  ]
+
+  for (const [condition, system, gap, reason] of rules) {
+    if (condition) {
+      const task = firstUnfinished(system)
+      if (task) return { task, gap, reason }
     }
-  })
+  }
 
-  return tasks
+  const task = [...tasks].filter(unfinished).sort((a, b) => b.riskLevel - a.riskLevel || b.xp - a.xp)[0]
+  return task ? { task, gap: task.relatedGap, reason: '核心缺口已處理，轉入最高風險項目壓力測試。' } : null
+}
+
+export function getTasks() {
+  return missionTasks
 }
