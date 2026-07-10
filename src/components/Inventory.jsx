@@ -1,19 +1,159 @@
 import React, { useState } from 'react'
-import { Package, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, CalendarClock, Package, Plus, Trash2 } from 'lucide-react'
 
 const categories = ['飲水', '食物', '照明', '醫療', '動物', '工具', '種植', '其他']
+
+const typeOptions = [
+  ['water', '飲水'],
+  ['food', '食物'],
+  ['medical', '醫療'],
+  ['power', '電力'],
+  ['animal', '動物'],
+  ['tool', '工具'],
+  ['hygiene', '衛生'],
+  ['other', '其他']
+]
+
+const priorityOptions = [
+  ['high', '高'],
+  ['medium', '中'],
+  ['low', '低']
+]
+
+const typeLabels = Object.fromEntries(typeOptions)
+const priorityLabels = Object.fromEntries(priorityOptions)
+
+const typeHints = {
+  water: '飲水類請填「飲水公升數」，用來估算最低 72 小時飲水線。',
+  food: '食物類請填「成人食物份數」，並標記是否免冷藏。',
+  animal: '動物類請填「動物補給天數」，避免低估飼料與飲水。',
+  medical: '醫療類請填保存期限與重要程度，便於輪替常備藥與耗材。'
+}
 
 const initialForm = {
   name: '',
   category: '飲水',
   quantity: '',
   unit: '',
-  note: ''
+  note: '',
+  type: 'water',
+  expiresAt: '',
+  shelfStable: false,
+  servings: '',
+  liters: '',
+  animalDays: '',
+  priority: 'medium'
+}
+
+function inferType(category = '') {
+  const text = String(category)
+  if (text.includes('飲水') || text.includes('水')) return 'water'
+  if (text.includes('食物')) return 'food'
+  if (text.includes('醫療')) return 'medical'
+  if (text.includes('照明') || text.includes('電力')) return 'power'
+  if (text.includes('動物')) return 'animal'
+  if (text.includes('工具')) return 'tool'
+  return 'other'
+}
+
+function numberValue(value) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+}
+
+function todayDate() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
+
+function parseDate(value) {
+  if (!value) return null
+  const date = new Date(`${value}T00:00:00`)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function daysUntil(value) {
+  const date = parseDate(value)
+  if (!date) return null
+  return Math.floor((date.getTime() - todayDate().getTime()) / 86400000)
+}
+
+export function normalizeInventoryItem(item = {}) {
+  const type = typeLabels[item.type] ? item.type : inferType(item.category)
+  const priority = priorityLabels[item.priority] ? item.priority : 'medium'
+
+  return {
+    ...item,
+    name: item.name || '未命名物資',
+    category: item.category || typeLabels[type] || '其他',
+    quantity: item.quantity || '',
+    unit: item.unit || '',
+    note: item.note || '',
+    type,
+    expiresAt: item.expiresAt || '',
+    shelfStable: item.shelfStable === true || item.shelfStable === 'true',
+    servings: item.servings ?? '',
+    liters: item.liters ?? '',
+    animalDays: item.animalDays ?? '',
+    priority
+  }
+}
+
+export function getInventorySummary(items = []) {
+  const normalizedItems = items.map(normalizeInventoryItem)
+
+  return normalizedItems.reduce((summary, item) => {
+    const expiryDays = daysUntil(item.expiresAt)
+
+    if (item.type === 'water') summary.waterLiters += numberValue(item.liters)
+    if (item.type === 'food') summary.foodServings += numberValue(item.servings)
+    if (item.type === 'food' && item.shelfStable) summary.shelfStableServings += numberValue(item.servings)
+    if (item.type === 'animal') summary.animalDays += numberValue(item.animalDays)
+    if (item.priority === 'high') summary.highPriorityCount += 1
+    if (item.type === 'animal' || String(item.category).includes('動物')) summary.hasAnimalDemand = true
+    if (expiryDays !== null && expiryDays < 0) summary.expiredCount += 1
+    if (expiryDays !== null && expiryDays >= 0 && expiryDays <= 30) summary.expiringSoonCount += 1
+
+    return summary
+  }, {
+    waterLiters: 0,
+    foodServings: 0,
+    shelfStableServings: 0,
+    animalDays: 0,
+    highPriorityCount: 0,
+    expiringSoonCount: 0,
+    expiredCount: 0,
+    hasAnimalDemand: false
+  })
+}
+
+function formatNumber(value) {
+  return Number(value.toFixed(1)).toString()
+}
+
+function expiryStatus(item) {
+  const expiryDays = daysUntil(item.expiresAt)
+  if (expiryDays === null) return null
+  if (expiryDays < 0) return 'expired'
+  if (expiryDays <= 30) return 'soon'
+  return null
+}
+
+function getSupplyGap(summary) {
+  if (summary.waterLiters < 9) return '飲水不足：至少先建立 72 小時最低飲水'
+  if (summary.shelfStableServings < 9) return '免冷藏食物不足：至少準備 72 小時可直接食用食物'
+  if (summary.hasAnimalDemand && summary.animalDays < 3) return '動物補給不足：至少準備 3 天飼料與飲水'
+  if (summary.expiredCount > 0) return '有已過期物資：立即檢查與替換'
+  if (summary.expiringSoonCount > 0) return '有即期物資：安排輪替'
+  if (summary.highPriorityCount === 0) return '尚未標記高優先物資'
+  return '目前沒有重大補給缺口'
 }
 
 export default function Inventory({ state, addInventoryItem, deleteInventoryItem }) {
   const [form, setForm] = useState(initialForm)
-  const inventory = state.inventory || []
+  const inventory = (state.inventory || []).map(normalizeInventoryItem)
+  const summary = getInventorySummary(state.inventory || [])
+  const supplyGap = getSupplyGap(summary)
 
   function updateField(field, value) {
     setForm({ ...form, [field]: value })
@@ -28,7 +168,14 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
       category: form.category,
       quantity: form.quantity.trim(),
       unit: form.unit.trim(),
-      note: form.note.trim()
+      note: form.note.trim(),
+      type: form.type,
+      expiresAt: form.expiresAt,
+      shelfStable: form.shelfStable,
+      servings: form.servings,
+      liters: form.liters,
+      animalDays: form.animalDays,
+      priority: form.priority
     })
     setForm(initialForm)
   }
@@ -36,10 +183,10 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
   return (
     <div className="space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Household Inventory</p>
-        <h1 className="text-2xl font-black text-bark">物資庫存</h1>
+        <p className="muji-kicker">Supply Inventory</p>
+        <h1 className="text-2xl font-black text-bark">補給庫存系統</h1>
         <p className="text-soil/70 mt-2 leading-7">
-          記錄家中的飲水、食物、照明、醫療與工具物資。少量、清楚、知道放在哪裡，比一次買很多更實用。
+          盤點飲水、免冷藏食物、醫療、電力與動物補給。庫存資料會用來判斷最低補給線、保存期限與替換優先序。
         </p>
         <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#eee5d6] px-4 py-2 text-sm font-bold text-[#3d5143]">
           <Package size={16} />
@@ -49,11 +196,38 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
 
       <section className="muji-card">
         <div className="muji-section-title">
+          <Package size={18} />
+          <span>補給狀態總覽</span>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <SummaryMetric label="飲水總量" value={`${formatNumber(summary.waterLiters)} L`} />
+          <SummaryMetric label="成人食物" value={`${formatNumber(summary.foodServings)} 份`} />
+          <SummaryMetric label="免冷藏食物" value={`${formatNumber(summary.shelfStableServings)} 份`} />
+          <SummaryMetric label="動物補給" value={`${formatNumber(summary.animalDays)} 天`} />
+          <SummaryMetric label="高優先物資" value={`${summary.highPriorityCount} 項`} />
+          <SummaryMetric label="30 天內到期" value={`${summary.expiringSoonCount} 項`} />
+          <SummaryMetric label="已過期" value={`${summary.expiredCount} 項`} />
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-soil/15 bg-white/65 p-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle size={18} className="mt-1 shrink-0 text-[#8b2f25]" />
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-soil/55">最高補給缺口</p>
+              <p className="mt-1 font-black text-bark leading-7">{supplyGap}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="muji-card">
+        <div className="muji-section-title">
           <Plus size={18} />
           <span>新增物資</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
+        <form onSubmit={handleSubmit} className="mt-4 grid gap-4">
           <label className="grid gap-1 text-sm font-bold text-soil">
             名稱
             <input
@@ -64,9 +238,22 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
             />
           </label>
 
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <label className="grid gap-1 text-sm font-bold text-soil">
-              類別
+              物資類型
+              <select
+                value={form.type}
+                onChange={(event) => updateField('type', event.target.value)}
+                className="rounded-2xl border border-soil/15 bg-white/75 px-4 py-3 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
+              >
+                {typeOptions.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-1 text-sm font-bold text-soil">
+              原類別
               <select
                 value={form.category}
                 onChange={(event) => updateField('category', event.target.value)}
@@ -77,7 +264,15 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
                 ))}
               </select>
             </label>
+          </div>
 
+          {typeHints[form.type] && (
+            <div className="rounded-2xl border border-[#c2a25c]/35 bg-[#fbf7ec] px-4 py-3 text-sm font-bold leading-6 text-soil/75">
+              {typeHints[form.type]}
+            </div>
+          )}
+
+          <div className="grid sm:grid-cols-3 gap-3">
             <label className="grid gap-1 text-sm font-bold text-soil">
               數量
               <input
@@ -98,7 +293,75 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
                 className="rounded-2xl border border-soil/15 bg-white/75 px-4 py-3 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
               />
             </label>
+
+            <label className="grid gap-1 text-sm font-bold text-soil">
+              重要程度
+              <select
+                value={form.priority}
+                onChange={(event) => updateField('priority', event.target.value)}
+                className="rounded-2xl border border-soil/15 bg-white/75 px-4 py-3 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
+              >
+                {priorityOptions.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
           </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <label className="grid gap-1 text-sm font-bold text-soil">
+              保存期限
+              <input
+                type="date"
+                value={form.expiresAt}
+                onChange={(event) => updateField('expiresAt', event.target.value)}
+                className="rounded-2xl border border-soil/15 bg-white/75 px-4 py-3 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
+              />
+            </label>
+
+            <label className="grid gap-1 text-sm font-bold text-soil">
+              飲水公升數
+              <input
+                value={form.liters}
+                onChange={(event) => updateField('liters', event.target.value)}
+                inputMode="decimal"
+                placeholder="例如：9"
+                className="rounded-2xl border border-soil/15 bg-white/75 px-4 py-3 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
+              />
+            </label>
+
+            <label className="grid gap-1 text-sm font-bold text-soil">
+              成人食物份數
+              <input
+                value={form.servings}
+                onChange={(event) => updateField('servings', event.target.value)}
+                inputMode="decimal"
+                placeholder="例如：9"
+                className="rounded-2xl border border-soil/15 bg-white/75 px-4 py-3 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
+              />
+            </label>
+
+            <label className="grid gap-1 text-sm font-bold text-soil">
+              動物補給天數
+              <input
+                value={form.animalDays}
+                onChange={(event) => updateField('animalDays', event.target.value)}
+                inputMode="decimal"
+                placeholder="例如：3"
+                className="rounded-2xl border border-soil/15 bg-white/75 px-4 py-3 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
+              />
+            </label>
+          </div>
+
+          <label className="flex items-center gap-3 rounded-2xl border border-soil/15 bg-white/65 px-4 py-3 text-sm font-bold text-soil">
+            <input
+              type="checkbox"
+              checked={form.shelfStable}
+              onChange={(event) => updateField('shelfStable', event.target.checked)}
+              className="h-5 w-5 accent-[#24483a]"
+            />
+            <span>免冷藏，可直接食用或簡單加熱</span>
+          </label>
 
           <label className="grid gap-1 text-sm font-bold text-soil">
             備註
@@ -123,40 +386,77 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
             <Package size={18} />
             <div>
               <strong>目前沒有物資紀錄</strong>
-              <p>先從家中已經有的飲水、乾糧、手電筒或急救用品開始整理。</p>
+              <p>先建立水、免冷藏食物、照明、急救與動物補給的最低線。</p>
             </div>
           </div>
         ) : (
           inventory.map((item) => (
-            <article key={item.id} className="muji-card">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="badge">{item.category}</span>
-                    <h2 className="font-black text-xl text-bark break-words">{item.name}</h2>
-                  </div>
-                  <p className="mt-2 text-soil/80 font-bold">
-                    {[item.quantity, item.unit].filter(Boolean).join(' ') || '未填數量'}
-                  </p>
-                  {item.note && (
-                    <p className="mt-2 text-sm leading-7 text-soil/70 break-words">{item.note}</p>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => deleteInventoryItem(item.id)}
-                  className="shrink-0 rounded-2xl border border-soil/15 bg-white/70 p-3 text-soil/70 transition hover:text-red-800"
-                  aria-label={`刪除 ${item.name}`}
-                  title="刪除物資"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </article>
+            <InventoryCard key={item.id || `${item.name}-${item.category}`} item={item} onDelete={deleteInventoryItem} />
           ))
         )}
       </section>
     </div>
+  )
+}
+
+function SummaryMetric({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-soil/15 bg-white/65 p-4">
+      <p className="text-xs font-black uppercase tracking-[0.12em] text-soil/50">{label}</p>
+      <p className="mt-2 text-xl font-black text-bark">{value}</p>
+    </div>
+  )
+}
+
+function InventoryCard({ item, onDelete }) {
+  const status = expiryStatus(item)
+  const quantityText = [item.quantity, item.unit].filter(Boolean).join(' ') || '未填數量'
+
+  return (
+    <article className="muji-card">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="badge">{typeLabels[item.type]}</span>
+            <h2 className="font-black text-xl text-bark break-words">{item.name}</h2>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {status === 'expired' && <span className="badge bg-[#8b2f25] text-[#fff9ea]">已過期</span>}
+            {status === 'soon' && <span className="badge bg-[#c2a25c] text-[#241b10]">30 天內到期</span>}
+            {item.priority === 'high' && <span className="badge bg-[#24483a] text-[#fff9ea]">高優先</span>}
+            {item.shelfStable && <span className="badge">免冷藏</span>}
+          </div>
+
+          <div className="mt-3 grid gap-1 text-sm font-bold text-soil/80">
+            <p>數量：{quantityText}</p>
+            {numberValue(item.liters) > 0 && <p>飲水：{formatNumber(numberValue(item.liters))} L</p>}
+            {numberValue(item.servings) > 0 && <p>成人食物：{formatNumber(numberValue(item.servings))} 份</p>}
+            {numberValue(item.animalDays) > 0 && <p>動物補給：{formatNumber(numberValue(item.animalDays))} 天</p>}
+            {item.expiresAt && (
+              <p className="inline-flex items-center gap-1">
+                <CalendarClock size={14} />
+                保存期限：{item.expiresAt}
+              </p>
+            )}
+            <p>重要程度：{priorityLabels[item.priority]}</p>
+          </div>
+
+          {item.note && (
+            <p className="mt-3 text-sm leading-7 text-soil/70 break-words">{item.note}</p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onDelete(item.id)}
+          className="shrink-0 rounded-2xl border border-soil/15 bg-white/70 p-3 text-soil/70 transition hover:text-red-800"
+          aria-label={`刪除 ${item.name}`}
+          title="刪除物資"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+    </article>
   )
 }

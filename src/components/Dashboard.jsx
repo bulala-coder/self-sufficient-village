@@ -1,6 +1,7 @@
 import React from 'react'
 import { AlertTriangle, BarChart3, Calculator, ClipboardCheck, Droplets, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
+import { getInventorySummary } from './Inventory.jsx'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -100,11 +101,16 @@ function readinessScore({ statuses, state, tasks, completedCount }) {
   return Math.round(Math.min(100, preparednessScore + inventoryScore + plantsScore + taskScore + drillScore))
 }
 
+function formatSupplyNumber(value) {
+  return Number(value.toFixed(1)).toString()
+}
+
 export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const statuses = getSystemStatus(state)
   const highestGap = statuses.find((item) => item.status === '缺口')
   const score = readinessScore({ statuses, state, tasks, completedCount })
   const drillSummary = getDrillCompletion(state.drills || {})
+  const supplySummary = getInventorySummary(state.inventory || [])
   const title = scoreTitle(score)
   const mission = highestGap ? gapTasks[highestGap.key] : '執行 72 小時斷水斷電壓力測試'
 
@@ -173,6 +179,16 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             <span>任務 {completedCount}/{tasks.length}</span>
             <span>狀態 {statuses.filter((item) => item.status !== '缺口').length}/6</span>
             <span>演練 {drillSummary.passedDrills}/8</span>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-3 text-sm font-bold text-soil/75">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-soil/50">補給摘要</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <span>水量 {formatSupplyNumber(supplySummary.waterLiters)} L</span>
+              <span>食物 {formatSupplyNumber(supplySummary.foodServings)} 份</span>
+              <span>動物 {formatSupplyNumber(supplySummary.animalDays)} 天</span>
+              <span>即期/過期 {supplySummary.expiringSoonCount + supplySummary.expiredCount} 項</span>
+            </div>
           </div>
         </aside>
       </section>
