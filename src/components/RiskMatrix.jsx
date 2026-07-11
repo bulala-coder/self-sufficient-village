@@ -3,6 +3,7 @@ import { AlertTriangle, BarChart3, RotateCcw, ShieldAlert } from 'lucide-react'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
+import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
 
 export const residenceLabels = {
   apartment: '公寓',
@@ -238,6 +239,7 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
   const compoundRisks = buildPresetCompoundEvents().filter((event)=>['water-power-72h','water-road-7d','earthquake-pipeline-14d'].includes(event.id)).map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
   const highestCompoundRisk = [...compoundRisks].sort((a,b)=>b.simulation.riskBreakdown.overallRisk-a.simulation.riskBreakdown.overallRisk)[0]
   const commonCompoundWeakness = [...compoundRisks].sort((a,b)=>b.simulation.riskBreakdown.waterRisk-a.simulation.riskBreakdown.waterRisk)[0]?.simulation.result.primaryFailurePoint || 'none'
+  const fortressCore = getCoreSystemSummary(state, water)
   const waterRisk = water.days.overallDays < 1 ? 'Critical' : water.days.overallDays < 3 ? 'High' : water.days.overallDays < 7 ? 'Moderate' : 'Lower'
   const riskProfile = state.riskProfile || {}
   const cards = getRiskCards(riskProfile)
@@ -315,6 +317,8 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
       </section>
 
       <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><ShieldAlert size={18}/><span>複合災害風險情報</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{compoundRisks.map((event)=><article key={event.id} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><h3 className="font-black text-bark">{event.name}</h3><p className="mt-2 text-sm font-black">{event.simulation.result.label} · {event.simulation.result.riskLevel}</p><p className="mt-1 text-sm">總風險 {event.simulation.riskBreakdown.overallRisk} · 分數 {event.simulation.result.score}</p></article>)}</div><div className="mt-4 grid gap-3 sm:grid-cols-2"><WaterRiskMetric label="最高風險情境" value={highestCompoundRisk?.name||'無資料'}/><WaterRiskMetric label="主要共通弱點" value={waterFailureLabels[commonCompoundWeakness]||commonCompoundWeakness}/></div><p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-bold">{highestCompoundRisk?.simulation.recommendations[0]}</p></section>
+
+      <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><ShieldAlert size={18}/><span>核心弱點情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-2">{fortressCore.weaknesses.slice(0,5).map((item)=><article key={item.id} className={`core-weakness-card core-weakness-${item.severity}`}><div className="flex items-start justify-between gap-2"><h3 className="font-black text-bark">{item.title}</h3><span className="badge">{item.severity}</span></div><p className="mt-2 text-xs font-black">{CORE_DOMAIN_LABELS[item.domain]||'Fortress Core'}</p><p className="mt-2 text-sm">{item.description}</p><p className="mt-2 text-sm font-bold">建議：{item.recommendation}</p></article>)}</div>{fortressCore.scenarioReadiness.some((item)=>['fail','critical'].includes(item.status))&&<p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-black">高風險提示：至少一個核心或複合災害情境無法承受，請優先處理最低分核心域。</p>}</section>
 
       <section className="muji-card">
         <div className="muji-section-title">

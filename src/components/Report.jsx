@@ -10,6 +10,7 @@ import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
+import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -145,11 +146,18 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
     `Survival Readiness Score：${score}｜${title}`,
+    '',
+    'Fortress Core Summary｜家庭核心生存摘要',
+    `Core Survival Score：${fortressCore.totalScore}｜${fortressCore.readinessLevel.level}・${fortressCore.readinessLevel.label}`,
+    `最弱核心域：${fortressCore.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`,
+    ...Object.entries(fortressCore.domains).map(([id,domain])=>`${CORE_DOMAIN_LABELS[id]}：${domain.score}｜${domain.status}｜confidence ${domain.confidence}｜source ${domain.source}`),
+    ...fortressCore.scenarioReadiness.map((item)=>`核心情境 ${item.name}：${item.label}｜${item.score}｜最弱 ${item.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`),
+    ...fortressCore.recommendations.slice(0,5).map((item,index)=>`核心建議 ${index+1}：${item}`),
     '',
     '補給摘要',
     `飲水總量：${formatNumber(supplySummary.waterLiters)} L`,
@@ -280,6 +288,7 @@ export default function Report({ state, tasks }) {
   const water = getWaterIntelligenceSummary()
   const waterEvents = [{ label: '24 小時停水', days: 1 }, { label: '72 小時停水', days: 3 }, { label: '7 天停水', days: 7 }, { label: '14 天停水', days: 14 }].map((item) => ({ ...item, simulation: simulateWaterEvent(water, { durationDays: item.days, mode: 'planned' }) }))
   const compoundEvents = buildPresetCompoundEvents().map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
+  const fortressCore = getCoreSystemSummary(state, water)
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -302,6 +311,7 @@ export default function Report({ state, tasks }) {
     water,
     waterEvents,
     compoundEvents,
+    fortressCore,
     priorityAction
   })
 
@@ -373,6 +383,8 @@ export default function Report({ state, tasks }) {
             </p>
           </div>
         </section>
+
+        <section className="muji-card core-summary-card border-[#24483a]/25"><SectionTitle>Fortress Core Summary｜家庭核心生存摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Core Survival Score" value={`${fortressCore.totalScore} / 100`}/><Metric label="Readiness Level" value={`${fortressCore.readinessLevel.level}｜${fortressCore.readinessLevel.label}`}/><Metric label="最弱核心域" value={fortressCore.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}/><Metric label="資料時間" value={new Date(fortressCore.generatedAt).toLocaleString('zh-TW')}/>{Object.entries(fortressCore.domains).map(([id,domain])=><Metric key={id} label={CORE_DOMAIN_LABELS[id]} value={`${domain.score}｜${domain.status}｜${domain.confidence}｜${domain.source}`}/>)}</div><ReportList title="核心情境準備度" items={fortressCore.scenarioReadiness.map((item)=>`${item.name}：${item.label}｜${item.score}｜最弱 ${item.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`)}/><ReportList title="核心改善建議" items={fortressCore.recommendations.slice(0,5)}/></section>
 
         <section className="muji-card border-[#24483a]/25">
           <SectionTitle>水資源安全摘要</SectionTitle>

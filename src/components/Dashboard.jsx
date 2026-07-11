@@ -10,6 +10,7 @@ import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
+import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -108,6 +109,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const water = getWaterIntelligenceSummary()
   const waterOutage72h = simulateWaterEvent(water, { durationDays: 3, mode: 'planned' })
   const compound72h = simulateCompoundDisaster(water, buildPresetCompoundEvents()[0], { mode: 'planned', strictness: 'standard' })
+  const core = getCoreSystemSummary(state, water)
   const statuses = getSystemStatus(state)
   const highestGap = statuses.find((item) => item.status === '缺口')
   const score = readinessScore({ statuses, state, tasks, completedCount })
@@ -141,6 +143,8 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
           {routeLabels[state.routeType] || '未指定環境'}
         </div>
       </section>
+
+      <section className="muji-card core-summary-card border-[#24483a]/25"><p className="muji-kicker">Fortress Core</p><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><h2 className="text-2xl font-black text-bark">家庭核心生存狀態</h2><p className="mt-2 text-soil/70">六大核心域的總控快照；非水資源域目前為保守推估。</p></div><div className="core-score-card"><span>Core Survival Score</span><strong>{core.totalScore}</strong><small>{core.readinessLevel.level}｜{core.readinessLevel.label}</small></div></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><div className="rounded-2xl border border-soil/15 bg-white/60 p-4"><p className="text-xs font-black">最弱核心域</p><strong>{core.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}</strong></div>{core.scenarioReadiness.filter((item)=>['water-power-72h','supply-7d'].includes(item.id)).map((item)=><div key={item.id} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><p className="text-xs font-black">{item.name}</p><strong>{item.label} · {item.score}</strong></div>)}</div><div className="core-domain-grid mt-4">{Object.entries(core.domains).map(([id,domain])=><button type="button" key={id} className={`core-domain-card core-domain-${id}`} onClick={id==='water'?()=>setPage('waterSystem'):undefined}><div className="flex items-start justify-between gap-2"><h3>{CORE_DOMAIN_LABELS[id]}</h3><span>{domain.confidence}</span></div><strong>{domain.score}</strong><p>{domain.status} · {domain.source}</p><small>{domain.topRecommendation}</small></button>)}</div><div className="mt-4"><p className="font-black">Top 3 改善建議</p><ol className="mt-2 space-y-2">{core.recommendations.slice(0,3).map((item,index)=><li key={item} className="rounded-xl bg-white/55 p-3 text-sm font-bold"><span className="mr-2 text-[#8b2f25]">{index+1}.</span>{item}</li>)}</ol></div></section>
 
       <section className="muji-card border-[#24483a]/25">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

@@ -6,6 +6,7 @@ import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getCompletedMap } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
+import { getCoreSystemSummary } from '../utils/coreSystem.js'
 
 export const abilityDomains = {
   water: '水',
@@ -210,6 +211,7 @@ function domainClass(domain) {
 export default function Roadmap({ state, updateRoadmap }) {
   const summary = getRoadmapSummary(state)
   const water = getWaterIntelligenceSummary()
+  const fortressCore = getCoreSystemSummary(state, water)
   const ownedTreatments = (water.data.treatments || []).filter((item) => item?.owned === true)
   const hasNonElectricTreatment = ownedTreatments.some((item) => !item?.requiresElectricity)
   const hasConsumables = ownedTreatments.some((item) => !item?.requiresConsumables || Number(item?.consumablesRemaining) > 0)
@@ -224,6 +226,12 @@ export default function Roadmap({ state, updateRoadmap }) {
     { level: 'Level 1：基礎複合風險', result: compound72h, items: [['停水 + 停電 72 小時可承受',compound72h.result.status==='pass'],['建立非電力淨水方式',hasNonElectricTreatment],['建立 72 小時照明與通訊替代方案',Boolean(preparedness.power||preparedness.light)]] },
     { level: 'Level 2：補給中斷韌性', result: compound7d, items: [['停水 + 道路中斷 7 天可承受',compound7d.result.status==='pass'],['建立第二補水來源',water.capabilities.sourceCount>=2],['建立 7 天食物與水聯合分配策略',water.capabilities.allocationPlanCount>0&&water.days.overallDays>=7]] },
     { level: 'Level 3：重大災害韌性', result: compound14d, items: [['地震 + 管線破裂 14 天壓力測試',!['fail','critical'].includes(compound14d.result.status)],['建立社區互助與外部補水備案',Boolean(preparedness.contacts)&&water.capabilities.sourceCount>0],['建立家庭衛生與排泄備案',water.days.utilityDays>=14]] }
+  ]
+  const coreScenario = (id) => fortressCore.scenarioReadiness.find((item)=>item.id===id)
+  const coreLevels = [
+    { level: 'Level 1：72 小時家庭自保', scenario: coreScenario('water-power-72h'), items: [['水：72 小時飲水與生活用水','water'],['食物：72 小時即食或低烹調食物','food'],['能源：照明、手機充電、基本烹調','energy'],['衛生：廁所與垃圾處理','sanitation'],['醫療：家庭急救包','medical'],['通訊：離線聯絡與資訊來源','communication']] },
+    { level: 'Level 2：7 天補給中斷', scenario: coreScenario('supply-7d'), items: [['水：7 天水資源壓力測試','water'],['食物：7 天食物配置','food'],['能源：7 天替代能源與燃料','energy'],['衛生：7 天排泄與清潔方案','sanitation'],['醫療：慢性病、寵物與基本照護','medical'],['通訊：收音機、紙本聯絡表、離線地圖','communication']] },
+    { level: 'Level 3：14 天重大災害', scenario: coreScenario('major-14d'), items: [['複合災害壓力測試','water'],['社區互助','communication'],['外部補水與補給備案','water'],['長期衛生與醫療計畫','sanitation'],['家庭角色分工','communication']] }
   ]
   const waterLevels = [
     { level: 'Level 1：72 小時水安全', items: [
@@ -297,6 +305,8 @@ export default function Roadmap({ state, updateRoadmap }) {
       </section>
 
       <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><Target size={18}/><span>複合災害韌性路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{compoundLevels.map((group)=><article key={group.level} className="compound-roadmap-card"><div className="flex items-start justify-between gap-2"><h3 className="font-black text-bark">{group.level}</h3><span className="badge">{group.result.result.label}</span></div><p className="mt-2 text-sm font-bold">風險 {group.result.result.riskLevel} · {group.result.result.score} 分</p><div className="mt-3 space-y-2">{group.items.map(([label,complete])=>{const priority=!complete&&['fail','critical'].includes(group.result.result.status);const status=complete?'已完成':priority?'優先處理':'需要加強';const statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>})}</div></article>)}</div></section>
+
+      <section className="muji-card border-[#24483a]/25"><div className="muji-section-title"><Target size={18}/><span>Fortress Core Roadmap｜核心生存路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{coreLevels.map((group)=><article key={group.level} className="core-roadmap-card"><div className="flex items-start justify-between gap-2"><h3 className="font-black text-bark">{group.level}</h3><span className="badge">{group.scenario?.label||'資料不足'}</span></div><div className="mt-3 space-y-2">{group.items.map(([label,domain])=>{const score=fortressCore.domains[domain]?.score||0;const complete=score>=70&&group.scenario?.status==='pass';const priority=score<30||['fail','critical'].includes(group.scenario?.status);const status=complete?'已完成':priority?'優先處理':'需要加強';const statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>})}</div></article>)}</div></section>
 
       <section className="grid gap-4">
         {summary.stages.map((stage) => (

@@ -1137,6 +1137,25 @@ textarea {
 .compound-result-fail, .compound-result-critical { border-color: rgba(139,47,37,0.45); background: #f2dfd4; }
 .compound-roadmap-card { min-width: 0; padding: 1rem; border: 1px solid rgba(86,72,53,0.16); border-radius: 1rem; background: rgba(255,255,255,0.58); }
 
+.core-score-card { display: grid; min-width: 12rem; padding: 1rem; border-radius: 1rem; color: #fff9ea; background: #24483a; }
+.core-score-card span, .core-score-card small { font-size: 0.75rem; font-weight: 800; }
+.core-score-card strong { font-size: 2.7rem; line-height: 1; }
+.core-domain-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.75rem; }
+.core-domain-card { min-width: 0; padding: 1rem; border: 1px solid rgba(86,72,53,0.16); border-radius: 1rem; text-align: left; background: rgba(255,255,255,0.62); }
+.core-domain-card h3 { font-size: 0.85rem; font-weight: 900; }
+.core-domain-card > strong { display: block; margin-top: 0.4rem; font-size: 2rem; color: #24483a; }
+.core-domain-card span, .core-domain-card p, .core-domain-card small { font-size: 0.72rem; font-weight: 750; color: rgba(60,52,40,0.7); }
+.core-domain-water { border-color: rgba(46,100,91,0.35); }
+.core-domain-food { border-color: rgba(160,115,40,0.35); }
+.core-domain-energy { border-color: rgba(194,162,92,0.55); }
+.core-domain-sanitation { border-color: rgba(76,119,103,0.3); }
+.core-domain-medical { border-color: rgba(139,47,37,0.3); }
+.core-domain-communication { border-color: rgba(74,85,110,0.3); }
+.core-weakness-card, .core-scenario-card, .core-roadmap-card { min-width: 0; padding: 1rem; border: 1px solid rgba(86,72,53,0.16); border-radius: 1rem; background: rgba(255,255,255,0.6); }
+.core-weakness-critical { border-color: rgba(139,47,37,0.5); background: #f2dfd4; }
+.core-weakness-high { border-color: rgba(155,93,37,0.4); background: #f3e4d2; }
+.core-weakness-medium { border-color: rgba(194,162,92,0.55); }
+
 @media (min-width: 900px) {
   .water-charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -1234,6 +1253,12 @@ textarea {
   .water-split-legend { flex-direction: column; gap: 0.3rem; }
   .simulator-mode-grid, .simulator-gap-list { grid-template-columns: 1fr; }
   .compound-hazard-list, .compound-risk-breakdown { grid-template-columns: 1fr; }
+  .core-score-card { width: 100%; }
+  .core-domain-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 900px) {
+  .core-domain-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
 }
 
 @media print {

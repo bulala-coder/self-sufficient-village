@@ -3,6 +3,7 @@ import { CheckCircle2, ChevronDown, ChevronUp, Circle, ClipboardCheck, ShieldAle
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
+import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
 
 const compoundFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', water: '水資源', power: '電力', logistics: '交通補給', contamination: '水質', sanitation: '衛生', none: '無' }
 
@@ -154,6 +155,7 @@ function renderDrillItem(item) {
 export default function Drills({ state, toggleDrillItem }) {
   const water = getWaterIntelligenceSummary()
   const compoundDrills = buildPresetCompoundEvents().filter((event)=>['water-power-72h','water-road-7d','typhoon-supply-7d'].includes(event.id)).map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
+  const fortressCore = getCoreSystemSummary(state, water)
   const [openDrills, setOpenDrills] = useState({ 'water-24h': true })
   const drills = state.drills || {}
   const summary = getDrillCompletion(drills)
@@ -210,6 +212,8 @@ export default function Drills({ state, toggleDrillItem }) {
       </section>
 
       <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><ShieldAlert size={18}/><span>複合災害演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{compoundDrills.map((event)=>{const simulation=event.simulation;const badge=simulation.result.status==='pass'?'bg-[#24483a] text-[#fff9ea]':simulation.result.status==='strained'||simulation.result.status==='partial'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={event.id} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><div className="flex items-start justify-between gap-3"><h3 className="font-black text-bark">{event.name}</h3><span className={`rounded-full px-3 py-1 text-xs font-black ${badge}`}>{simulation.result.label}</span></div><div className="mt-3 space-y-1 text-sm font-bold text-soil/75"><p>分數：{simulation.result.score} / 100</p><p>風險等級：{simulation.result.riskLevel}</p><p>主要失敗點：{compoundFailureLabels[simulation.result.primaryFailurePoint]||simulation.result.primaryFailurePoint}</p><p className="pt-1">建議：{simulation.recommendations[0]}</p></div></article>})}</div></section>
+
+      <section className="muji-card border-[#24483a]/25"><div className="muji-section-title"><ClipboardCheck size={18}/><span>核心生存演練</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{fortressCore.scenarioReadiness.filter((item)=>['home-24h','water-power-72h','supply-7d','major-14d'].includes(item.id)).map((item)=><article key={item.id} className="core-scenario-card"><div className="flex items-start justify-between gap-2"><h3 className="font-black">{item.name}</h3><span className="badge">{item.label}</span></div><p className="mt-2 font-black">{item.score} / 100</p><p className="mt-2 text-sm">最弱：{item.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}</p><p className="mt-2 text-sm font-bold">建議：{item.recommendation}</p></article>)}</div></section>
 
       <section className="grid lg:grid-cols-2 gap-4">
         {DRILLS.map((drill) => {
