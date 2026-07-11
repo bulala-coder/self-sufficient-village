@@ -1,13 +1,19 @@
 export const usageCategories = ['drinking', 'cooking', 'cleaning', 'toilet', 'animals', 'irrigation', 'medical', 'other']
 export const usageSourceTypes = ['manualStorage', 'inventory', 'external', 'rainwater', 'unknown']
+export const usageCategoryLabels = { drinking: '飲水', cooking: '煮食', cleaning: '清潔', toilet: '廁所', animals: '動物', irrigation: '灌溉', medical: '醫療', other: '其他' }
 
 const list = (value) => Array.isArray(value) ? value : []
 const positive = (value) => { const parsed = Number(value); return Number.isFinite(parsed) && parsed > 0 ? parsed : 0 }
 const validDate = (value) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return null
   const date = new Date(`${value}T00:00:00`)
-  return Number.isNaN(date.getTime()) ? null : date
+  if (Number.isNaN(date.getTime())) return null
+  const [year, month, day] = String(value).split('-').map(Number)
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? date : null
 }
+
+const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+const labelDate = (date) => `${date.getMonth() + 1}/${date.getDate()}`
 
 export function normalizeUsageLog(log = {}) {
   return {
@@ -76,4 +82,60 @@ export function generateUsageWarnings(summary = {}, logs = []) {
   const projected = calculateProjectedRemainingDays(summary, normalized, 7)
   if (projected.projectedTotalWaterDays > 0 && projected.projectedTotalWaterDays < positive(summary.days?.overallDays)) warnings.push('依實際用水推估的剩餘天數低於 Water System 原始支撐天數。')
   return warnings.length ? warnings : ['最近用水未偵測到明顯超支；持續記錄以觀察趨勢。']
+}
+
+export function buildDailyUsageSeries(logs = [], days = 7) {
+  const windowDays = Math.max(1, Math.min(365, Math.floor(positive(days) || 1)))
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const normalized = list(logs).map(normalizeUsageLog).filter((log) => validDate(log.date) && log.volumeLiters > 0)
+  const byDate = new Map()
+  normalized.forEach((log) => {
+    const current = byDate.get(log.date) || Object.fromEntries(usageCategories.map((category) => [category, 0]))
+    current[log.category] += log.volumeLiters
+    byDate.set(log.date, current)
+  })
+  return Array.from({ length: windowDays }, (_, index) => {
+    const date = new Date(today); date.setDate(today.getDate() - windowDays + index + 1)
+    const key = dateKey(date)
+    const categories = byDate.get(key) || Object.fromEntries(usageCategories.map((category) => [category, 0]))
+    const drinkingLiters = categories.drinking + categories.animals + categories.medical
+    const utilityLiters = categories.cooking + categories.cleaning + categories.toilet + categories.irrigation + categories.other
+    return { date: key, label: labelDate(date), totalLiters: drinkingLiters + utilityLiters, drinkingLiters, utilityLiters, categories }
+  })
+}
+
+export function buildCategoryUsageChartData(logs = [], days = 7) {
+  const totals = Object.fromEntries(usageCategories.map((category) => [category, 0]))
+  buildDailyUsageSeries(logs, days).forEach((item) => usageCategories.forEach((category) => { totals[category] += item.categories[category] }))
+  const total = Object.values(totals).reduce((sum, value) => sum + value, 0)
+  return usageCategories.map((category) => ({ category, label: usageCategoryLabels[category], liters: totals[category], percentage: total > 0 ? totals[category] / total * 100 : 0 }))
+}
+
+export function calculateUsageTypeSplit(logs = [], days = 7) {
+  const series = buildDailyUsageSeries(logs, days)
+  const drinkingLiters = series.reduce((sum, item) => sum + item.drinkingLiters, 0)
+  const utilityLiters = series.reduce((sum, item) => sum + item.utilityLiters, 0)
+  const total = drinkingLiters + utilityLiters
+  return { drinkingLiters, utilityLiters, drinkingPercentage: total > 0 ? drinkingLiters / total * 100 : 0, utilityPercentage: total > 0 ? utilityLiters / total * 100 : 0 }
+}
+
+export function findOverBudgetUsageDays(logs = [], summary = {}, days = 7) {
+  const plannedDailyTotal = positive(summary.demand?.dailyTotal)
+  if (!plannedDailyTotal) return []
+  return buildDailyUsageSeries(logs, days).filter((item) => item.totalLiters > plannedDailyTotal).map((item) => ({ date: item.date, label: item.label, totalLiters: item.totalLiters, plannedDailyTotal, overByLiters: item.totalLiters - plannedDailyTotal }))
+}
+
+export function getUsageTrendSummary(logs = [], summary = {}) {
+  const recent7 = buildDailyUsageSeries(logs, 7)
+  const recent30 = buildDailyUsageSeries(logs, 30)
+  const recent7Total = recent7.reduce((sum, item) => sum + item.totalLiters, 0)
+  const recent30Total = recent30.reduce((sum, item) => sum + item.totalLiters, 0)
+  const recent7Average = recent7Total / 7
+  const recent30Average = recent30Total / 30
+  let direction = 'insufficient'
+  if (recent30Average > 0) direction = recent7Average > recent30Average * 1.15 ? 'increasing' : recent7Average < recent30Average * 0.85 ? 'decreasing' : 'stable'
+  const directionLabels = { increasing: '用水上升', decreasing: '用水下降', stable: '用水穩定', insufficient: '資料不足' }
+  const categoryData = buildCategoryUsageChartData(logs, 30)
+  const topCategory = [...categoryData].sort((a, b) => b.liters - a.liters)[0]
+  return { recent7Total, recent7Average, recent30Total, recent30Average, direction, directionLabel: directionLabels[direction], overBudgetDays7: findOverBudgetUsageDays(logs, summary, 7).length, topCategory: topCategory?.liters > 0 ? topCategory.category : null, topCategoryLiters: topCategory?.liters || 0 }
 }

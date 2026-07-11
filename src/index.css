@@ -1070,6 +1070,54 @@ textarea {
   text-decoration-color: rgba(194, 162, 92, 0.9);
 }
 
+.water-charts-grid {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.water-chart-card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid rgba(86, 72, 53, 0.16);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.water-chart-card h3 { font-weight: 900; color: #3c3428; }
+.water-chart-heading, .water-bar-meta, .water-split-legend { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.water-chart-heading span, .water-chart-note { font-size: 0.8rem; font-weight: 800; color: rgba(60, 52, 40, 0.65); }
+.water-bar-chart, .water-mini-bars { display: flex; align-items: end; gap: 0.4rem; min-height: 10rem; margin-top: 1rem; }
+.water-mini-bar { position: relative; display: grid; grid-template-rows: 1.4rem 6.5rem 1.3rem; flex: 1 0 2.2rem; min-width: 0; text-align: center; }
+.water-bar-value, .water-bar-label { overflow: hidden; font-size: 0.68rem; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
+.water-vertical-track { display: flex; align-items: end; width: 70%; height: 100%; margin-inline: auto; overflow: hidden; border-radius: 0.45rem 0.45rem 0 0; background: rgba(36, 72, 58, 0.1); }
+.water-vertical-track > span { display: block; width: 100%; min-height: 0; border-radius: inherit; background: #4c7767; }
+.water-over-budget .water-vertical-track > span { background: #a34d3d; }
+.water-budget-mark { position: absolute; top: 1.25rem; right: 0; display: grid; width: 1rem; height: 1rem; place-items: center; border-radius: 999px; color: white; background: #8b2f25; font-size: 0.65rem; font-weight: 900; }
+.water-chart-scroll { overflow-x: auto; padding-bottom: 0.35rem; }
+.water-mini-bars { min-width: 48rem; gap: 0.22rem; }
+.water-mini-bars .water-mini-bar { flex-basis: 1.25rem; grid-template-rows: 1.2rem 5.2rem 1.2rem; }
+.water-mini-bars .water-bar-value { font-size: 0.55rem; }
+.water-chart-alert { margin-top: 0.75rem; padding: 0.65rem; border-radius: 0.75rem; color: #8b2f25; background: #f2dfd4; font-size: 0.82rem; font-weight: 900; }
+.water-category-bars { display: grid; gap: 0.75rem; margin-top: 1rem; }
+.water-bar-row { min-width: 0; }
+.water-bar-meta { margin-bottom: 0.3rem; font-size: 0.78rem; }
+.water-bar-meta strong { color: rgba(60, 52, 40, 0.7); }
+.water-bar-track { height: 0.7rem; overflow: hidden; border-radius: 999px; background: rgba(36, 72, 58, 0.1); }
+.water-bar-fill { display: block; height: 100%; border-radius: inherit; background: #4c7767; }
+.water-split-bar { display: flex; height: 1.1rem; margin-top: 1rem; overflow: hidden; border-radius: 999px; background: rgba(36, 72, 58, 0.1); }
+.water-split-drinking { background: #3d7062; }
+.water-split-utility { background: #c2a25c; }
+.water-split-legend { align-items: flex-start; margin-top: 0.8rem; font-size: 0.8rem; font-weight: 800; }
+.water-split-legend i { display: inline-block; width: 0.65rem; height: 0.65rem; margin-right: 0.35rem; border-radius: 999px; }
+.water-dot-drinking { background: #3d7062; }
+.water-dot-utility { background: #c2a25c; }
+.water-chart-empty { margin-top: 1.25rem; padding: 1.5rem; border: 1px dashed rgba(86, 72, 53, 0.28); border-radius: 1rem; text-align: center; color: rgba(60, 52, 40, 0.65); }
+
+@media (min-width: 900px) {
+  .water-charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 768px) {
   body {
     font-size: 16px;
@@ -1155,6 +1203,12 @@ textarea {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }
+
+  .water-chart-card { padding: 0.85rem; }
+  .water-bar-chart { gap: 0.2rem; }
+  .water-mini-bar { flex-basis: 1.7rem; grid-template-rows: 1.4rem 5.5rem 1.3rem; }
+  .water-bar-value { font-size: 0.58rem; }
+  .water-split-legend { flex-direction: column; gap: 0.3rem; }
 }
 
 @media print {

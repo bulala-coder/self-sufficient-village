@@ -11,7 +11,7 @@ export const waterLabels = {
 }
 
 export const defaultWaterSystem = {
-  version: '4.6',
+  version: '4.7',
   updatedAt: '',
   household: {
     adults: 1, children: 0, seniors: 0, specialNeeds: 0, dogs: 0, cats: 0, otherAnimals: 0, otherAnimalName: '',

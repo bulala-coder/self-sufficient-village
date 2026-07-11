@@ -149,7 +149,9 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             </div>
             <p className="mt-4 text-sm leading-7 text-soil/75">{water.recommendations[0]}</p>
             <p className="mt-2 text-sm font-bold text-soil/70">手動水量 {formatSupplyNumber(water.totals.manualPotableLiters + water.totals.manualNonPotableLiters)} L · Inventory 引用 {formatSupplyNumber(water.inventoryWater.totalLiters)} L</p>
-            <p className="mt-2 text-sm font-bold text-soil/70">最近 7 天平均 {formatSupplyNumber(water.usage.recent7Average)} L/日 · 預估總水量剩餘 {formatSupplyNumber(water.usage.projectedTotalWaterDays)} 天</p>
+            <p className="mt-2 text-sm font-bold text-soil/70">7 日平均 {formatSupplyNumber(water.usage.recent7Average)} L/日 · 30 日平均 {formatSupplyNumber(water.usage.recent30Average)} L/日 · {water.usage.trend.directionLabel}</p>
+            {water.usage.trend.overBudgetDays7 > 0 && <p className="mt-2 text-sm font-black text-[#8b2f25]">最近 7 天有 {water.usage.trend.overBudgetDays7} 天超過計畫用水</p>}
+            <p className="mt-2 text-sm font-bold text-soil/70">預估總水量剩餘 {formatSupplyNumber(water.usage.projectedTotalWaterDays)} 天</p>
             <p className="mt-2 text-sm font-black text-[#8b2f25]">{water.usage.warnings[0]}</p>
             {water.inventoryWater.incompleteCount > 0 && <p className="mt-2 text-sm font-black text-[#8b2f25]">有 {water.inventoryWater.incompleteCount} 筆 Inventory 水品項缺少容量資料</p>}
           </div>
