@@ -154,6 +154,8 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     '',
     '水資源安全摘要',
     `水系統分數：${water.score} / 100｜${water.status}`,
+    `Water System 手動儲水：${formatNumber(water.totals.manualPotableLiters + water.totals.manualNonPotableLiters)} L`,
+    `Inventory 引用儲水：${formatNumber(water.inventoryWater.totalLiters)} L｜${water.inventoryWater.items.length} 項｜資料不完整 ${water.inventoryWater.incompleteCount} 項`,
     `可飲用／非飲用／需處理：${formatNumber(water.totals.potableLiters)} / ${formatNumber(water.totals.nonPotableLiters)} / ${formatNumber(water.totals.treatmentRequiredLiters)} L`,
     `每日飲水／生活用水：${formatNumber(water.demand.dailyDrinking)} / ${formatNumber(water.demand.dailyUtility)} L`,
     `飲水／生活／整體支撐：${formatNumber(water.days.drinkingDays)} / ${formatNumber(water.days.utilityDays)} / ${formatNumber(water.days.overallDays)} 天`,
@@ -354,6 +356,10 @@ export default function Report({ state, tasks }) {
           <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Metric label="水系統分數" value={`${water.score} / 100`} />
             <Metric label="水系統狀態" value={water.status} />
+            <Metric label="Water System 手動儲水" value={`${formatNumber(water.totals.manualPotableLiters + water.totals.manualNonPotableLiters)} L`} />
+            <Metric label="Inventory 引用儲水" value={`${formatNumber(water.inventoryWater.totalLiters)} L`} />
+            <Metric label="Inventory 水品項" value={`${water.inventoryWater.items.length} 項`} />
+            <Metric label="Inventory 資料不完整" value={`${water.inventoryWater.incompleteCount} 項`} />
             <Metric label="可飲用水" value={`${formatNumber(water.totals.potableLiters)} L`} />
             <Metric label="非飲用水" value={`${formatNumber(water.totals.nonPotableLiters)} L`} />
             <Metric label="需處理水量" value={`${formatNumber(water.totals.treatmentRequiredLiters)} L`} />

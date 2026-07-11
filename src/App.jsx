@@ -62,6 +62,9 @@ export default function App() {
   function deleteInventoryItem(itemId) {
     update({ ...state, inventory: (state.inventory || []).filter((item) => item.id !== itemId) })
   }
+  function updateInventoryItem(itemId, values) {
+    update({ ...state, inventory: (state.inventory || []).map((item) => item.id === itemId ? { ...item, ...values, id: item.id } : item) })
+  }
   function addPlant(plant) {
     update({ ...state, plants: [{ ...plant, id: Date.now(), lastWateredAt: '' }, ...(state.plants || [])] })
   }
@@ -108,7 +111,7 @@ export default function App() {
   if (!state.started) return <Welcome onStart={start} />
   if (!state.onboarded) return <Onboarding onFinish={finishOnboarding} />
 
-  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, updateRiskProfile, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, updatePlant, waterPlant, toggleDrillItem, updateCalculator, updateEvacuationKit, updateRoadmap }
+  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, updateRiskProfile, addInventoryItem, deleteInventoryItem, updateInventoryItem, addPlant, deletePlant, updatePlant, waterPlant, toggleDrillItem, updateCalculator, updateEvacuationKit, updateRoadmap }
 
   return <div className="ink-page min-h-screen pb-28">
     <header className="ink-header sticky top-0 z-20">

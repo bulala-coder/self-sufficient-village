@@ -148,6 +148,8 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
               <div><p className="text-xs font-black text-soil/50">整體支撐</p><strong className="text-xl text-bark">{formatSupplyNumber(water.days.overallDays)} 天</strong></div>
             </div>
             <p className="mt-4 text-sm leading-7 text-soil/75">{water.recommendations[0]}</p>
+            <p className="mt-2 text-sm font-bold text-soil/70">手動水量 {formatSupplyNumber(water.totals.manualPotableLiters + water.totals.manualNonPotableLiters)} L · Inventory 引用 {formatSupplyNumber(water.inventoryWater.totalLiters)} L</p>
+            {water.inventoryWater.incompleteCount > 0 && <p className="mt-2 text-sm font-black text-[#8b2f25]">有 {water.inventoryWater.incompleteCount} 筆 Inventory 水品項缺少容量資料</p>}
           </div>
           <div className="grid grid-cols-2 gap-3 lg:min-w-72">
             <div className="rounded-2xl border border-soil/15 bg-white/60 p-4"><p className="text-xs font-black text-soil/50">飲用水支撐</p><strong className="text-xl">{formatSupplyNumber(water.days.drinkingDays)} 天</strong></div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { AlertTriangle, CalendarClock, Package, Plus, Trash2 } from 'lucide-react'
+import { AlertTriangle, CalendarClock, Package, Pencil, Plus, Trash2 } from 'lucide-react'
+import { inventoryWaterCategories, inventoryWaterStorageTypes, normalizeInventoryWaterItem } from '../utils/inventoryWaterLink.js'
 
 const categories = ['飲水', '食物', '照明', '醫療', '動物', '工具', '種植', '其他']
 
@@ -22,6 +23,8 @@ const priorityOptions = [
 
 const typeLabels = Object.fromEntries(typeOptions)
 const priorityLabels = Object.fromEntries(priorityOptions)
+const waterCategoryLabels = { drinking: '飲用水', cooking: '煮食用水', utility: '生活用水', rainwater: '雨水', emergency: '緊急備用水', animal: '動物用水', other: '其他' }
+const waterStorageLabels = { bottled: '瓶裝', container: '桶裝', tank: '水塔或水箱', dispenser: '飲水機', bathtub: '浴缸儲水', rainBarrel: '雨水桶', other: '其他' }
 
 const typeHints = {
   water: '飲水類請填「飲水公升數」，用來估算最低 72 小時飲水線。',
@@ -42,7 +45,8 @@ const initialForm = {
   servings: '',
   liters: '',
   animalDays: '',
-  priority: 'medium'
+  priority: 'medium', isWaterResource: false,
+  waterMeta: { volumeLitersPerUnit: '', potable: true, requiresTreatment: false, waterCategory: 'drinking', storageType: 'bottled' }
 }
 
 function inferType(category = '') {
@@ -95,7 +99,9 @@ export function normalizeInventoryItem(item = {}) {
     servings: item.servings ?? '',
     liters: item.liters ?? '',
     animalDays: item.animalDays ?? '',
-    priority
+    priority,
+    isWaterResource: item.isWaterResource === true,
+    waterMeta: { ...initialForm.waterMeta, ...(item.waterMeta || {}) }
   }
 }
 
@@ -156,8 +162,9 @@ function getSupplyGap(summary) {
   return '目前沒有重大補給缺口'
 }
 
-export default function Inventory({ state, addInventoryItem, deleteInventoryItem }) {
+export default function Inventory({ state, addInventoryItem, deleteInventoryItem, updateInventoryItem }) {
   const [form, setForm] = useState(initialForm)
+  const [editingId, setEditingId] = useState(null)
   const inventory = (state.inventory || []).map(normalizeInventoryItem)
   const summary = getInventorySummary(state.inventory || [])
   const supplyGap = getSupplyGap(summary)
@@ -166,12 +173,13 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
   function updateField(field, value) {
     setForm({ ...form, [field]: value })
   }
+  function updateWaterMeta(field, value) { setForm({ ...form, waterMeta: { ...form.waterMeta, [field]: value } }) }
 
   function handleSubmit(event) {
     event.preventDefault()
     if (!form.name.trim()) return
 
-    addInventoryItem({
+    const values = {
       name: form.name.trim(),
       category: form.category,
       quantity: form.quantity.trim(),
@@ -183,10 +191,15 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
       servings: form.servings,
       liters: form.liters,
       animalDays: form.animalDays,
-      priority: form.priority
-    })
+      priority: form.priority, isWaterResource: form.isWaterResource, waterMeta: { ...form.waterMeta }
+    }
+    if (editingId) updateInventoryItem(editingId, values)
+    else addInventoryItem(values)
     setForm(initialForm)
+    setEditingId(null)
   }
+
+  function editItem(item) { setEditingId(item.id); setForm({ ...initialForm, ...item, waterMeta: { ...initialForm.waterMeta, ...(item.waterMeta || {}) } }); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
   return (
     <div className="space-y-5 pb-32">
@@ -403,6 +416,19 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
             <span>免冷藏，可直接食用或簡單加熱</span>
           </label>
 
+          <label className="flex items-center gap-3 rounded-2xl border border-[#24483a]/25 bg-[#edf1e9] px-4 py-3 text-sm font-bold text-soil">
+            <input type="checkbox" checked={form.isWaterResource} onChange={(event) => updateField('isWaterResource', event.target.checked)} className="h-5 w-5 accent-[#24483a]" />
+            <span>納入水資源系統</span>
+          </label>
+
+          {form.isWaterResource && <div className="grid gap-3 rounded-2xl border border-soil/15 bg-white/55 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="grid gap-1 text-sm font-bold">每單位容量（L）<input type="number" min="0" step="0.1" value={form.waterMeta.volumeLitersPerUnit} onChange={(e) => updateWaterMeta('volumeLitersPerUnit', e.target.value)} /></label>
+            <label className="grid gap-1 text-sm font-bold">水類型<select value={form.waterMeta.waterCategory} onChange={(e) => updateWaterMeta('waterCategory', e.target.value)}>{inventoryWaterCategories.map((value) => <option key={value} value={value}>{waterCategoryLabels[value]}</option>)}</select></label>
+            <label className="grid gap-1 text-sm font-bold">儲存方式<select value={form.waterMeta.storageType} onChange={(e) => updateWaterMeta('storageType', e.target.value)}>{inventoryWaterStorageTypes.map((value) => <option key={value} value={value}>{waterStorageLabels[value]}</option>)}</select></label>
+            <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={form.waterMeta.potable} onChange={(e) => updateWaterMeta('potable', e.target.checked)}/>可直接飲用</label>
+            <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={form.waterMeta.requiresTreatment} onChange={(e) => updateWaterMeta('requiresTreatment', e.target.checked)}/>需要淨水處理</label>
+          </div>}
+
           <label className="grid gap-1 text-sm font-bold text-soil">
             備註
             <textarea
@@ -414,9 +440,7 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
             />
           </label>
 
-          <button type="submit" className="btn-primary w-full sm:w-auto justify-self-start">
-            新增物資
-          </button>
+          <div className="flex gap-2"><button type="submit" className="btn-primary w-full sm:w-auto">{editingId ? '儲存修改' : '新增物資'}</button>{editingId && <button type="button" className="btn-secondary" onClick={() => { setEditingId(null); setForm(initialForm) }}>取消編輯</button>}</div>
         </form>
       </section>
 
@@ -431,7 +455,7 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
           </div>
         ) : (
           inventory.map((item) => (
-            <InventoryCard key={item.id || `${item.name}-${item.category}`} item={item} onDelete={deleteInventoryItem} />
+            <InventoryCard key={item.id || `${item.name}-${item.category}`} item={item} onDelete={deleteInventoryItem} onEdit={editItem} />
           ))
         )}
       </section>
@@ -448,8 +472,9 @@ function SummaryMetric({ label, value }) {
   )
 }
 
-function InventoryCard({ item, onDelete }) {
+function InventoryCard({ item, onDelete, onEdit }) {
   const status = expiryStatus(item)
+  const water = item.isWaterResource ? normalizeInventoryWaterItem(item) : null
   const quantityText = [item.quantity, item.unit].filter(Boolean).join(' ') || '未填數量'
 
   return (
@@ -466,6 +491,7 @@ function InventoryCard({ item, onDelete }) {
             {status === 'soon' && <span className="badge bg-[#c2a25c] text-[#241b10]">30 天內到期</span>}
             {item.priority === 'high' && <span className="badge bg-[#24483a] text-[#fff9ea]">高優先</span>}
             {item.shelfStable && <span className="badge">免冷藏</span>}
+            {water && <span className="badge bg-[#24483a] text-[#fff9ea]">水資源</span>}
           </div>
 
           <div className="mt-3 grid gap-1 text-sm font-bold text-soil/80">
@@ -480,6 +506,7 @@ function InventoryCard({ item, onDelete }) {
               </p>
             )}
             <p>重要程度：{priorityLabels[item.priority]}</p>
+            {water && <><p>總水量：{formatNumber(water.volumeLiters)} L</p><p>{water.isIncomplete ? '需補齊每單位容量' : water.potable ? '可飲用' : water.requiresTreatment ? '需處理' : '生活用水'}</p></>}
           </div>
 
           {item.note && (
@@ -487,7 +514,7 @@ function InventoryCard({ item, onDelete }) {
           )}
         </div>
 
-        <button
+        <div className="flex gap-1"><button type="button" onClick={() => onEdit(item)} className="shrink-0 rounded-2xl border border-soil/15 bg-white/70 p-3" aria-label={`編輯 ${item.name}`}><Pencil size={18}/></button><button
           type="button"
           onClick={() => onDelete(item.id)}
           className="shrink-0 rounded-2xl border border-soil/15 bg-white/70 p-3 text-soil/70 transition hover:text-red-800"
@@ -495,7 +522,7 @@ function InventoryCard({ item, onDelete }) {
           title="刪除物資"
         >
           <Trash2 size={18} />
-        </button>
+        </button></div>
       </div>
     </article>
   )

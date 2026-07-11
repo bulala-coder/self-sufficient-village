@@ -15,6 +15,7 @@ import {
   generateWaterRecommendations,
   getWaterStatus
 } from './waterCalculations.js'
+import { calculateInventoryWaterTotals } from './inventoryWaterLink.js'
 
 const list = (value) => Array.isArray(value) ? value : []
 const safeNumber = (value) => {
@@ -50,11 +51,15 @@ export function loadWaterSystemData() {
 
 export function getWaterIntelligenceSummary(input) {
   const data = input && typeof input === 'object' && !Array.isArray(input) ? input : loadWaterSystemData()
+  const inventoryWater = calculateInventoryWaterTotals()
   const household = data.household || {}
   const mode = data.modes?.[data.activeMode] || {}
-  const potableLiters = calculatePotableStorage(data.storage)
-  const nonPotableLiters = calculateNonPotableStorage(data.storage)
-  const treatmentRequiredLiters = calculateTreatmentRequiredStorage(data.storage)
+  const manualPotableLiters = calculatePotableStorage(data.storage)
+  const manualNonPotableLiters = calculateNonPotableStorage(data.storage)
+  const manualTreatmentRequiredLiters = calculateTreatmentRequiredStorage(data.storage)
+  const potableLiters = manualPotableLiters + inventoryWater.potableLiters
+  const nonPotableLiters = manualNonPotableLiters + inventoryWater.nonPotableLiters
+  const treatmentRequiredLiters = manualTreatmentRequiredLiters + inventoryWater.treatmentRequiredLiters
   const humanDrinking = calculateHumanDrinkingDemand(household)
   const animalDrinking = calculateAnimalDrinkingDemand(household)
   const dailyDrinking = calculateDailyDrinkingDemand(household)
@@ -64,13 +69,15 @@ export function getWaterIntelligenceSummary(input) {
   const treatments = list(data.treatments).filter((item) => item?.owned === true)
   const sources = list(data.sources)
   const alternativeTypes = ['rain', 'spring', 'stream', 'river', 'well', 'dehumidifier', 'airConditioner']
-  const score = calculateWaterScore(data)
+  const mergedData = { ...data, storage: [...list(data.storage), ...inventoryWater.items] }
+  const score = calculateWaterScore(mergedData)
 
   return {
     data,
     score: safeNumber(score),
     status: getWaterStatus(score),
-    totals: { potableLiters, nonPotableLiters, treatmentRequiredLiters },
+    totals: { manualPotableLiters, manualNonPotableLiters, inventoryPotableLiters: inventoryWater.potableLiters, inventoryNonPotableLiters: inventoryWater.nonPotableLiters, potableLiters, nonPotableLiters, treatmentRequiredLiters },
+    inventoryWater,
     demand: { humanDrinking, animalDrinking, dailyDrinking, dailyUtility, dailyTotal: dailyDrinking + dailyUtility },
     days: { drinkingDays, utilityDays, overallDays: calculateOverallWaterDays(drinkingDays, utilityDays) },
     capabilities: {
@@ -81,6 +88,6 @@ export function getWaterIntelligenceSummary(input) {
       allocationPlanCount: list(data.plans).length,
       hasRainwater: Boolean(data.rainwater?.enabled || sources.some((item) => alternativeTypes.includes(item?.type)))
     },
-    recommendations: generateWaterRecommendations(data)
+    recommendations: generateWaterRecommendations(mergedData)
   }
 }
