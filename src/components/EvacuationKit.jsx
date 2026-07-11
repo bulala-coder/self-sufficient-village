@@ -281,7 +281,7 @@ function buildTextChecklist(kit, summary) {
   ].join('\n')
 }
 
-export default function EvacuationKit({ state, updateEvacuationKit }) {
+export default function EvacuationKit({ state, updateEvacuationKit, setPage }) {
   const [filter, setFilter] = useState('all')
   const [copyStatus, setCopyStatus] = useState('')
   const kit = { items: {}, targetDays: '3', ...(state.evacuationKit || {}) }
@@ -357,6 +357,25 @@ export default function EvacuationKit({ state, updateEvacuationKit }) {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="muji-card border-[#8b2f25]/20">
+        <div className="muji-section-title">
+          <ShieldAlert size={18} />
+          <span>10 分鐘撤離包測試</span>
+        </div>
+        <p className="mt-3 summary-text">
+          撤離包不只是清單，必須測試能否 <span className="action-point">10 分鐘內拿了就走</span>。
+          測試重點是包的位置、鞋子、鑰匙、手機、文件、動物與重量。
+        </p>
+        {summary.burden.ratio >= 20 && (
+          <p className="mt-3 rounded-2xl border border-[#8b2f25]/20 bg-[#f2ded8] p-4 text-base font-black leading-7 text-[#8b2f25]">
+            過重會降低撤離速度：目前負重比例 {formatRatio(summary.burden.ratio)}，請立即減重或分包。
+          </p>
+        )}
+        <button type="button" className="btn-secondary mt-4" onClick={() => setPage?.('drills')}>
+          前往情境演練
+        </button>
       </section>
 
       <section className="muji-card">

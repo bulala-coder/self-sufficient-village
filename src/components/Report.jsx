@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { Clipboard, FileText, Printer, RefreshCw, ShieldAlert } from 'lucide-react'
 import { DRILLS, getDrillCompletion } from './Drills.jsx'
-import { getInventorySummary, normalizeInventoryItem } from './Inventory.jsx'
+import { getFoodRotationList, getInventorySummary, normalizeInventoryItem } from './Inventory.jsx'
 import { getFoodProductionSummary } from './Plants.jsx'
 import { getHighestRisk, getRiskCounts, residenceLabels } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
@@ -135,7 +135,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -149,6 +149,7 @@ function buildTextReport({ generatedAt, score, title, supplySummary, productionS
     `高優先物資：${supplySummary.highPriorityCount} 項`,
     `30 天內到期：${supplySummary.expiringSoonCount} 項`,
     `已過期：${supplySummary.expiredCount} 項`,
+    `物資輪替狀態：已過期 ${supplySummary.expiredCount} 項；30 天內到期 ${supplySummary.expiringSoonCount} 項；最早到期食物：${rotationList[0] ? `${rotationList[0].name}（${rotationList[0].expiresAt}）` : '尚未建立食物期限資料'}`,
     '',
     '食物生產摘要',
     `Food Production Score：${productionSummary.score}｜${productionSummary.scoreTitle}`,
@@ -219,6 +220,7 @@ export default function Report({ state, tasks }) {
   const generatedAt = useMemo(() => new Date().toLocaleString('zh-TW'), [refreshKey, state])
   const normalizedInventory = (state.inventory || []).map(normalizeInventoryItem)
   const supplySummary = getInventorySummary(state.inventory || [])
+  const rotationList = getFoodRotationList(state.inventory || [])
   const productionSummary = getFoodProductionSummary(state.plants || [])
   const drillSummary = getDrillCompletion(state.drills || {})
   const drillDetails = getDrillDetails(state.drills || {})
@@ -252,6 +254,7 @@ export default function Report({ state, tasks }) {
     score,
     title,
     supplySummary,
+    rotationList,
     productionSummary,
     drillSummary,
     drillDetails,
@@ -323,6 +326,13 @@ export default function Report({ state, tasks }) {
             <Metric label="高優先物資" value={`${supplySummary.highPriorityCount} 項`} />
             <Metric label="30 天內到期" value={`${supplySummary.expiringSoonCount} 項`} />
             <Metric label="已過期" value={`${supplySummary.expiredCount} 項`} />
+          </div>
+          <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4">
+            <h3 className="font-black text-bark">物資輪替狀態</h3>
+            <p className="mt-2 text-sm font-bold leading-7 text-soil/75">
+              已過期 {supplySummary.expiredCount} 項，30 天內到期 {supplySummary.expiringSoonCount} 項。
+              最早到期食物：{rotationList[0] ? `${rotationList[0].name}（${rotationList[0].expiresAt}）` : '尚未建立食物期限資料'}。
+            </p>
           </div>
         </section>
 

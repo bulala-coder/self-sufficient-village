@@ -43,6 +43,8 @@ export const ROADMAP_STAGES = [
       { id: 's2-meds-backup', title: '常用藥與急救備援', domain: 'medical', description: '常用藥、慢性病藥與急救耗材有替換週期與固定位置。', evidenceType: 'auto', suggestedAction: '完成醫療備災或在庫存標記高優先醫療物資。' },
       { id: 's2-power-comms', title: '電力與通訊備援', domain: 'power', description: '手機、行動電源、照明與紙本資料能支援補給中斷期。', evidenceType: 'auto', suggestedAction: '確認行動電源、手電筒與充電線。' },
       { id: 's2-supply-rotation', title: '補給輪替', domain: 'food', description: '食物與藥品不是堆放，而是能被消耗、補回、檢查期限。', evidenceType: 'manual', suggestedAction: '建立每月輪替日期與補貨下限。' },
+      { id: 's2-rolling-pantry', title: '滾動式備糧', domain: 'food', description: '用平常會吃的食物建立吃掉、補上、輪替的備糧系統。', evidenceType: 'auto', suggestedAction: '完成滾動式備糧任務，或在庫存建立有期限的食物輪替資料。' },
+      { id: 's2-home-shelter-14d', title: '14 天居家避難儲備', domain: 'food', description: '住處仍安全但外部補給中斷時，能在家維持 14 天基本生活。', evidenceType: 'auto', suggestedAction: '完成 14 天居家避難儲備任務，或把水食物補給拉高到 14 天。' },
       { id: 's2-community-contact', title: '社區聯絡', domain: 'community', description: '建立鄰里、親友、醫療與動物支援聯絡網。', evidenceType: 'auto', suggestedAction: '補齊緊急聯絡人或風險矩陣環境資料。' }
     ]
   },
@@ -57,7 +59,8 @@ export const ROADMAP_STAGES = [
       { id: 's3-water-source', title: '儲水與備用水源', domain: 'water', description: '除了瓶裝飲水，也要有容器、清潔與補水方案。', evidenceType: 'auto', suggestedAction: '完成備用取水與淨水相關任務。' },
       { id: 's3-repair-tools', title: '工具修繕', domain: 'repair', description: '家庭基本維修工具、耗材與清單固定位置。', evidenceType: 'auto', suggestedAction: '完成工具修繕任務或在庫存建立工具物資。' },
       { id: 's3-doc-cash', title: '文件與現金備援', domain: 'evacuation', description: '重要文件、現金與備用鑰匙能在斷電斷網時使用。', evidenceType: 'auto', suggestedAction: '完成重要文件、現金或撤離包文件項目。' },
-      { id: 's3-risk-matrix', title: '家庭風險矩陣', domain: 'community', description: '用住所、地形、醫療距離與補給風險建立個人化風險模型。', evidenceType: 'auto', suggestedAction: '完成家庭風險矩陣基本環境資料。' }
+      { id: 's3-risk-matrix', title: '家庭風險矩陣', domain: 'community', description: '用住所、地形、醫療距離與補給風險建立個人化風險模型。', evidenceType: 'auto', suggestedAction: '完成家庭風險矩陣基本環境資料。' },
+      { id: 's3-semiannual-supply-audit', title: '半年物資檢查', domain: 'food', description: '每半年檢查撤離包與居家庫存，處理即期、過期與漏補物資。', evidenceType: 'auto', suggestedAction: '完成半年物資檢查任務，並讓庫存無已過期物資。' }
     ]
   },
   {
@@ -105,6 +108,7 @@ function getAutoCompletion(abilityId, state, supplySummary, kitSummary, producti
   const riskProfile = state.riskProfile || {}
   const hasMedicalHigh = inventory.some((item) => item.type === 'medical' && item.priority === 'high')
   const hasToolInventory = inventory.some((item) => item.type === 'tool' || String(item.category).includes('工具'))
+  const foodWithExpiryCount = inventory.filter((item) => item.type === 'food' && item.expiresAt).length
   const hasPowerDrill = Object.values(drills.power_12h || drills['power-12h'] || {}).some(Boolean)
   const animalKit = kitSummary.categories.find((category) => category.id === 'animal')
   const animalKitReady = animalKit ? animalKit.percent >= 50 : false
@@ -120,11 +124,14 @@ function getAutoCompletion(abilityId, state, supplySummary, kitSummary, producti
     's2-animal-7d': preparedness.animals || supplySummary.animalDays >= 7 || animalKitReady,
     's2-meds-backup': preparedness.medicine || preparedness.firstaid || hasMedicalHigh,
     's2-power-comms': preparedness.power || kitItemPrepared(state, 'comms-power-bank') || kitItemPrepared(state, 'comms-light'),
+    's2-rolling-pantry': hasCompletedTask(state, 'food-rolling-pantry-system') || foodWithExpiryCount >= 3,
+    's2-home-shelter-14d': hasCompletedTask(state, 'food-home-shelter-14d') || supplySummary.waterLiters >= 42 || supplySummary.foodServings >= 42,
     's2-community-contact': preparedness.contacts || Boolean(riskProfile.residenceType),
     's3-water-source': hasCompletedTask(state, 'water-backup-purification') || preparedness.water,
     's3-repair-tools': hasCompletedTask(state, 'longterm-tools-repair-list') || hasToolInventory,
     's3-doc-cash': preparedness.documents || kitItemPrepared(state, 'documents-id-copy') || kitItemPrepared(state, 'documents-cash'),
     's3-risk-matrix': Boolean(riskProfile.residenceType),
+    's3-semiannual-supply-audit': hasCompletedTask(state, 'food-semiannual-supply-audit') || supplySummary.expiredCount === 0 && foodWithExpiryCount > 0,
     's4-food-production': productionSummary.activeCount >= 1,
     's4-simple-growing': productionSummary.activeCount >= 3,
     's4-sprouts-herbs': productionSummary.score >= 40,

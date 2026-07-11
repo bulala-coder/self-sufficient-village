@@ -127,6 +127,13 @@ export function getInventorySummary(items = []) {
   })
 }
 
+export function getFoodRotationList(items = []) {
+  return items
+    .map(normalizeInventoryItem)
+    .filter((item) => item.type === 'food' && item.expiresAt && parseDate(item.expiresAt))
+    .sort((a, b) => parseDate(a.expiresAt).getTime() - parseDate(b.expiresAt).getTime())
+}
+
 function formatNumber(value) {
   return Number(value.toFixed(1)).toString()
 }
@@ -154,6 +161,7 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
   const inventory = (state.inventory || []).map(normalizeInventoryItem)
   const summary = getInventorySummary(state.inventory || [])
   const supplyGap = getSupplyGap(summary)
+  const foodRotationList = getFoodRotationList(state.inventory || []).slice(0, 5)
 
   function updateField(field, value) {
     setForm({ ...form, [field]: value })
@@ -218,6 +226,38 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
               <p className="mt-1 font-black text-bark leading-7">{supplyGap}</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="muji-card">
+        <div className="muji-section-title">
+          <CalendarClock size={18} />
+          <span>滾動式備糧提醒</span>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-4">
+          {['優先選日常會吃的食物', '先到期先吃', '吃掉後補回', '免冷藏食物優先'].map((item) => (
+            <div key={item} className="rounded-2xl border border-soil/15 bg-white/65 p-4">
+              <p className="summary-text font-black text-bark">{item}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-soil/15 bg-white/65 p-4">
+          <p className="summary-meta font-black">輪替優先清單</p>
+          {foodRotationList.length > 0 ? (
+            <div className="mt-3 grid gap-2">
+              {foodRotationList.map((item) => (
+                <div key={item.id || `${item.name}-${item.expiresAt}`} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#f7f2e8] px-4 py-3">
+                  <span className="font-black text-bark">{item.name}</span>
+                  <span className="text-sm font-bold text-soil/75">{item.expiresAt}</span>
+                  <span className="badge">{item.shelfStable ? '免冷藏' : '需確認保存條件'}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 summary-text">尚未建立輪替資料。請在食物類物資填入保存期限，才能依先到期先吃排序。</p>
+          )}
         </div>
       </section>
 

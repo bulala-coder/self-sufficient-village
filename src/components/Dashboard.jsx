@@ -6,7 +6,7 @@ import { getFoodProductionSummary } from './Plants.jsx'
 import { getHighestRisk, riskLevelClass } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
-import { getRecommendedTask } from '../data/tasks.js'
+import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -109,6 +109,12 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const supplySummary = getInventorySummary(state.inventory || [])
   const productionSummary = getFoodProductionSummary(state.plants || [])
   const recommendedMission = getRecommendedTask(tasks, state)
+  const completedMap = getCompletedMap(state.completed)
+  const tenMinuteKitTask = tasks.find((task) => task.id === 'evac-10min-kit-test' && !completedMap[task.id])
+  const displayedMission = tenMinuteKitTask ? {
+    task: tenMinuteKitTask,
+    reason: '公開試用版優先暴露撤離執行缺口：確認撤離包、鞋子、鑰匙、手機、文件、動物與重量能在 10 分鐘內完成。'
+  } : recommendedMission
   const highestEnvironmentalRisk = getHighestRisk(state.riskProfile || {})
   const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
   const roadmapSummary = getRoadmapSummary(state)
@@ -254,15 +260,15 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             <span>今日硬核任務</span>
           </div>
 
-          <h2 className="mt-4">{recommendedMission?.task.title || '執行 72 小時斷水斷電壓力測試'}</h2>
-          {recommendedMission && (
+          <h2 className="mt-4">{displayedMission?.task.title || '執行 72 小時斷水斷電壓力測試'}</h2>
+          {displayedMission && (
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="badge">{recommendedMission.task.relatedGap}</span>
-              <span className="badge">Level {recommendedMission.task.riskLevel}</span>
+              <span className="badge">{displayedMission.task.relatedGap}</span>
+              <span className="badge">Level {displayedMission.task.riskLevel}</span>
             </div>
           )}
           <p>
-            {recommendedMission?.reason || '只做可驗證項目：盤點、測試、記錄、補缺口。不把希望寄託在臨場反應。'}
+            {displayedMission?.reason || '只做可驗證項目：盤點、測試、記錄、補缺口。不把希望寄託在臨場反應。'}
           </p>
 
           <button
