@@ -2,6 +2,7 @@ import React from 'react'
 import { AlertTriangle, Backpack, BarChart3, BookOpen, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, Route, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary } from './Inventory.jsx'
+import { getFoodProductionSummary } from './Plants.jsx'
 import { getHighestRisk, riskLevelClass } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
@@ -106,6 +107,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const score = readinessScore({ statuses, state, tasks, completedCount })
   const drillSummary = getDrillCompletion(state.drills || {})
   const supplySummary = getInventorySummary(state.inventory || [])
+  const productionSummary = getFoodProductionSummary(state.plants || [])
   const recommendedMission = getRecommendedTask(tasks, state)
   const highestEnvironmentalRisk = getHighestRisk(state.riskProfile || {})
   const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
@@ -218,6 +220,17 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
               <span>完成 {roadmapSummary.completedAbilities}/{roadmapSummary.totalAbilities}</span>
             </div>
             <p className="mt-2 text-sm leading-7 text-soil/75">{roadmapSummary.nextAbility?.title || '年度自給生活系統'}</p>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-3 text-sm font-bold text-soil/75">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-soil/50">食物生產摘要</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <span>分數 {productionSummary.score}</span>
+              <span>項目 {productionSummary.total}</span>
+              <span>可採收 {productionSummary.harvestableCount}</span>
+              <span>30 天內 {productionSummary.harvestSoonCount}</span>
+            </div>
+            <p className="mt-2 text-sm leading-7 text-soil/75">{productionSummary.highestGap}</p>
           </div>
         </aside>
       </section>

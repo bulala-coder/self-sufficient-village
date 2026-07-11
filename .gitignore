@@ -1,0 +1,12 @@
+
+# gh-pages cache
+node_modules/.cache/
+
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# gh-pages cache
+node_modules/.cache/

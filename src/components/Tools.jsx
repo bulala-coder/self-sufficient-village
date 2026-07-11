@@ -26,7 +26,7 @@ const tools = [
   {
     id: 'plants',
     title: '食物生產',
-    description: '記錄植物、食物生產與長期自給基礎。',
+    description: '記錄作物、採收、留種與每月產出，建立半自給食物基礎。',
     button: '打開生產',
     icon: Leaf
   },

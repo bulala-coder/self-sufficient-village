@@ -1,6 +1,7 @@
 import React from 'react'
 import { CheckCircle2, Circle, Flag, Route, Target } from 'lucide-react'
 import { getInventorySummary } from './Inventory.jsx'
+import { getFoodProductionSummary } from './Plants.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getCompletedMap } from '../data/tasks.js'
 
@@ -65,8 +66,8 @@ export const ROADMAP_STAGES = [
     goal: '開始建立可持續產生資源的生活系統。',
     threshold: 70,
     abilities: [
-      { id: 's4-food-production', title: '食物生產', domain: 'production', description: '至少開始記錄一項可持續食物生產或種植活動。', evidenceType: 'auto', suggestedAction: '新增一筆植物或食物生產紀錄。' },
-      { id: 's4-simple-growing', title: '簡易種植', domain: 'production', description: '用蔥、香草、芽菜或葉菜建立低門檻生產基礎。', evidenceType: 'auto', suggestedAction: '建立至少 3 筆植物紀錄。' },
+      { id: 's4-food-production', title: '食物生產', domain: 'production', description: '至少開始記錄一項可持續食物生產或種植活動。', evidenceType: 'auto', suggestedAction: '新增一筆作物或食物生產紀錄。' },
+      { id: 's4-simple-growing', title: '簡易種植', domain: 'production', description: '用蔥、香草、芽菜或葉菜建立低門檻生產基礎。', evidenceType: 'auto', suggestedAction: '建立至少 3 筆作物紀錄。' },
       { id: 's4-sprouts-herbs', title: '芽菜／香草／葉菜', domain: 'production', description: '選擇室內或陽台可控的短週期食物來源。', evidenceType: 'manual', suggestedAction: '完成一個可重複收成的小型生產流程。' },
       { id: 's4-food-preservation', title: '食物保存', domain: 'food', description: '建立乾燥、罐頭、冷凍或輪替保存原則，降低浪費。', evidenceType: 'manual', suggestedAction: '記錄一套食物保存方法與安全邊界。' },
       { id: 's4-water-management', title: '雨水或備用水管理', domain: 'water', description: '建立非飲用水與備用水的收集、標示、清潔與使用邊界。', evidenceType: 'manual', suggestedAction: '建立備用水容器標示與清潔週期。' },
@@ -97,10 +98,9 @@ function hasCompletedTask(state, taskId) {
   return Boolean(getCompletedMap(state.completed)[taskId])
 }
 
-function getAutoCompletion(abilityId, state, supplySummary, kitSummary) {
+function getAutoCompletion(abilityId, state, supplySummary, kitSummary, productionSummary) {
   const preparedness = state.preparedness || {}
   const inventory = state.inventory || []
-  const plants = state.plants || []
   const drills = state.drills || {}
   const riskProfile = state.riskProfile || {}
   const hasMedicalHigh = inventory.some((item) => item.type === 'medical' && item.priority === 'high')
@@ -125,8 +125,9 @@ function getAutoCompletion(abilityId, state, supplySummary, kitSummary) {
     's3-repair-tools': hasCompletedTask(state, 'longterm-tools-repair-list') || hasToolInventory,
     's3-doc-cash': preparedness.documents || kitItemPrepared(state, 'documents-id-copy') || kitItemPrepared(state, 'documents-cash'),
     's3-risk-matrix': Boolean(riskProfile.residenceType),
-    's4-food-production': plants.length >= 1,
-    's4-simple-growing': plants.length >= 3,
+    's4-food-production': productionSummary.activeCount >= 1,
+    's4-simple-growing': productionSummary.activeCount >= 3,
+    's4-sprouts-herbs': productionSummary.score >= 40,
     's4-energy-backup': preparedness.power || hasPowerDrill || hasCompletedTask(state, 'power-12h-lighting-test'),
     's5-animal-system': preparedness.animals || supplySummary.animalDays >= 7 || animalKitReady,
     's5-medical-transfer': hasCompletedTask(state, 'medical-remote-transfer-plan') || Boolean(riskProfile.medicalDistance),
@@ -141,12 +142,13 @@ export function getRoadmapSummary(state = {}) {
   const checks = roadmap.checks || {}
   const supplySummary = getInventorySummary(state.inventory || [])
   const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
+  const productionSummary = getFoodProductionSummary(state.plants || [])
   let completedAbilities = 0
   let totalAbilities = 0
 
   const stages = ROADMAP_STAGES.map((stage) => {
     const abilities = stage.abilities.map((ability) => {
-      const autoCompleted = getAutoCompletion(ability.id, state, supplySummary, kitSummary)
+      const autoCompleted = getAutoCompletion(ability.id, state, supplySummary, kitSummary, productionSummary)
       const manualCompleted = Boolean(checks[ability.id])
       const completed = autoCompleted || manualCompleted
       if (completed) completedAbilities += 1

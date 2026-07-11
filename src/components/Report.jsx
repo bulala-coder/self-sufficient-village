@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Clipboard, FileText, Printer, RefreshCw, ShieldAlert } from 'lucide-react'
 import { DRILLS, getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary, normalizeInventoryItem } from './Inventory.jsx'
+import { getFoodProductionSummary } from './Plants.jsx'
 import { getHighestRisk, getRiskCounts, residenceLabels } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
@@ -134,7 +135,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -148,6 +149,16 @@ function buildTextReport({ generatedAt, score, title, supplySummary, drillSummar
     `高優先物資：${supplySummary.highPriorityCount} 項`,
     `30 天內到期：${supplySummary.expiringSoonCount} 項`,
     `已過期：${supplySummary.expiredCount} 項`,
+    '',
+    '食物生產摘要',
+    `Food Production Score：${productionSummary.score}｜${productionSummary.scoreTitle}`,
+    `作物總數：${productionSummary.total}`,
+    `Active 作物：${productionSummary.activeCount}`,
+    `可採收：${productionSummary.harvestableCount}`,
+    `累計採收：${productionSummary.harvestSummary}`,
+    `可留種：${productionSummary.seedSavingCount} 項`,
+    `30 天內可採收：${productionSummary.harvestSoonCount} 項`,
+    `最高缺口：${productionSummary.highestGap}`,
     '',
     '演練摘要',
     `完成度：${drillSummary.percent}%`,
@@ -208,6 +219,7 @@ export default function Report({ state, tasks }) {
   const generatedAt = useMemo(() => new Date().toLocaleString('zh-TW'), [refreshKey, state])
   const normalizedInventory = (state.inventory || []).map(normalizeInventoryItem)
   const supplySummary = getInventorySummary(state.inventory || [])
+  const productionSummary = getFoodProductionSummary(state.plants || [])
   const drillSummary = getDrillCompletion(state.drills || {})
   const drillDetails = getDrillDetails(state.drills || {})
   const unpassedDrills = drillDetails.filter((drill) => !drill.passed)
@@ -240,6 +252,7 @@ export default function Report({ state, tasks }) {
     score,
     title,
     supplySummary,
+    productionSummary,
     drillSummary,
     drillDetails,
     taskSummary,
@@ -323,6 +336,20 @@ export default function Report({ state, tasks }) {
 
           <ReportList title="未通過演練列表" items={unpassedDrills.map((drill) => `${drill.title}（${drill.completed}/${drill.items.length}）`)} empty="全部演練已通過。" />
           <ReportList title="完成度最低的 3 個演練" items={lowestDrills.map((drill) => `${drill.title}：${drill.percent}%`)} />
+        </section>
+
+        <section className="muji-card">
+          <SectionTitle>食物生產摘要</SectionTitle>
+          <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <Metric label="Food Production Score" value={`${productionSummary.score}｜${productionSummary.scoreTitle}`} />
+            <Metric label="作物總數" value={`${productionSummary.total} 項`} />
+            <Metric label="Active 作物" value={`${productionSummary.activeCount} 項`} />
+            <Metric label="可採收" value={`${productionSummary.harvestableCount} 項`} />
+            <Metric label="累計採收" value={productionSummary.harvestSummary} />
+            <Metric label="可留種作物" value={`${productionSummary.seedSavingCount} 項`} />
+            <Metric label="30 天內可採收" value={`${productionSummary.harvestSoonCount} 項`} />
+            <Metric label="最高缺口" value={productionSummary.highestGap} />
+          </div>
         </section>
 
         <section className="muji-card">
