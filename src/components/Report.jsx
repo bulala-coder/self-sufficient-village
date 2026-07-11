@@ -4,6 +4,7 @@ import { DRILLS, getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary, normalizeInventoryItem } from './Inventory.jsx'
 import { getHighestRisk, getRiskCounts, residenceLabels } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
+import { getRoadmapSummary } from './Roadmap.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 
 function scoreTitle(score) {
@@ -133,7 +134,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -170,6 +171,12 @@ function buildTextReport({ generatedAt, score, title, supplySummary, drillSummar
     `高優先缺口：${kitSummary.highPriorityGapCount} 項`,
     `即期／過期：${kitSummary.expiringSoonCount}/${kitSummary.expiredCount}`,
     `最高缺口：${kitSummary.highestGap}`,
+    '',
+    '自給能力摘要',
+    `目前階段：${roadmapSummary.currentStage.name}`,
+    `總體自給能力分數：${roadmapSummary.score}`,
+    `下一個最重要能力：${roadmapSummary.nextAbility?.title || '全部階段已達標'}`,
+    `Stage 完成率：${roadmapSummary.stages.map((stage) => `${stage.name} ${stage.percent}%`).join('；')}`,
     '',
     '核心缺口',
     ...coreStatuses.map((item) => `${item.label}：${item.status}｜${item.reason}｜下一步：${item.action}`),
@@ -223,6 +230,7 @@ export default function Report({ state, tasks }) {
     residenceType: residenceLabels[state.riskProfile?.residenceType] || '公寓'
   }
   const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
+  const roadmapSummary = getRoadmapSummary(state)
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -239,6 +247,7 @@ export default function Report({ state, tasks }) {
     coreStatuses,
     riskSummary,
     kitSummary,
+    roadmapSummary,
     priorityAction
   })
 
@@ -353,6 +362,17 @@ export default function Report({ state, tasks }) {
           <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4">
             <p className="text-sm font-black text-bark"><span className="critical-point">最高缺口</span>：{renderReportEmphasis(kitSummary.highestGap)}</p>
           </div>
+        </section>
+
+        <section className="muji-card">
+          <SectionTitle>自給能力摘要</SectionTitle>
+          <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <Metric label="目前階段" value={roadmapSummary.currentStage.name} />
+            <Metric label="總體自給能力分數" value={`${roadmapSummary.score}`} />
+            <Metric label="已完成能力" value={`${roadmapSummary.completedAbilities}/${roadmapSummary.totalAbilities}`} />
+            <Metric label="下一個能力" value={roadmapSummary.nextAbility?.title || '全部階段已達標'} />
+          </div>
+          <ReportList title="Stage 1–5 完成率" items={roadmapSummary.stages.map((stage) => `${stage.name}：${stage.percent}%（${stage.completedCount}/${stage.totalCount}）`)} />
         </section>
 
         <section className="muji-card">

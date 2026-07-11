@@ -1,9 +1,10 @@
 import React from 'react'
-import { AlertTriangle, Backpack, BarChart3, BookOpen, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
+import { AlertTriangle, Backpack, BarChart3, BookOpen, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, Route, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary } from './Inventory.jsx'
 import { getHighestRisk, riskLevelClass } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
+import { getRoadmapSummary } from './Roadmap.jsx'
 import { getRecommendedTask } from '../data/tasks.js'
 
 const routeLabels = {
@@ -108,6 +109,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const recommendedMission = getRecommendedTask(tasks, state)
   const highestEnvironmentalRisk = getHighestRisk(state.riskProfile || {})
   const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
+  const roadmapSummary = getRoadmapSummary(state)
   const title = scoreTitle(score)
 
   return (
@@ -207,6 +209,16 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             </div>
             <p className="mt-2 text-sm leading-7 text-soil/75">{kitSummary.highestGap}</p>
           </div>
+
+          <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-3 text-sm font-bold text-soil/75">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-soil/50">自給階段</p>
+            <p className="mt-2 text-base font-black text-bark">{roadmapSummary.currentStage.name}</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <span>能力 {roadmapSummary.score}</span>
+              <span>完成 {roadmapSummary.completedAbilities}/{roadmapSummary.totalAbilities}</span>
+            </div>
+            <p className="mt-2 text-sm leading-7 text-soil/75">{roadmapSummary.nextAbility?.title || '年度自給生活系統'}</p>
+          </div>
         </aside>
       </section>
 
@@ -284,6 +296,11 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
           <button onClick={() => setPage('drills')}>
             <ClipboardCheck size={18} />
             <span>情境演練</span>
+          </button>
+
+          <button onClick={() => setPage('roadmap')}>
+            <Route size={18} />
+            <span>自給能力路線圖</span>
           </button>
 
           <button onClick={() => setPage('evacuationKit')}>

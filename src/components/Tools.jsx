@@ -1,5 +1,5 @@
 import React from 'react'
-import { Backpack, Calculator, Leaf, ShieldCheck } from 'lucide-react'
+import { Backpack, BookOpen, Calculator, Leaf, ShieldCheck } from 'lucide-react'
 
 const tools = [
   {
@@ -29,6 +29,13 @@ const tools = [
     description: '記錄植物、食物生產與長期自給基礎。',
     button: '打開生產',
     icon: Leaf
+  },
+  {
+    id: 'manual',
+    title: '離線手冊',
+    description: '保留停水、停電、地震、颱風、動物撤離與偏遠地區處置流程。',
+    button: '打開手冊',
+    icon: BookOpen
   }
 ]
 
@@ -39,7 +46,7 @@ export default function Tools({ setPage }) {
         <p className="muji-kicker">Tools Center</p>
         <h1 className="text-2xl font-black text-bark">工具中心</h1>
         <p className="mt-2 leading-7 text-soil/70">
-          集中管理撤離包、硬核計算器、72 小時備災與長期自給工具。
+          集中管理撤離包、硬核計算器、72 小時備災、長期自給工具與離線手冊。
         </p>
       </section>
 
