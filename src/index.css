@@ -699,9 +699,9 @@ button {
   background: #eee5d6 !important;
   color: #4b4134 !important;
   border: 1px solid rgba(100, 85, 65, 0.14) !important;
-  font-size: 0.82rem !important;
-  padding: 0.4rem 0.78rem !important;
-  line-height: 1.35 !important;
+  font-size: 0.85rem !important;
+  padding: 0.42rem 0.82rem !important;
+  line-height: 1.38 !important;
 }
 
 .ink-nav {
@@ -824,12 +824,12 @@ button {
   gap: 8px;
   color: #3d5143;
   font-weight: 800;
-  font-size: clamp(1.18rem, 2.2vw, 1.32rem);
-  margin-bottom: 18px;
+  font-size: clamp(1.25rem, 2.4vw, 1.5rem);
+  margin-bottom: 20px;
 }
 
 .muji-card h2 {
-  font-size: clamp(1.22rem, 2.5vw, 1.48rem);
+  font-size: clamp(1.3rem, 2.6vw, 1.55rem);
   line-height: 1.25;
   font-weight: 750;
   color: #2f302b;
@@ -838,8 +838,8 @@ button {
 .muji-card p {
   margin-top: 10px;
   color: #5a5146;
-  font-size: 1rem;
-  line-height: 1.72;
+  font-size: 1.04rem;
+  line-height: 1.76;
 }
 
 .muji-task-meta {
@@ -885,12 +885,13 @@ button {
 .muji-stat span,
 .muji-stat small {
   color: #62594d;
-  font-size: 0.92rem;
+  font-size: 0.98rem;
+  line-height: 1.55;
 }
 
 .muji-stat strong {
   display: block;
-  font-size: 1.8rem;
+  font-size: clamp(1.45rem, 3vw, 1.75rem);
   color: #2f302b;
   margin: 4px 0;
 }
@@ -931,24 +932,26 @@ button {
   display: flex;
   gap: 12px;
   color: #4b4134;
-  font-size: 1rem;
+  font-size: 1.04rem;
+  line-height: 1.7;
 }
 
 .muji-note p {
   color: #5a5146;
   margin-top: 4px;
-  line-height: 1.72;
+  font-size: 1.04rem;
+  line-height: 1.76;
 }
 
 /* v3.3.1 readability layer: keep dense Fortress OS screens readable. */
 .text-xs {
-  font-size: 0.875rem !important;
-  line-height: 1.45 !important;
+  font-size: 0.91rem !important;
+  line-height: 1.5 !important;
 }
 
 .text-sm {
-  font-size: 0.95rem !important;
-  line-height: 1.58 !important;
+  font-size: 1rem !important;
+  line-height: 1.66 !important;
 }
 
 small,
@@ -979,9 +982,68 @@ textarea {
 .report-content .muji-card p,
 .report-content .muji-card li,
 .muji-card li {
-  font-size: 1rem;
-  line-height: 1.72;
+  font-size: 1.04rem;
+  line-height: 1.76;
   color: #51493f;
+}
+
+/* v3.3.4 summary typography: make status/overview cards readable for long sessions. */
+.summary-title,
+.status-summary h2,
+.report-summary h2,
+.muji-card .rounded-2xl h2,
+.muji-card .rounded-2xl h3 {
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem) !important;
+  line-height: 1.25 !important;
+  font-weight: 800 !important;
+}
+
+.summary-text,
+.status-summary p,
+.report-summary p,
+.muji-card > p,
+.muji-card article p,
+.muji-card .rounded-2xl p,
+.muji-note p {
+  font-size: 1.04rem !important;
+  line-height: 1.76 !important;
+  color: #51493f !important;
+}
+
+.summary-meta,
+.muji-card .rounded-2xl .text-xs,
+.muji-card .rounded-2xl .text-sm,
+.muji-dashboard aside .text-sm,
+.report-page .text-xs,
+.report-page .text-sm {
+  font-size: 0.95rem !important;
+  line-height: 1.55 !important;
+}
+
+.summary-value,
+.muji-stat strong,
+.report-page .muji-card .text-xl,
+.report-page .muji-card .text-2xl,
+.muji-card .rounded-2xl .text-xl,
+.muji-card .rounded-2xl .text-2xl {
+  font-size: clamp(1.4rem, 3.2vw, 1.75rem) !important;
+  line-height: 1.18 !important;
+  font-weight: 800 !important;
+}
+
+.muji-dashboard aside .rounded-2xl,
+.report-page .rounded-2xl,
+.muji-card article,
+.muji-card .rounded-2xl {
+  overflow-wrap: anywhere;
+}
+
+.muji-dashboard aside .rounded-2xl div,
+.muji-dashboard aside .rounded-2xl span,
+.muji-card article span,
+.muji-card .rounded-2xl span {
+  font-size: max(0.95rem, 15.2px);
+  line-height: 1.55;
 }
 
 .emphasis-underline,
@@ -1029,7 +1091,8 @@ textarea {
   }
 
   .muji-section-title {
-    font-size: 1.18rem;
+    font-size: 1.25rem;
+    line-height: 1.28;
   }
 
   .muji-grid,
@@ -1043,7 +1106,35 @@ textarea {
   }
 
   .muji-stat strong {
-    font-size: 1.45rem;
+    font-size: 1.45rem !important;
+  }
+
+  .summary-text,
+  .status-summary p,
+  .report-summary p,
+  .muji-card > p,
+  .muji-card article p,
+  .muji-card .rounded-2xl p,
+  .muji-note p {
+    font-size: 1.04rem !important;
+    line-height: 1.76 !important;
+  }
+
+  .summary-meta,
+  .muji-card .rounded-2xl .text-xs,
+  .muji-card .rounded-2xl .text-sm,
+  .muji-dashboard aside .text-sm,
+  .report-page .text-xs,
+  .report-page .text-sm {
+    font-size: 0.95rem !important;
+  }
+
+  .summary-value,
+  .report-page .muji-card .text-xl,
+  .report-page .muji-card .text-2xl,
+  .muji-card .rounded-2xl .text-xl,
+  .muji-card .rounded-2xl .text-2xl {
+    font-size: clamp(1.4rem, 6vw, 1.72rem) !important;
   }
 
   .ink-nav > div {
