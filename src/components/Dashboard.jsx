@@ -287,6 +287,11 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
         </div>
 
         <div className="muji-tool-grid">
+          <button onClick={() => setPage('waterSystem')}>
+            <Droplets size={18} />
+            <span>Water System 2.0</span>
+          </button>
+
           <button onClick={() => setPage('tasks')}>
             <ListChecks size={18} />
             <span>能力任務</span>

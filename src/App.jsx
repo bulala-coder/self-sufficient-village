@@ -20,6 +20,7 @@ import Manual from './components/Manual.jsx'
 import Roadmap from './components/Roadmap.jsx'
 import Journal from './components/Journal.jsx'
 import VillageElder from './components/VillageElder.jsx'
+import WaterSystem from './components/WaterSystem.jsx'
 import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
 
@@ -126,6 +127,7 @@ export default function App() {
       {page === 'risk' && <RiskMatrix {...commonProps}/>} 
       {page === 'inventory' && <Inventory {...commonProps}/>} 
       {page === 'tools' && <Tools {...commonProps}/>} 
+      {page === 'waterSystem' && <WaterSystem {...commonProps}/>}
       {page === 'plants' && <Plants {...commonProps}/>} 
       {page === 'drills' && <Drills {...commonProps}/>} 
       {page === 'calculators' && <Calculators {...commonProps}/>} 

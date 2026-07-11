@@ -1,6 +1,7 @@
 {
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "lint": "vite build --outDir /tmp/fortress-os-lint --emptyOutDir",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "predeploy": "npm run build",

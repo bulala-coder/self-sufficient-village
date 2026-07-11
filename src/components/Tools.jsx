@@ -1,7 +1,14 @@
 import React from 'react'
-import { Backpack, BookOpen, Calculator, Leaf, ShieldCheck } from 'lucide-react'
+import { Backpack, BookOpen, Calculator, Droplets, Leaf, ShieldCheck } from 'lucide-react'
 
 const tools = [
+  {
+    id: 'waterSystem',
+    title: 'Water System 2.0',
+    description: '管理家庭與動物飲水、儲水、補水、淨水與停水分配方案。',
+    button: '打開水資源系統',
+    icon: Droplets
+  },
   {
     id: 'evacuationKit',
     title: '撤離包',
