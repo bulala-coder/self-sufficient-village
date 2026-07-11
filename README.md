@@ -1,13 +1,10 @@
-# 自足村 Self-Sufficient Village v1.5
+# Fortress OS｜自足堡壘
 
-這是「示意圖背景版」：首頁直接使用水墨介面圖作為視覺基底，讓首頁更接近你指定的山水墨畫設計。
+家庭韌性、補給中斷、風險矩陣、硬核任務、情境演練、離線手冊與作戰報告系統。
 
 ## 本機啟動
 
 ```bash
-npm config set registry https://registry.npmjs.org/
-rm -rf node_modules
-rm -f package-lock.json
 npm install
 npm run dev
 ```
@@ -15,12 +12,26 @@ npm run dev
 開啟：
 
 ```text
-http://localhost:5173/
+http://localhost:5173/self-sufficient-village/
 ```
+
+## 建置
+
+```bash
+npm run build
+```
+
+## GitHub Pages 部署
+
+```bash
+npm run deploy
+```
+
+目前 Vite base 保留為 `/self-sufficient-village/`，以維持既有 GitHub Pages repo 部署路徑。
 
 ## 說明
 
-- 首頁視覺以 `public/dashboard-bg.png` 為主。
-- 首頁的「開始任務」、「問 AI 村長」與底部導覽是透明可點擊熱區。
-- 其他頁面維持原本 React 功能。
-- 這版優先解決視覺信心問題，後續再把動態內容逐步重建成真正元件。
+- 使用 React + Vite。
+- 資料保存在瀏覽器 localStorage。
+- 不需要登入、Supabase 或真 AI 服務。
+- package name 與 repo/base 路徑保留既有設定，避免影響部署。

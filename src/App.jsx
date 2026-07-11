@@ -95,7 +95,7 @@ export default function App() {
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="ink-logo w-12 h-12 rounded-2xl grid place-items-center"><Sprout size={25}/></div>
-          <div><h1 className="ink-title font-black text-2xl">自足村</h1><p className="text-sm text-[#8b7455] font-semibold">Self-Sufficient Village｜Survival OS</p></div>
+          <div><h1 className="ink-title font-black text-2xl">Fortress OS｜自足堡壘</h1><p className="text-sm text-[#8b7455] font-semibold">家庭韌性、補給中斷與自給生存管理系統</p></div>
         </div>
         <button className="btn-secondary text-sm" onClick={reset}><RotateCcw size={14} className="inline mr-1"/>重新開始</button>
       </div>

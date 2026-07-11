@@ -212,6 +212,21 @@ export function getRiskCounts(riskProfile = {}) {
   }, { 極高: 0, 高: 0, 中: 0, 低: 0 })
 }
 
+const riskEmphasisTerms = ['極高', '第一行動', '醫療距離', '補給中斷', '動物照護', '地形風險', '交通或補給中斷', '7 天', '停水', '停電', '撤離', '不夜間豪雨移動']
+
+function renderRiskEmphasis(text, maxMatches = 3) {
+  const escapedTerms = [...riskEmphasisTerms].sort((a, b) => b.length - a.length).map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const pattern = new RegExp(`(${escapedTerms.join('|')})`, 'g')
+  let matchCount = 0
+
+  return String(text).split(pattern).map((part, index) => {
+    if (!riskEmphasisTerms.includes(part) || matchCount >= maxMatches) return part
+    matchCount += 1
+    const className = part.includes('第一行動') || part.includes('7 天') || part.includes('撤離') ? 'action-point' : part.includes('極高') ? 'critical-point' : 'emphasis-underline'
+    return <span key={`${part}-${index}`} className={className}>{part}</span>
+  })
+}
+
 export default function RiskMatrix({ state, updateRiskProfile }) {
   const riskProfile = state.riskProfile || {}
   const cards = getRiskCards(riskProfile)
@@ -252,8 +267,8 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
                 </span>
                 {highestRisk.tools.map((tool) => <span key={tool} className="badge">{tool}</span>)}
               </div>
-              <p>{highestRisk.reason}</p>
-              <p className="font-black text-bark">第一行動：{highestRisk.action}</p>
+              <p>{renderRiskEmphasis(highestRisk.reason)}</p>
+              <p className="font-black text-bark"><span className="action-point">第一行動</span>：{renderRiskEmphasis(highestRisk.action)}</p>
             </>
           )}
         </section>
@@ -318,7 +333,7 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2>{card.title}</h2>
-                <p>{card.reason}</p>
+                <p>{renderRiskEmphasis(card.reason)}</p>
               </div>
               <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${card.level === '未設定' ? 'bg-[#c2a25c] text-[#241b10]' : riskLevelClass(card.riskScore)}`}>
                 {card.level} {card.level === '未設定' ? '' : card.riskScore}
@@ -327,7 +342,7 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#d5c9b4]">
               <div className="h-full rounded-full bg-[#24483a]" style={{ width: `${card.riskScore}%` }} />
             </div>
-            <p className="mt-4 font-black text-bark">建議行動：{card.action}</p>
+            <p className="mt-4 font-black text-bark"><span className="action-point">建議行動</span>：{renderRiskEmphasis(card.action)}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {card.tools.map((tool) => <span key={tool} className="badge">{tool}</span>)}
             </div>

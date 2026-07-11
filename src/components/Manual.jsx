@@ -130,6 +130,28 @@ function severityClass(severity) {
   return 'bg-[#24483a] text-[#fff9ea]'
 }
 
+const manualEmphasisTerms = [
+  '最低飲水估算', '不要取代醫療診斷', '不要在夜間豪雨中冒險移動', '不要去海邊看浪',
+  '藥品冷藏', '冰箱食物', '停止外出', '大量出血', '呼吸困難', '意識異常',
+  '急診獸醫', '撤離路線', '社區互助', '醫療距離', '動物用水', '避難包',
+  '土石流', '補給中斷', '7 天', '飲水', '衛生', '照明', '通訊', '安全',
+  '傷口', '火源', '固定', '排水', '補給', '充電', '外出籠', '飼料', '病歷',
+  '落石', '暴潮', '強風'
+]
+
+function renderEmphasisText(text, terms = manualEmphasisTerms, maxMatches = 3) {
+  const escapedTerms = [...terms].sort((a, b) => b.length - a.length).map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const pattern = new RegExp(`(${escapedTerms.join('|')})`, 'g')
+  let matchCount = 0
+
+  return String(text).split(pattern).map((part, index) => {
+    if (!terms.includes(part) || matchCount >= maxMatches) return part
+    matchCount += 1
+    const className = part.includes('不要') ? 'stop-condition' : part.includes('大量出血') || part.includes('呼吸困難') || part.includes('意識異常') ? 'critical-point' : 'emphasis-underline'
+    return <span key={`${part}-${index}`} className={className}>{part}</span>
+  })
+}
+
 export default function Manual() {
   const [filter, setFilter] = useState('all')
   const [openSections, setOpenSections] = useState({ 'water-outage': true })
@@ -192,7 +214,7 @@ export default function Manual() {
                     {section.relatedTools.map((tool) => <span key={tool} className="badge">{tool}</span>)}
                   </div>
                   <h2 className="mt-3 text-xl font-black text-bark">{section.title}</h2>
-                  <p className="mt-2 text-sm leading-7 text-soil/70">{section.summary}</p>
+                  <p className="mt-2 text-sm leading-7 text-soil/70">{renderEmphasisText(section.summary)}</p>
                 </div>
               </div>
 
@@ -231,7 +253,7 @@ function ManualBlock({ title, icon: Icon, items, danger = false }) {
         <h3 className="font-black text-bark">{title}</h3>
       </div>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-soil/75">
-        {items.map((item) => <li key={item}>{item}</li>)}
+        {items.map((item) => <li key={item}>{renderEmphasisText(item)}</li>)}
       </ul>
     </div>
   )

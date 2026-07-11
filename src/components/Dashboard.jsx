@@ -112,10 +112,10 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
     <div className="muji-dashboard space-y-5 pb-32">
       <section className="muji-hero border-[#2f3d35]/30 bg-[#e7dfd0]">
         <div>
-          <p className="muji-kicker">Survival OS</p>
-          <h1>自足村 Survival OS</h1>
+          <p className="muji-kicker">Fortress OS｜自足堡壘</p>
+          <h1>Fortress OS</h1>
           <p className="muji-subtitle">
-            家庭韌性、補給中斷、地形風險與自給生活壓力測試系統
+            自足堡壘：家庭韌性、風險矩陣、補給管理與生存任務系統
           </p>
         </div>
 

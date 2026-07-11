@@ -134,7 +134,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
 
 function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, priorityAction }) {
   return [
-    '自足村 Survival OS 作戰報告',
+    'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
     `Survival Readiness Score：${score}｜${title}`,
     '',
@@ -170,6 +170,21 @@ function buildTextReport({ generatedAt, score, title, supplySummary, drillSummar
     '',
     '安全邊界：本報告用於家庭盤點、討論與低風險準備，不取代政府防災指引、醫療建議、獸醫建議或現場專業判斷。'
   ].join('\n')
+}
+
+const reportEmphasisTerms = ['最高優先行動', '缺口', '已過期', '極高風險', '高風險', '未通過演練', '未完成高風險任務', '最低線', '下一步', '高優先醫療', '補給中斷']
+
+function renderReportEmphasis(text, maxMatches = 2) {
+  const escapedTerms = [...reportEmphasisTerms].sort((a, b) => b.length - a.length).map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const pattern = new RegExp(`(${escapedTerms.join('|')})`, 'g')
+  let matchCount = 0
+
+  return String(text).split(pattern).map((part, index) => {
+    if (!reportEmphasisTerms.includes(part) || matchCount >= maxMatches) return part
+    matchCount += 1
+    const className = part.includes('下一步') || part.includes('最高優先行動') ? 'action-point' : part.includes('已過期') || part.includes('極高') || part.includes('未通過') || part.includes('高風險') ? 'critical-point' : 'emphasis-underline'
+    return <span key={`${part}-${index}`} className={className}>{part}</span>
+  })
 }
 
 export default function Report({ state, tasks }) {
@@ -311,8 +326,8 @@ export default function Report({ state, tasks }) {
           </div>
           {highestRisk && (
             <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4">
-              <p className="text-sm font-black text-bark">{highestRisk.level} {highestRisk.riskScore}｜{highestRisk.reason}</p>
-              <p className="mt-2 text-sm font-bold text-soil/75">建議行動：{highestRisk.action}</p>
+              <p className="text-sm font-black text-bark"><span className={highestRisk.level === '極高' ? 'critical-point' : 'emphasis-underline'}>{highestRisk.level} {highestRisk.riskScore}</span>｜{renderReportEmphasis(highestRisk.reason)}</p>
+              <p className="mt-2 text-sm font-bold text-soil/75"><span className="action-point">建議行動</span>：{renderReportEmphasis(highestRisk.action)}</p>
             </div>
           )}
         </section>
@@ -326,8 +341,8 @@ export default function Report({ state, tasks }) {
                   <h2 className="font-black text-bark">{item.label}</h2>
                   <span className={`rounded-full px-3 py-1 text-xs font-black ${statusBadgeClass(item.status)}`}>{item.status}</span>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-soil/75">{item.reason}</p>
-                <p className="mt-2 text-sm font-black text-bark">下一步：{item.action}</p>
+                <p className="mt-3 text-sm leading-7 text-soil/75">{renderReportEmphasis(item.reason)}</p>
+                <p className="mt-2 text-sm font-black text-bark"><span className="action-point">下一步</span>：{renderReportEmphasis(item.action)}</p>
               </article>
             ))}
           </div>
@@ -338,7 +353,7 @@ export default function Report({ state, tasks }) {
             <ShieldAlert size={18} />
             <span>最高優先行動</span>
           </div>
-          <h2 className="mt-4 text-2xl font-black text-bark">{priorityAction}</h2>
+          <h2 className="mt-4 text-2xl font-black text-bark"><span className="action-point">{priorityAction}</span></h2>
           <p className="mt-2 leading-7 text-soil/70">
             先處理會直接影響 72 小時生存基準的缺口，再處理演練與長期壓力測試。
           </p>
@@ -361,9 +376,11 @@ function SectionTitle({ children }) {
 }
 
 function Metric({ label, value }) {
+  const emphasizedLabels = ['已過期', '未通過演練', '未完成高風險任務', '極高風險', '高風險']
+
   return (
     <div className="rounded-2xl border border-soil/15 bg-white/65 p-4">
-      <p className="text-xs font-black uppercase tracking-[0.12em] text-soil/50">{label}</p>
+      <p className={`text-xs font-black uppercase tracking-[0.12em] text-soil/50 ${emphasizedLabels.includes(label) ? 'critical-point' : ''}`}>{label}</p>
       <p className="mt-2 break-words text-xl font-black text-bark">{value}</p>
     </div>
   )

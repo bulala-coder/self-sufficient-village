@@ -100,6 +100,28 @@ function levelMarks(level) {
   return Array.from({ length: 5 }, (_, index) => index < level ? '■' : '□').join('')
 }
 
+function renderDrillItem(item) {
+  if (item.includes('停止條件')) {
+    return item.split('停止條件').map((part, index) => (
+      <React.Fragment key={`${part}-${index}`}>
+        {index > 0 && <span className="stop-condition">停止條件</span>}
+        {part}
+      </React.Fragment>
+    ))
+  }
+
+  if (item.includes('高風險')) {
+    return item.split('高風險').map((part, index) => (
+      <React.Fragment key={`${part}-${index}`}>
+        {index > 0 && <span className="critical-point">高風險</span>}
+        {part}
+      </React.Fragment>
+    ))
+  }
+
+  return item
+}
+
 export default function Drills({ state, toggleDrillItem }) {
   const [openDrills, setOpenDrills] = useState({ 'water-24h': true })
   const drills = state.drills || {}
@@ -165,7 +187,7 @@ export default function Drills({ state, toggleDrillItem }) {
               <div className="mt-4 grid grid-cols-3 gap-2 text-sm font-bold text-soil/70">
                 <span>{completed}/{drill.items.length} 項</span>
                 <span>{percent}%</span>
-                <span>標準 {drill.passCount}/{drill.items.length}</span>
+                <span><span className="emphasis-underline">最低通過標準</span> {drill.passCount}/{drill.items.length}</span>
               </div>
 
               <div className="mt-3 h-2 rounded-full bg-[#d5c9b4] overflow-hidden">
@@ -196,7 +218,7 @@ export default function Drills({ state, toggleDrillItem }) {
                       >
                         <span className="flex items-start gap-3">
                           {isChecked ? <CheckCircle2 size={18} className="mt-1 shrink-0 text-[#24483a]" /> : <Circle size={18} className="mt-1 shrink-0 text-soil/35" />}
-                          <span className="text-sm font-bold leading-7 text-bark">{item}</span>
+                          <span className="text-sm font-bold leading-7 text-bark">{renderDrillItem(item)}</span>
                         </span>
                       </button>
                     )
@@ -212,7 +234,7 @@ export default function Drills({ state, toggleDrillItem }) {
         <ShieldAlert size={18} />
         <div>
           <strong>安全邊界</strong>
-          <p>演練只做室內盤點、清單確認與低風險測試。颱風、豪雨、地震後或夜間不進行危險移動與外出驗證。</p>
+          <p>演練只做室內盤點、清單確認與低風險測試。颱風、豪雨、地震後或夜間 <span className="stop-condition">不進行危險移動</span> 與外出驗證。</p>
         </div>
       </section>
     </div>

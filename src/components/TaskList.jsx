@@ -74,8 +74,8 @@ export default function TaskList({ state, tasks, completeTask }) {
                 </span>
               </div>
               <h2 className="mt-3 text-xl font-black text-bark">{recommendation.task.title}</h2>
-              <p className="mt-2 text-sm font-bold text-[#8b2f25]">{recommendation.gap}</p>
-              <p className="mt-2 leading-7 text-soil/70">{recommendation.reason}</p>
+              <p className="mt-2 text-sm font-bold text-[#8b2f25]"><span className="critical-point">對應缺口</span>：{recommendation.gap}</p>
+              <p className="mt-2 leading-7 text-soil/70">依目前資料，先處理 <span className="emphasis-underline">風險等級</span> Level {recommendation.task.riskLevel} 的任務。{recommendation.reason}</p>
             </div>
 
             <button type="button" className="btn-primary shrink-0" onClick={() => openTask(recommendation.task)}>
@@ -197,7 +197,7 @@ export default function TaskList({ state, tasks, completeTask }) {
                 <span className="badge">{selected.estimatedMinutes} 分鐘</span>
               </div>
               <h3 className="mt-3 text-2xl font-black text-bark">{selected.title}</h3>
-              <p className="mt-2 text-sm font-bold text-[#8b2f25]">{selected.relatedGap}</p>
+              <p className="mt-2 text-sm font-bold text-[#8b2f25]"><span className="critical-point">對應缺口</span>：{selected.relatedGap}</p>
             </div>
 
             <TaskBlock title="目的">
@@ -275,9 +275,11 @@ export default function TaskList({ state, tasks, completeTask }) {
 }
 
 function TaskBlock({ title, children }) {
+  const titleClass = title === '完成標準' ? 'action-point' : title === '失敗條件' ? 'critical-point' : ''
+
   return (
     <div className="rounded-2xl border border-soil/10 bg-white/65 p-4 leading-7 text-soil">
-      <h4 className="mb-2 font-black text-bark">{title}</h4>
+      <h4 className={`mb-2 font-black text-bark ${titleClass}`}>{title}</h4>
       {children}
     </div>
   )

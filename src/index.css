@@ -64,7 +64,7 @@ button { cursor: pointer; }
 
 .ink-page { position: relative; }
 .ink-page::before {
-  content: "自\A足\A村";
+  content: "堡\A壘\AOS";
   white-space: pre;
   position: fixed;
   right: 1.7rem;
@@ -764,10 +764,10 @@ button {
 }
 
 .muji-hero h1 {
-  font-size: clamp(1.95rem, 5vw, 2.65rem);
+  font-size: clamp(2.35rem, 5vw, 2.75rem);
   font-weight: 800;
   letter-spacing: 0.04em;
-  line-height: 1.15;
+  line-height: 1.12;
   color: #2f302b;
 }
 
@@ -775,8 +775,9 @@ button {
   margin-top: 10px;
   max-width: 560px;
   color: #665f52;
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: 1.08rem;
+  line-height: 1.68;
+  color: #554c41;
 }
 
 .muji-route {
@@ -798,8 +799,9 @@ button {
 
 .muji-card > h1,
 .muji-card h1.text-2xl {
-  font-size: clamp(1.8rem, 4.5vw, 2.35rem) !important;
-  line-height: 1.18;
+  font-size: clamp(2rem, 5vw, 2.65rem) !important;
+  line-height: 1.14;
+  font-weight: 800 !important;
   letter-spacing: 0;
 }
 
@@ -822,12 +824,12 @@ button {
   gap: 8px;
   color: #3d5143;
   font-weight: 800;
-  font-size: 1.08rem;
-  margin-bottom: 14px;
+  font-size: clamp(1.18rem, 2.2vw, 1.32rem);
+  margin-bottom: 18px;
 }
 
 .muji-card h2 {
-  font-size: clamp(1.18rem, 2.4vw, 1.42rem);
+  font-size: clamp(1.22rem, 2.5vw, 1.48rem);
   line-height: 1.25;
   font-weight: 750;
   color: #2f302b;
@@ -893,6 +895,12 @@ button {
   margin: 4px 0;
 }
 
+.muji-card h3 {
+  font-size: clamp(1.08rem, 2vw, 1.22rem);
+  line-height: 1.3;
+  font-weight: 750;
+}
+
 .muji-tool-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -932,7 +940,7 @@ button {
   line-height: 1.72;
 }
 
-/* v3.3.1 readability layer: keep dense Survival OS screens readable. */
+/* v3.3.1 readability layer: keep dense Fortress OS screens readable. */
 .text-xs {
   font-size: 0.875rem !important;
   line-height: 1.45 !important;
@@ -976,6 +984,30 @@ textarea {
   color: #51493f;
 }
 
+.emphasis-underline,
+.critical-point,
+.action-point,
+.stop-condition {
+  color: #2f302b;
+  font-weight: 750;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.12em;
+  text-decoration-color: rgba(139, 47, 37, 0.52);
+  text-underline-offset: 0.2em;
+}
+
+.critical-point {
+  text-decoration-color: rgba(139, 47, 37, 0.72);
+}
+
+.action-point {
+  text-decoration-color: rgba(36, 72, 58, 0.66);
+}
+
+.stop-condition {
+  text-decoration-color: rgba(194, 162, 92, 0.9);
+}
+
 @media (max-width: 768px) {
   body {
     font-size: 16px;
@@ -988,7 +1020,16 @@ textarea {
   }
 
   .muji-hero h1 {
-    font-size: clamp(1.75rem, 8vw, 1.95rem);
+    font-size: clamp(1.9rem, 8vw, 2.15rem);
+  }
+
+  .muji-card > h1,
+  .muji-card h1.text-2xl {
+    font-size: clamp(1.9rem, 8vw, 2.15rem) !important;
+  }
+
+  .muji-section-title {
+    font-size: 1.18rem;
   }
 
   .muji-grid,
