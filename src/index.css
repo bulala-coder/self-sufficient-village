@@ -1165,7 +1165,8 @@ textarea {
 
   .ink-header,
   .ink-nav,
-  .report-actions {
+  .report-actions,
+  .evacuation-actions {
     display: none !important;
   }
 
@@ -1178,13 +1179,16 @@ textarea {
     background: #fff9ea !important;
   }
 
-  .report-page {
+  .report-page,
+  .evacuation-kit-page {
     padding-bottom: 0 !important;
   }
 
   .report-content,
   .report-content .muji-card,
-  .report-content .muji-note {
+  .report-content .muji-note,
+  .evacuation-kit-page .muji-card,
+  .evacuation-kit-page .muji-note {
     break-inside: avoid;
     page-break-inside: avoid;
   }

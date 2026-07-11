@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Sprout, Home, ListChecks, Calculator, RotateCcw, AlertTriangle, Package, ClipboardCheck, FileText, BookOpen } from 'lucide-react'
+import { Sprout, Home, ListChecks, Backpack, RotateCcw, AlertTriangle, Package, ClipboardCheck, FileText, BookOpen } from 'lucide-react'
 import Welcome from './components/Welcome.jsx'
 import Onboarding from './components/Onboarding.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -13,6 +13,7 @@ import Inventory from './components/Inventory.jsx'
 import Plants from './components/Plants.jsx'
 import Drills from './components/Drills.jsx'
 import Calculators from './components/Calculators.jsx'
+import EvacuationKit from './components/EvacuationKit.jsx'
 import Report from './components/Report.jsx'
 import Manual from './components/Manual.jsx'
 import Journal from './components/Journal.jsx'
@@ -21,13 +22,13 @@ import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
 
 const STORAGE_KEY = 'self_sufficient_village_v1'
-const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, riskProfile: {}, inventory: [], plants: [], drills: {}, calculators: {} }
+const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, riskProfile: {}, inventory: [], plants: [], drills: {}, calculators: {}, evacuationKit: {} }
 
 function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState } catch { return defaultState } }
 function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
 
 const navItems = [
-  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['risk','風險',AlertTriangle], ['inventory','庫存',Package], ['drills','演練',ClipboardCheck], ['calculators','計算',Calculator], ['report','報告',FileText], ['manual','手冊',BookOpen]
+  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['risk','風險',AlertTriangle], ['inventory','庫存',Package], ['drills','演練',ClipboardCheck], ['evacuation','撤離包',Backpack], ['report','報告',FileText], ['manual','手冊',BookOpen]
 ]
 
 export default function App() {
@@ -74,6 +75,9 @@ export default function App() {
   function updateCalculator(calculatorId, values) {
     update({ ...state, calculators: { ...(state.calculators || {}), [calculatorId]: values } })
   }
+  function updateEvacuationKit(values) {
+    update({ ...state, evacuationKit: values || {} })
+  }
 
   function completeTask(task, reflection) {
     const completedMap = getCompletedMap(state.completed)
@@ -88,7 +92,7 @@ export default function App() {
   if (!state.started) return <Welcome onStart={start} />
   if (!state.onboarded) return <Onboarding onFinish={finishOnboarding} />
 
-  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, updateRiskProfile, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, waterPlant, toggleDrillItem, updateCalculator }
+  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, updateRiskProfile, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, waterPlant, toggleDrillItem, updateCalculator, updateEvacuationKit }
 
   return <div className="ink-page min-h-screen pb-28">
     <header className="ink-header sticky top-0 z-20">
@@ -109,6 +113,7 @@ export default function App() {
       {page === 'plants' && <Plants {...commonProps}/>} 
       {page === 'drills' && <Drills {...commonProps}/>} 
       {page === 'calculators' && <Calculators {...commonProps}/>} 
+      {page === 'evacuation' && <EvacuationKit {...commonProps}/>} 
       {page === 'report' && <Report {...commonProps}/>} 
       {page === 'manual' && <Manual {...commonProps}/>} 
       {page === 'skills' && <SkillTree {...commonProps}/>} 

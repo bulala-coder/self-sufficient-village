@@ -1,8 +1,9 @@
 import React from 'react'
-import { AlertTriangle, BarChart3, BookOpen, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
+import { AlertTriangle, Backpack, BarChart3, BookOpen, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary } from './Inventory.jsx'
 import { getHighestRisk, riskLevelClass } from './RiskMatrix.jsx'
+import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRecommendedTask } from '../data/tasks.js'
 
 const routeLabels = {
@@ -106,6 +107,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const supplySummary = getInventorySummary(state.inventory || [])
   const recommendedMission = getRecommendedTask(tasks, state)
   const highestEnvironmentalRisk = getHighestRisk(state.riskProfile || {})
+  const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
   const title = scoreTitle(score)
 
   return (
@@ -196,6 +198,15 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
               </div>
             </div>
           )}
+
+          <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-3 text-sm font-bold text-soil/75">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-soil/50">撤離包摘要</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <span>完成 {kitSummary.percent}%</span>
+              <span>負重 {kitSummary.burden.label}</span>
+            </div>
+            <p className="mt-2 text-sm leading-7 text-soil/75">{kitSummary.highestGap}</p>
+          </div>
         </aside>
       </section>
 
@@ -273,6 +284,11 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
           <button onClick={() => setPage('drills')}>
             <ClipboardCheck size={18} />
             <span>情境演練</span>
+          </button>
+
+          <button onClick={() => setPage('evacuation')}>
+            <Backpack size={18} />
+            <span>撤離包</span>
           </button>
 
           <button onClick={() => setPage('calculators')}>

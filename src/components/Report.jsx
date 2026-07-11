@@ -3,6 +3,7 @@ import { Clipboard, FileText, Printer, RefreshCw, ShieldAlert } from 'lucide-rea
 import { DRILLS, getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary, normalizeInventoryItem } from './Inventory.jsx'
 import { getHighestRisk, getRiskCounts, residenceLabels } from './RiskMatrix.jsx'
+import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 
 function scoreTitle(score) {
@@ -132,7 +133,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -162,6 +163,13 @@ function buildTextReport({ generatedAt, score, title, supplySummary, drillSummar
     `住所型態：${riskSummary.residenceType}`,
     `最高風險：${riskSummary.highestRisk ? `${riskSummary.highestRisk.title}｜${riskSummary.highestRisk.level} ${riskSummary.highestRisk.riskScore}` : '尚未建立'}`,
     `極高／高風險數：${riskSummary.extremeCount}/${riskSummary.highCount}`,
+    '',
+    '撤離包摘要',
+    `完成率：${kitSummary.percent}%（${kitSummary.preparedCount}/${kitSummary.totalItems}）`,
+    `負重比例：${kitSummary.burden.ratio > 0 ? `${Number(kitSummary.burden.ratio.toFixed(1)).toString()}%` : '未計算'}｜${kitSummary.burden.label}`,
+    `高優先缺口：${kitSummary.highPriorityGapCount} 項`,
+    `即期／過期：${kitSummary.expiringSoonCount}/${kitSummary.expiredCount}`,
+    `最高缺口：${kitSummary.highestGap}`,
     '',
     '核心缺口',
     ...coreStatuses.map((item) => `${item.label}：${item.status}｜${item.reason}｜下一步：${item.action}`),
@@ -214,6 +222,7 @@ export default function Report({ state, tasks }) {
     highCount: riskCounts.高 || 0,
     residenceType: residenceLabels[state.riskProfile?.residenceType] || '公寓'
   }
+  const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -229,6 +238,7 @@ export default function Report({ state, tasks }) {
     recommendation,
     coreStatuses,
     riskSummary,
+    kitSummary,
     priorityAction
   })
 
@@ -330,6 +340,19 @@ export default function Report({ state, tasks }) {
               <p className="mt-2 text-sm font-bold text-soil/75"><span className="action-point">建議行動</span>：{renderReportEmphasis(highestRisk.action)}</p>
             </div>
           )}
+        </section>
+
+        <section className="muji-card">
+          <SectionTitle>撤離包摘要</SectionTitle>
+          <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <Metric label="完成率" value={`${kitSummary.percent}%`} />
+            <Metric label="負重判定" value={`${kitSummary.burden.ratio > 0 ? `${Number(kitSummary.burden.ratio.toFixed(1)).toString()}%` : '未計算'}｜${kitSummary.burden.label}`} />
+            <Metric label="高優先缺口" value={`${kitSummary.highPriorityGapCount} 項`} />
+            <Metric label="即期／過期" value={`${kitSummary.expiringSoonCount}/${kitSummary.expiredCount}`} />
+          </div>
+          <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4">
+            <p className="text-sm font-black text-bark"><span className="critical-point">最高缺口</span>：{renderReportEmphasis(kitSummary.highestGap)}</p>
+          </div>
         </section>
 
         <section className="muji-card">
