@@ -1,0 +1,238 @@
+import React, { useMemo, useState } from 'react'
+import { AlertTriangle, BookOpen, CheckCircle2, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react'
+
+const filters = [
+  ['all', '全部'],
+  ['water', '停水'],
+  ['power', '停電'],
+  ['earthquake', '地震'],
+  ['typhoon', '颱風'],
+  ['medical', '醫療'],
+  ['animal', '動物'],
+  ['terrain', '地形'],
+  ['remote', '偏遠']
+]
+
+const manualSections = [
+  {
+    id: 'water-outage',
+    filter: 'water',
+    title: '停水處置',
+    severity: 4,
+    summary: '停水時優先保護飲水、衛生與動物用水，不要把所有水浪費在低優先用途。',
+    immediateActions: ['立即確認家中可飲用水總量', '停止非必要用水', '將飲水、煮食、清潔、廁所用水分開管理', '優先保留人與動物飲水', '使用硬核計算器估算可撐天數'],
+    doNotDo: ['不要把不明來源水直接飲用', '不要先大量沖洗或清潔再計算飲水', '不要忽略動物飲水'],
+    checklist: ['可飲用水已集中', '每日飲水需求已估算', '清潔用水另行標記', '廁所策略已決定', '補水來源已確認'],
+    escalation: ['可飲用水低於 24 小時需求', '家中有嬰幼兒、老人、病患或動物缺水風險', '無法取得安全水源'],
+    relatedTools: ['計算', '庫存', '演練']
+  },
+  {
+    id: 'power-outage',
+    filter: 'power',
+    title: '停電處置',
+    severity: 4,
+    summary: '停電時優先保護照明、通訊、藥品冷藏、冰箱食物與夜間安全。',
+    immediateActions: ['先確認人員與動物安全', '開啟最低照明，不要浪費電力', '手機改低耗電模式', '冰箱冷凍庫非必要不要打開', '盤點行動電源與電池'],
+    doNotDo: ['不要在密閉空間使用燃油發電機或炭火', '不要頻繁打開冰箱', '不要把所有行動電源用於娛樂'],
+    checklist: ['手電筒可用', '行動電源已確認', '手機省電模式已開', '冷藏藥品已確認', '夜間動線已清空'],
+    escalation: ['需要冷藏的藥物失去保存條件', '家中有人依賴電力醫療設備', '高溫或低溫影響人與動物安全'],
+    relatedTools: ['計算', '庫存', '演練']
+  },
+  {
+    id: 'earthquake-72h',
+    filter: 'earthquake',
+    title: '地震後 72 小時',
+    severity: 5,
+    summary: '震後前三天重點是安全、飲水、傷口、火源、避難包與聯絡。',
+    immediateActions: ['先避開玻璃、倒塌物、火源與瓦斯風險', '檢查自己、家人、動物是否受傷', '關閉可疑火源與瓦斯', '穿鞋，避免踩到碎片', '取出避難包與重要文件'],
+    doNotDo: ['不要立刻衝進受損建築拿物品', '不要使用明火檢查瓦斯', '不要堵塞逃生動線'],
+    checklist: ['人員傷勢已檢查', '動物狀態已確認', '飲水與食物已集中', '急救箱已取出', '集合點已確認', '聯絡方式已確認'],
+    escalation: ['有嚴重出血、意識異常、呼吸困難', '建築結構明顯受損', '火災、瓦斯味或道路中斷'],
+    relatedTools: ['報告', '演練', '庫存']
+  },
+  {
+    id: 'typhoon-24h',
+    filter: 'typhoon',
+    title: '颱風前 24 小時',
+    severity: 4,
+    summary: '颱風前重點是固定、排水、補給、充電、動物安置與停止外出條件。',
+    immediateActions: ['固定陽台與戶外物品', '檢查排水孔與排水溝', '補足飲水與免冷藏食物', '充滿手機與行動電源', '確認動物安置位置'],
+    doNotDo: ['不要在強風豪雨時外出檢查', '不要靠近海岸、溪流或淹水道路', '不要把動物安置在可能淹水或過熱處'],
+    checklist: ['戶外物品已固定', '排水已檢查', '飲水已補足', '電力已充滿', '現金與文件已準備', '動物安置已完成'],
+    escalation: ['住處有淹水、土石流、暴潮風險', '政府發布撤離通知', '動物或家人需要提前轉移'],
+    relatedTools: ['演練', '庫存', '報告']
+  },
+  {
+    id: 'first-aid-boundary',
+    filter: 'medical',
+    title: '家庭急救邊界',
+    severity: 5,
+    summary: '急救目標是爭取時間與降低惡化，不是自行取代醫療診斷。',
+    immediateActions: ['先確認現場安全', '評估意識、呼吸、大量出血', '大量出血優先加壓止血', '保持病患保暖與安靜', '記錄發生時間與變化'],
+    doNotDo: ['不要亂給藥', '不要移動疑似脊椎傷者，除非現場不安全', '不要延誤就醫', '不要用偏方處理嚴重傷口'],
+    checklist: ['急救箱可取得', '常備藥清單已建立', '就醫路線已確認', '緊急電話已寫成紙本', '慢性病資料已備份'],
+    escalation: ['意識異常', '呼吸困難', '大量出血', '胸痛、嚴重腹痛、抽搐', '嚴重燒燙傷或骨折'],
+    relatedTools: ['醫療', '報告', '任務']
+  },
+  {
+    id: 'animal-evacuation-care',
+    filter: 'animal',
+    title: '動物撤離與照護',
+    severity: 4,
+    summary: '動物在災害中需要飲水、食物、外出籠、醫療資訊與轉送計畫。',
+    immediateActions: ['先把動物限制在安全可控區域', '準備外出籠、牽繩或運輸箱', '集中 3–7 天飼料與飲水', '準備用藥與病歷摘要', '確認急診獸醫與可收容地點'],
+    doNotDo: ['不要災害中放任動物自由移動', '不要臨時才找外出籠', '不要忽略特殊物種的溫度與食物需求'],
+    checklist: ['外出籠可用', '飼料已準備', '飲水已納入', '藥物與病歷已備份', '獸醫資訊已紙本化'],
+    escalation: ['動物受傷、呼吸異常、無法站立', '需要長期用藥但藥物不足', '住處無法維持安全溫度'],
+    relatedTools: ['庫存', '演練', '報告']
+  },
+  {
+    id: 'mountain-rain-landslide',
+    filter: 'terrain',
+    title: '山區豪雨與土石流',
+    severity: 5,
+    summary: '山區風險重點是豪雨、落石、土石流、低溫、道路中斷與通訊不穩。',
+    immediateActions: ['先確認官方警戒資訊', '觀察溪水暴漲、異常聲響、落石與坡地變化', '準備提前撤離，不等到夜間或豪雨中才移動', '確認替代道路與集合點'],
+    doNotDo: ['不要穿越暴漲溪流', '不要在夜間豪雨中冒險移動', '不要停留在土石流潛勢區'],
+    checklist: ['警戒資訊來源已確認', '撤離路線已畫出', '替代道路已確認', '保暖雨具已準備', '通訊備援已準備', '動物轉送已規劃'],
+    escalation: ['政府發布撤離或土石流警戒', '道路開始中斷', '溪水暴漲、坡地異常、落石增加'],
+    relatedTools: ['演練', '報告', '任務']
+  },
+  {
+    id: 'coastal-typhoon-surge',
+    filter: 'terrain',
+    title: '海邊颱風與暴潮',
+    severity: 5,
+    summary: '海邊風險重點是強風、暴潮、鹽害、海水倒灌與冷藏食物處理。',
+    immediateActions: ['查詢潮汐、暴潮與颱風警報', '固定所有可能被強風吹動的物品', '準備淡水與免冷藏食物', '冷藏食物安排優先處理順序', '設定不要靠近海岸的停止條件'],
+    doNotDo: ['不要去海邊看浪', '不要低估暴潮與海水倒灌', '不要把重要物資放在可能進水位置'],
+    checklist: ['潮汐資訊已確認', '強風固定已完成', '淡水已準備', '防潮措施已完成', '撤離路線已確認'],
+    escalation: ['暴潮或淹水風險升高', '地方政府發布撤離通知', '住處低窪或靠近海岸線'],
+    relatedTools: ['演練', '庫存', '報告']
+  },
+  {
+    id: 'remote-supply-interruption',
+    filter: 'remote',
+    title: '離島／偏遠地區補給中斷',
+    severity: 5,
+    summary: '離島與偏遠地區要用 7 天以上思維處理飲水、食物、醫療、動物、交通與通訊。',
+    immediateActions: ['盤點至少 7 天飲水與食物', '確認船班、道路或交通中斷資訊', '準備常用藥與急救用品', '確認動物飼料與飲水', '建立社區互助聯絡人'],
+    doNotDo: ['不要只準備 72 小時就停止', '不要等補給中斷後才買藥', '不要忽略現金與紙本資料'],
+    checklist: ['7 天飲水已估算', '7 天食物已盤點', '醫療用品已確認', '動物補給已納入', '通訊備援已準備', '社區聯絡人已建立'],
+    escalation: ['補給交通中斷超過 72 小時', '醫療或動物醫療需求無法等待', '家中有高風險成員'],
+    relatedTools: ['計算', '庫存', '報告']
+  }
+]
+
+function severityClass(severity) {
+  if (severity >= 5) return 'bg-[#8b2f25] text-[#fff9ea]'
+  if (severity >= 4) return 'bg-[#c2a25c] text-[#241b10]'
+  return 'bg-[#24483a] text-[#fff9ea]'
+}
+
+export default function Manual() {
+  const [filter, setFilter] = useState('all')
+  const [openSections, setOpenSections] = useState({ 'water-outage': true })
+  const sections = useMemo(() => {
+    if (filter === 'all') return manualSections
+    if (filter === 'typhoon') return manualSections.filter((section) => section.filter === 'typhoon' || section.id === 'coastal-typhoon-surge')
+    return manualSections.filter((section) => section.filter === filter)
+  }, [filter])
+
+  function toggleSection(sectionId) {
+    setOpenSections({ ...openSections, [sectionId]: !openSections[sectionId] })
+  }
+
+  return (
+    <div className="space-y-5 pb-32">
+      <section className="muji-card">
+        <p className="muji-kicker">Offline Survival Manual v3.2</p>
+        <h1 className="text-2xl font-black text-bark">離線生存手冊</h1>
+        <p className="mt-2 leading-7 text-soil/70">
+          停水、停電、地震、颱風、地形風險與補給中斷時的硬核流程。
+        </p>
+        <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4 text-sm font-bold leading-7 text-soil/75">
+          內容內建於 App，可在斷網時閱讀。手冊用於安全流程、盤點與決策，不取代現場專業判斷。
+        </div>
+      </section>
+
+      <section className="muji-card">
+        <div className="muji-section-title">
+          <BookOpen size={18} />
+          <span>手冊分類</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-9">
+          {filters.map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFilter(value)}
+              className={`rounded-2xl border px-3 py-3 text-sm font-black transition ${
+                filter === value
+                  ? 'border-[#24483a] bg-[#24483a] text-[#fff9ea]'
+                  : 'border-soil/15 bg-white/70 text-soil/75 hover:bg-[#fbf7ec]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        {sections.map((section) => {
+          const isOpen = Boolean(openSections[section.id])
+
+          return (
+            <article key={section.id} className="muji-card">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-3 py-1 text-xs font-black ${severityClass(section.severity)}`}>Severity {section.severity}</span>
+                    {section.relatedTools.map((tool) => <span key={tool} className="badge">{tool}</span>)}
+                  </div>
+                  <h2 className="mt-3 text-xl font-black text-bark">{section.title}</h2>
+                  <p className="mt-2 text-sm leading-7 text-soil/70">{section.summary}</p>
+                </div>
+              </div>
+
+              <button type="button" className="btn-secondary mt-4 inline-flex items-center gap-2" onClick={() => toggleSection(section.id)}>
+                {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                {isOpen ? '收合流程' : '展開流程'}
+              </button>
+
+              {isOpen && (
+                <div className="mt-5 grid gap-3">
+                  <ManualBlock title="立即行動" icon={CheckCircle2} items={section.immediateActions} />
+                  <ManualBlock title="不要做" icon={AlertTriangle} items={section.doNotDo} danger />
+                  <ManualBlock title="檢查清單" icon={BookOpen} items={section.checklist} />
+                  <ManualBlock title="何時升級求助" icon={ShieldAlert} items={section.escalation} danger />
+                  <div className="rounded-2xl border border-soil/15 bg-white/60 p-4">
+                    <h3 className="font-black text-bark">相關功能</h3>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {section.relatedTools.map((tool) => <span key={tool} className="badge">{tool}</span>)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </article>
+          )
+        })}
+      </section>
+    </div>
+  )
+}
+
+function ManualBlock({ title, icon: Icon, items, danger = false }) {
+  return (
+    <div className="rounded-2xl border border-soil/15 bg-white/60 p-4">
+      <div className="flex items-center gap-2">
+        <Icon size={17} className={danger ? 'text-[#8b2f25]' : 'text-[#24483a]'} />
+        <h3 className="font-black text-bark">{title}</h3>
+      </div>
+      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-soil/75">
+        {items.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+    </div>
+  )
+}

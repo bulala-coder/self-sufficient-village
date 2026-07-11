@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Sprout, Home, ListChecks, Calculator, RotateCcw, ShieldCheck, Package, Leaf, ClipboardCheck, FileText } from 'lucide-react'
+import { Sprout, Home, ListChecks, Calculator, RotateCcw, ShieldCheck, Package, ClipboardCheck, FileText, BookOpen } from 'lucide-react'
 import Welcome from './components/Welcome.jsx'
 import Onboarding from './components/Onboarding.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -13,6 +13,7 @@ import Plants from './components/Plants.jsx'
 import Drills from './components/Drills.jsx'
 import Calculators from './components/Calculators.jsx'
 import Report from './components/Report.jsx'
+import Manual from './components/Manual.jsx'
 import Journal from './components/Journal.jsx'
 import VillageElder from './components/VillageElder.jsx'
 import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
@@ -25,7 +26,7 @@ function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)
 function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
 
 const navItems = [
-  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['preparedness','備災',ShieldCheck], ['inventory','庫存',Package], ['plants','生產',Leaf], ['drills','演練',ClipboardCheck], ['calculators','計算',Calculator], ['report','報告',FileText]
+  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['preparedness','備災',ShieldCheck], ['inventory','庫存',Package], ['drills','演練',ClipboardCheck], ['calculators','計算',Calculator], ['report','報告',FileText], ['manual','手冊',BookOpen]
 ]
 
 export default function App() {
@@ -104,6 +105,7 @@ export default function App() {
       {page === 'drills' && <Drills {...commonProps}/>} 
       {page === 'calculators' && <Calculators {...commonProps}/>} 
       {page === 'report' && <Report {...commonProps}/>} 
+      {page === 'manual' && <Manual {...commonProps}/>} 
       {page === 'skills' && <SkillTree {...commonProps}/>} 
       {page === 'score' && <SelfScore {...commonProps}/>} 
       {page === 'health' && <HealthSafety/>} 
