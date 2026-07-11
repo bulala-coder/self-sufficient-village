@@ -18,7 +18,7 @@ body {
   position: relative;
   overflow-x: hidden;
   font-size: 16px;
-  line-height: 1.65;
+  line-height: 1.7;
   color: #252a25;
   background:
     radial-gradient(circle at 14% 18%, rgba(115, 48, 33, .055) 0 3px, transparent 7px),
@@ -699,8 +699,9 @@ button {
   background: #eee5d6 !important;
   color: #4b4134 !important;
   border: 1px solid rgba(100, 85, 65, 0.14) !important;
-  font-size: 0.78rem !important;
-  padding: 0.34rem 0.72rem !important;
+  font-size: 0.82rem !important;
+  padding: 0.4rem 0.78rem !important;
+  line-height: 1.35 !important;
 }
 
 .ink-nav {
@@ -715,9 +716,10 @@ button {
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 10px !important;
-  min-width: 54px;
-  font-size: 0.78rem !important;
-  gap: 0.28rem !important;
+  min-width: 60px;
+  font-size: 0.82rem !important;
+  line-height: 1.2 !important;
+  gap: 0.36rem !important;
 }
 
 .ink-nav button:hover {
@@ -754,7 +756,7 @@ button {
 }
 
 .muji-kicker {
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #837765;
@@ -762,7 +764,7 @@ button {
 }
 
 .muji-hero h1 {
-  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-size: clamp(1.95rem, 5vw, 2.65rem);
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.15;
@@ -773,8 +775,8 @@ button {
   margin-top: 10px;
   max-width: 560px;
   color: #665f52;
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: 1.05rem;
+  line-height: 1.7;
 }
 
 .muji-route {
@@ -782,7 +784,7 @@ button {
   color: #fffaf0;
   border-radius: 999px;
   padding: 8px 14px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   white-space: nowrap;
 }
 
@@ -796,19 +798,22 @@ button {
 
 .muji-card > h1,
 .muji-card h1.text-2xl {
-  font-size: clamp(1.65rem, 4.5vw, 2.35rem) !important;
-  line-height: 1.15;
+  font-size: clamp(1.8rem, 4.5vw, 2.35rem) !important;
+  line-height: 1.18;
   letter-spacing: 0;
 }
 
 .muji-card label {
+  font-size: 0.95rem;
   line-height: 1.45;
+  color: #4b4134;
 }
 
 .muji-card input,
 .muji-card select,
 .muji-card textarea {
-  line-height: 1.45;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .muji-section-title {
@@ -817,12 +822,12 @@ button {
   gap: 8px;
   color: #3d5143;
   font-weight: 800;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   margin-bottom: 14px;
 }
 
 .muji-card h2 {
-  font-size: clamp(1.15rem, 2.4vw, 1.38rem);
+  font-size: clamp(1.18rem, 2.4vw, 1.42rem);
   line-height: 1.25;
   font-weight: 750;
   color: #2f302b;
@@ -830,8 +835,9 @@ button {
 
 .muji-card p {
   margin-top: 10px;
-  color: #665f52;
-  line-height: 1.68;
+  color: #5a5146;
+  font-size: 1rem;
+  line-height: 1.72;
 }
 
 .muji-task-meta {
@@ -846,7 +852,7 @@ button {
   color: #4b4134;
   border-radius: 999px;
   padding: 6px 12px;
-  font-size: 0.86rem;
+  font-size: 0.9rem;
 }
 
 .muji-primary {
@@ -876,7 +882,8 @@ button {
 
 .muji-stat span,
 .muji-stat small {
-  color: #786f60;
+  color: #62594d;
+  font-size: 0.92rem;
 }
 
 .muji-stat strong {
@@ -899,7 +906,7 @@ button {
   padding: 16px 10px;
   color: #3d5143;
   font-weight: 800;
-  font-size: 0.96rem;
+  font-size: 1rem;
   display: grid;
   place-items: center;
   gap: 8px;
@@ -916,17 +923,63 @@ button {
   display: flex;
   gap: 12px;
   color: #4b4134;
+  font-size: 1rem;
 }
 
 .muji-note p {
-  color: #665f52;
+  color: #5a5146;
   margin-top: 4px;
-  line-height: 1.7;
+  line-height: 1.72;
+}
+
+/* v3.3.1 readability layer: keep dense Survival OS screens readable. */
+.text-xs {
+  font-size: 0.875rem !important;
+  line-height: 1.45 !important;
+}
+
+.text-sm {
+  font-size: 0.95rem !important;
+  line-height: 1.58 !important;
+}
+
+small,
+.muted,
+.helper,
+.hint,
+.meta,
+.caption {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #5f564a;
+}
+
+label {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+.report-page .muji-card p,
+.report-page .muji-card li,
+.report-page .muji-note p,
+.report-content .muji-card p,
+.report-content .muji-card li,
+.muji-card li {
+  font-size: 1rem;
+  line-height: 1.72;
+  color: #51493f;
 }
 
 @media (max-width: 768px) {
   body {
-    font-size: 15.5px;
+    font-size: 16px;
+    line-height: 1.7;
   }
 
   .muji-hero {
@@ -935,7 +988,7 @@ button {
   }
 
   .muji-hero h1 {
-    font-size: clamp(1.65rem, 8vw, 1.9rem);
+    font-size: clamp(1.75rem, 8vw, 1.95rem);
   }
 
   .muji-grid,
@@ -945,6 +998,7 @@ button {
 
   .muji-card {
     border-radius: 18px;
+    padding: 17px;
   }
 
   .muji-stat strong {
@@ -953,7 +1007,21 @@ button {
 
   .ink-nav > div {
     min-width: max-content;
-    grid-template-columns: repeat(8, minmax(58px, 1fr)) !important;
+    grid-template-columns: repeat(8, minmax(64px, 1fr)) !important;
+    gap: 0.2rem !important;
+    padding-inline: 0.45rem !important;
+  }
+
+  .ink-nav button {
+    min-width: 64px;
+    padding-top: 0.65rem !important;
+    padding-bottom: 0.65rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  main {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
 }
 
