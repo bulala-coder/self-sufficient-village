@@ -16,6 +16,7 @@ import {
   getWaterStatus
 } from './waterCalculations.js'
 import { calculateInventoryWaterTotals } from './inventoryWaterLink.js'
+import { calculateAverageDailyUsage, calculateProjectedRemainingDays, calculateRecentUsage, calculateUsageTotals, generateUsageWarnings } from './waterUsage.js'
 
 const list = (value) => Array.isArray(value) ? value : []
 const safeNumber = (value) => {
@@ -42,6 +43,7 @@ export function loadWaterSystemData() {
       storage: list(saved.storage),
       sources: list(saved.sources),
       treatments: list(saved.treatments),
+      usageLogs: list(saved.usageLogs),
       plans: Array.isArray(saved.plans) ? saved.plans : fallback.plans
     }
   } catch {
@@ -71,15 +73,25 @@ export function getWaterIntelligenceSummary(input) {
   const alternativeTypes = ['rain', 'spring', 'stream', 'river', 'well', 'dehumidifier', 'airConditioner']
   const mergedData = { ...data, storage: [...list(data.storage), ...inventoryWater.items] }
   const score = calculateWaterScore(mergedData)
+  const days = { drinkingDays, utilityDays, overallDays: calculateOverallWaterDays(drinkingDays, utilityDays) }
+  const totals = { manualPotableLiters, manualNonPotableLiters, inventoryPotableLiters: inventoryWater.potableLiters, inventoryNonPotableLiters: inventoryWater.nonPotableLiters, potableLiters, nonPotableLiters, treatmentRequiredLiters }
+  const demand = { humanDrinking, animalDrinking, dailyDrinking, dailyUtility, dailyTotal: dailyDrinking + dailyUtility }
+  const usageLogs = list(data.usageLogs)
+  const usageTotals = calculateUsageTotals(usageLogs)
+  const recent7 = calculateRecentUsage(usageLogs, 7)
+  const recent30 = calculateRecentUsage(usageLogs, 30)
+  const usageBase = { totals, demand, days }
+  const projected = calculateProjectedRemainingDays(usageBase, usageLogs, 7)
 
   return {
     data,
     score: safeNumber(score),
     status: getWaterStatus(score),
-    totals: { manualPotableLiters, manualNonPotableLiters, inventoryPotableLiters: inventoryWater.potableLiters, inventoryNonPotableLiters: inventoryWater.nonPotableLiters, potableLiters, nonPotableLiters, treatmentRequiredLiters },
+    totals,
     inventoryWater,
-    demand: { humanDrinking, animalDrinking, dailyDrinking, dailyUtility, dailyTotal: dailyDrinking + dailyUtility },
-    days: { drinkingDays, utilityDays, overallDays: calculateOverallWaterDays(drinkingDays, utilityDays) },
+    demand,
+    days,
+    usage: { totalUsedLiters: usageTotals.totalUsedLiters, drinkingUsedLiters: usageTotals.drinkingUsedLiters, utilityUsedLiters: usageTotals.utilityUsedLiters, recent7Total: recent7.totalLiters, recent7Average: calculateAverageDailyUsage(usageLogs, 7), recent30Total: recent30.totalLiters, recent30Average: calculateAverageDailyUsage(usageLogs, 30), byCategory: usageTotals.byCategory, projectedPotableDays: projected.projectedPotableDays, projectedTotalWaterDays: projected.projectedTotalWaterDays, warnings: generateUsageWarnings(usageBase, usageLogs) },
     capabilities: {
       sourceCount: sources.length,
       stableSourceCount: sources.filter((item) => item?.stable === true).length,

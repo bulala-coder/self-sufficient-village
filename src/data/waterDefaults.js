@@ -11,7 +11,7 @@ export const waterLabels = {
 }
 
 export const defaultWaterSystem = {
-  version: '4.3',
+  version: '4.6',
   updatedAt: '',
   household: {
     adults: 1, children: 0, seniors: 0, specialNeeds: 0, dogs: 0, cats: 0, otherAnimals: 0, otherAnimalName: '',
@@ -26,6 +26,7 @@ export const defaultWaterSystem = {
   storage: [],
   sources: [],
   treatments: [],
+  usageLogs: [],
   rainwater: { enabled: false, collectionArea: 0, storageCapacity: 0, currentVolume: 0, intendedUses: '', firstFlush: false, meshFilter: false, covered: false, mosquitoProtected: false, notes: '' },
   plans: [
     { id: 'default-24h', name: '24 小時停水', durationDays: 1, drinking: 3, cooking: 2, cleaning: 2, toilet: 4, animals: 0, emergencyReserve: 3, notes: '' },

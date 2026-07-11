@@ -20,6 +20,8 @@ function scoreTitle(score) {
 function formatNumber(value) {
   return Number(value.toFixed(1)).toString()
 }
+const usageCategoryLabels = { drinking: '飲水', cooking: '煮食', cleaning: '清潔', toilet: '廁所', animals: '動物', irrigation: '灌溉', medical: '醫療', other: '其他' }
+function primaryUsageCategory(water) { const entry = Object.entries(water.usage.byCategory).sort((a, b) => b[1] - a[1])[0]; return entry && entry[1] > 0 ? usageCategoryLabels[entry[0]] : '無紀錄' }
 
 function statusBadgeClass(status) {
   if (status === '基本成立') return 'bg-[#24483a] text-[#fff9ea]'
@@ -162,6 +164,11 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     `補水來源：${water.capabilities.sourceCount}（穩定 ${water.capabilities.stableSourceCount}）`,
     `淨水方式：${water.capabilities.purificationCount}｜每日能力 ${formatNumber(water.capabilities.purificationDailyCapacity)} L`,
     `停水分配方案：${water.capabilities.allocationPlanCount}｜雨水或替代水源：${water.capabilities.hasRainwater ? '有' : '無'}`,
+    `最近 7 天用水：${formatNumber(water.usage.recent7Total)} L｜平均 ${formatNumber(water.usage.recent7Average)} L/日`,
+    `最近 30 天用水：${formatNumber(water.usage.recent30Total)} L｜平均 ${formatNumber(water.usage.recent30Average)} L/日`,
+    `預估可飲用水／總水量剩餘：${formatNumber(water.usage.projectedPotableDays)} / ${formatNumber(water.usage.projectedTotalWaterDays)} 天`,
+    `主要用水分類：${primaryUsageCategory(water)}`,
+    ...water.usage.warnings.slice(0, 3).map((item, index) => `用水警告 ${index + 1}：${item}`),
     ...water.recommendations.slice(0, 3).map((item, index) => `改善建議 ${index + 1}：${item}`),
     '',
     '食物生產摘要',
@@ -373,8 +380,16 @@ export default function Report({ state, tasks }) {
             <Metric label="每日淨水能力" value={`${formatNumber(water.capabilities.purificationDailyCapacity)} L`} />
             <Metric label="停水分配方案" value={`${water.capabilities.allocationPlanCount} 個`} />
             <Metric label="雨水或替代水源" value={water.capabilities.hasRainwater ? '有' : '無'} />
+            <Metric label="最近 7 天總用水" value={`${formatNumber(water.usage.recent7Total)} L`} />
+            <Metric label="7 天平均每日" value={`${formatNumber(water.usage.recent7Average)} L`} />
+            <Metric label="最近 30 天總用水" value={`${formatNumber(water.usage.recent30Total)} L`} />
+            <Metric label="30 天平均每日" value={`${formatNumber(water.usage.recent30Average)} L`} />
+            <Metric label="預估可飲用水剩餘" value={`${formatNumber(water.usage.projectedPotableDays)} 天`} />
+            <Metric label="預估總水量剩餘" value={`${formatNumber(water.usage.projectedTotalWaterDays)} 天`} />
+            <Metric label="主要用水分類" value={primaryUsageCategory(water)} />
           </div>
           <ReportList title="水系統前 3 條改善建議" items={water.recommendations.slice(0, 3)} />
+          <ReportList title="前 3 條用水警告" items={water.usage.warnings.slice(0, 3)} />
         </section>
 
         <section className="muji-card">
