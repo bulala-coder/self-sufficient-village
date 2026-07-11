@@ -1127,6 +1127,16 @@ textarea {
 .simulator-score-bar span { display: block; height: 100%; border-radius: inherit; background: #24483a; }
 .simulator-result-fail .simulator-score-bar span, .simulator-result-critical .simulator-score-bar span { background: #8b2f25; }
 
+.compound-event-grid, .compound-hazard-list, .compound-risk-breakdown { display: grid; gap: 0.75rem; }
+.compound-event-grid { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+.compound-hazard-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.compound-risk-breakdown { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.compound-risk-item { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem; border: 1px solid rgba(86, 72, 53, 0.14); border-radius: 0.8rem; background: rgba(255,255,255,0.58); font-size: 0.85rem; font-weight: 800; }
+.compound-result-pass { border-color: rgba(36,72,58,0.35); background: #edf1e9; }
+.compound-result-strained, .compound-result-partial { border-color: rgba(194,162,92,0.55); background: #f5edda; }
+.compound-result-fail, .compound-result-critical { border-color: rgba(139,47,37,0.45); background: #f2dfd4; }
+.compound-roadmap-card { min-width: 0; padding: 1rem; border: 1px solid rgba(86,72,53,0.16); border-radius: 1rem; background: rgba(255,255,255,0.58); }
+
 @media (min-width: 900px) {
   .water-charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -1223,6 +1233,7 @@ textarea {
   .water-bar-value { font-size: 0.58rem; }
   .water-split-legend { flex-direction: column; gap: 0.3rem; }
   .simulator-mode-grid, .simulator-gap-list { grid-template-columns: 1fr; }
+  .compound-hazard-list, .compound-risk-breakdown { grid-template-columns: 1fr; }
 }
 
 @media print {

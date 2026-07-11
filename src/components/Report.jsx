@@ -9,6 +9,7 @@ import { getRoadmapSummary } from './Roadmap.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
+import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -26,6 +27,8 @@ function primaryUsageCategory(water) { const entry = Object.entries(water.usage.
 function usageCategorySummary(water) { return Object.entries(water.usage.byCategory).filter(([, liters]) => Number(liters) > 0).sort((a, b) => b[1] - a[1]).map(([category, liters]) => `${usageCategoryLabels[category]} ${formatNumber(liters)} L`) }
 const eventFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', none: '無' }
 function waterEventLine(item) { const result = item.simulation; return `${item.label}：${result.result.label}｜${result.result.score} 分｜可撐 ${formatNumber(result.result.survivedDays)} 天｜飲水缺口 ${formatNumber(result.gaps.drinkingGap)} L｜生活用水缺口 ${formatNumber(result.gaps.utilityGap)} L｜失敗點 ${eventFailureLabels[result.result.failurePoint]}` }
+const compoundFailureLabels = { ...eventFailureLabels, water: '水資源', power: '電力', logistics: '交通補給', contamination: '水質', sanitation: '衛生' }
+function compoundEventLine(item) { const result=item.simulation; return `${item.name}：${result.result.label}｜${result.result.score} 分｜${result.result.riskLevel}｜可撐 ${formatNumber(result.result.survivedDays)} 天｜失敗點 ${compoundFailureLabels[result.result.primaryFailurePoint]||result.result.primaryFailurePoint}｜建議：${result.recommendations[0]}` }
 
 function statusBadgeClass(status) {
   if (status === '基本成立') return 'bg-[#24483a] text-[#fff9ea]'
@@ -142,7 +145,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -175,6 +178,8 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     `主要用水分類：${primaryUsageCategory(water)}`,
     `分類用水摘要：${usageCategorySummary(water).join('、') || '尚無紀錄'}`,
     ...waterEvents.map(waterEventLine),
+    '複合災害推演摘要',
+    ...compoundEvents.map(compoundEventLine),
     ...water.usage.warnings.slice(0, 3).map((item, index) => `用水警告 ${index + 1}：${item}`),
     ...water.recommendations.slice(0, 3).map((item, index) => `改善建議 ${index + 1}：${item}`),
     '',
@@ -274,6 +279,7 @@ export default function Report({ state, tasks }) {
   const roadmapSummary = getRoadmapSummary(state)
   const water = getWaterIntelligenceSummary()
   const waterEvents = [{ label: '24 小時停水', days: 1 }, { label: '72 小時停水', days: 3 }, { label: '7 天停水', days: 7 }, { label: '14 天停水', days: 14 }].map((item) => ({ ...item, simulation: simulateWaterEvent(water, { durationDays: item.days, mode: 'planned' }) }))
+  const compoundEvents = buildPresetCompoundEvents().map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -295,6 +301,7 @@ export default function Report({ state, tasks }) {
     roadmapSummary,
     water,
     waterEvents,
+    compoundEvents,
     priorityAction
   })
 
@@ -402,6 +409,7 @@ export default function Report({ state, tasks }) {
           <ReportList title="水系統前 3 條改善建議" items={water.recommendations.slice(0, 3)} />
           <ReportList title="分類用水摘要" items={usageCategorySummary(water)} empty="尚無用水紀錄。" />
           <ReportList title="停水事件模擬" items={waterEvents.map(waterEventLine)} />
+          <ReportList title="複合災害推演摘要" items={compoundEvents.map(compoundEventLine)} />
           <ReportList title="前 3 條用水警告" items={water.usage.warnings.slice(0, 3)} />
         </section>
 

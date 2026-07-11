@@ -9,6 +9,7 @@ import { getRoadmapSummary } from './Roadmap.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
+import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -106,6 +107,7 @@ function formatSupplyNumber(value) {
 export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const water = getWaterIntelligenceSummary()
   const waterOutage72h = simulateWaterEvent(water, { durationDays: 3, mode: 'planned' })
+  const compound72h = simulateCompoundDisaster(water, buildPresetCompoundEvents()[0], { mode: 'planned', strictness: 'standard' })
   const statuses = getSystemStatus(state)
   const highestGap = statuses.find((item) => item.status === '缺口')
   const score = readinessScore({ statuses, state, tasks, completedCount })
@@ -155,6 +157,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             {water.usage.trend.overBudgetDays7 > 0 && <p className="mt-2 text-sm font-black text-[#8b2f25]">最近 7 天有 {water.usage.trend.overBudgetDays7} 天超過計畫用水</p>}
             <p className="mt-2 text-sm font-bold text-soil/70">預估總水量剩餘 {formatSupplyNumber(water.usage.projectedTotalWaterDays)} 天</p>
             <p className={`mt-2 text-sm font-black ${waterOutage72h.result.status === 'pass' ? 'text-[#24483a]' : 'text-[#8b2f25]'}`}>72 小時停水：{waterOutage72h.result.label}{waterOutage72h.result.status !== 'pass' ? ` · 主要缺口 ${waterOutage72h.result.failurePoint === 'drinking' ? '飲用水' : waterOutage72h.result.failurePoint === 'utility' ? '生活用水' : waterOutage72h.result.failurePoint === 'purification' ? '淨水能力' : '總水量'}` : ''}</p>
+            <p className={`mt-2 text-sm font-black ${compound72h.result.status === 'pass' ? 'text-[#24483a]' : 'text-[#8b2f25]'}`}>複合災害壓力測試：停水 + 停電 72 小時 · {compound72h.result.label} · {compound72h.result.riskLevel}</p>
             <p className="mt-2 text-sm font-black text-[#8b2f25]">{water.usage.warnings[0]}</p>
             {water.inventoryWater.incompleteCount > 0 && <p className="mt-2 text-sm font-black text-[#8b2f25]">有 {water.inventoryWater.incompleteCount} 筆 Inventory 水品項缺少容量資料</p>}
           </div>

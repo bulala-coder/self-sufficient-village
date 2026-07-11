@@ -5,6 +5,7 @@ import { getFoodProductionSummary } from './Plants.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getCompletedMap } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
+import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 
 export const abilityDomains = {
   water: '水',
@@ -213,6 +214,17 @@ export default function Roadmap({ state, updateRoadmap }) {
   const hasNonElectricTreatment = ownedTreatments.some((item) => !item?.requiresElectricity)
   const hasConsumables = ownedTreatments.some((item) => !item?.requiresConsumables || Number(item?.consumablesRemaining) > 0)
   const hasRotation = (water.data.storage || []).some((item) => item?.storedAt && item?.expiresAt)
+  const compoundPresets = buildPresetCompoundEvents()
+  const compoundResult = (id) => simulateCompoundDisaster(water, compoundPresets.find((event)=>event.id===id), { mode: 'planned', strictness: 'standard' })
+  const compound72h = compoundResult('water-power-72h')
+  const compound7d = compoundResult('water-road-7d')
+  const compound14d = compoundResult('earthquake-pipeline-14d')
+  const preparedness = state.preparedness || {}
+  const compoundLevels = [
+    { level: 'Level 1：基礎複合風險', result: compound72h, items: [['停水 + 停電 72 小時可承受',compound72h.result.status==='pass'],['建立非電力淨水方式',hasNonElectricTreatment],['建立 72 小時照明與通訊替代方案',Boolean(preparedness.power||preparedness.light)]] },
+    { level: 'Level 2：補給中斷韌性', result: compound7d, items: [['停水 + 道路中斷 7 天可承受',compound7d.result.status==='pass'],['建立第二補水來源',water.capabilities.sourceCount>=2],['建立 7 天食物與水聯合分配策略',water.capabilities.allocationPlanCount>0&&water.days.overallDays>=7]] },
+    { level: 'Level 3：重大災害韌性', result: compound14d, items: [['地震 + 管線破裂 14 天壓力測試',!['fail','critical'].includes(compound14d.result.status)],['建立社區互助與外部補水備案',Boolean(preparedness.contacts)&&water.capabilities.sourceCount>0],['建立家庭衛生與排泄備案',water.days.utilityDays>=14]] }
+  ]
   const waterLevels = [
     { level: 'Level 1：72 小時水安全', items: [
       ['建立 72 小時飲水基準', water.days.drinkingDays >= 3, water.days.drinkingDays < 1],
@@ -283,6 +295,8 @@ export default function Roadmap({ state, updateRoadmap }) {
           })}</div></article>)}
         </div>
       </section>
+
+      <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><Target size={18}/><span>複合災害韌性路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{compoundLevels.map((group)=><article key={group.level} className="compound-roadmap-card"><div className="flex items-start justify-between gap-2"><h3 className="font-black text-bark">{group.level}</h3><span className="badge">{group.result.result.label}</span></div><p className="mt-2 text-sm font-bold">風險 {group.result.result.riskLevel} · {group.result.result.score} 分</p><div className="mt-3 space-y-2">{group.items.map(([label,complete])=>{const priority=!complete&&['fail','critical'].includes(group.result.result.status);const status=complete?'已完成':priority?'優先處理':'需要加強';const statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>})}</div></article>)}</div></section>
 
       <section className="grid gap-4">
         {summary.stages.map((stage) => (
