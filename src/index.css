@@ -716,10 +716,10 @@ button {
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 10px !important;
-  min-width: 60px;
-  font-size: 0.82rem !important;
-  line-height: 1.2 !important;
-  gap: 0.36rem !important;
+  min-width: 64px;
+  font-size: 0.86rem !important;
+  line-height: 1.22 !important;
+  gap: 0.42rem !important;
 }
 
 .ink-nav button:hover {
@@ -1139,16 +1139,16 @@ textarea {
 
   .ink-nav > div {
     min-width: max-content;
-    grid-template-columns: repeat(8, minmax(64px, 1fr)) !important;
-    gap: 0.2rem !important;
+    grid-template-columns: repeat(8, minmax(68px, 1fr)) !important;
+    gap: 0.25rem !important;
     padding-inline: 0.45rem !important;
   }
 
   .ink-nav button {
-    min-width: 64px;
+    min-width: 68px;
     padding-top: 0.65rem !important;
     padding-bottom: 0.65rem !important;
-    font-size: 0.82rem !important;
+    font-size: 0.86rem !important;
   }
 
   main {

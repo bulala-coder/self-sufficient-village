@@ -286,7 +286,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             <span>情境演練</span>
           </button>
 
-          <button onClick={() => setPage('evacuation')}>
+          <button onClick={() => setPage('evacuationKit')}>
             <Backpack size={18} />
             <span>撤離包</span>
           </button>

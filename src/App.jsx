@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Sprout, Home, ListChecks, Backpack, RotateCcw, AlertTriangle, Package, ClipboardCheck, FileText, BookOpen } from 'lucide-react'
+import { Sprout, Home, ListChecks, Wrench, RotateCcw, AlertTriangle, Package, ClipboardCheck, FileText, BookOpen } from 'lucide-react'
 import Welcome from './components/Welcome.jsx'
 import Onboarding from './components/Onboarding.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -11,6 +11,7 @@ import Preparedness from './components/Preparedness.jsx'
 import RiskMatrix from './components/RiskMatrix.jsx'
 import Inventory from './components/Inventory.jsx'
 import Plants from './components/Plants.jsx'
+import Tools from './components/Tools.jsx'
 import Drills from './components/Drills.jsx'
 import Calculators from './components/Calculators.jsx'
 import EvacuationKit from './components/EvacuationKit.jsx'
@@ -28,7 +29,7 @@ function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)
 function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
 
 const navItems = [
-  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['risk','風險',AlertTriangle], ['inventory','庫存',Package], ['drills','演練',ClipboardCheck], ['evacuation','撤離包',Backpack], ['report','報告',FileText], ['manual','手冊',BookOpen]
+  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['risk','風險',AlertTriangle], ['inventory','庫存',Package], ['tools','工具',Wrench], ['drills','演練',ClipboardCheck], ['report','報告',FileText], ['manual','手冊',BookOpen]
 ]
 
 export default function App() {
@@ -110,10 +111,11 @@ export default function App() {
       {page === 'preparedness' && <Preparedness {...commonProps}/>} 
       {page === 'risk' && <RiskMatrix {...commonProps}/>} 
       {page === 'inventory' && <Inventory {...commonProps}/>} 
+      {page === 'tools' && <Tools {...commonProps}/>} 
       {page === 'plants' && <Plants {...commonProps}/>} 
       {page === 'drills' && <Drills {...commonProps}/>} 
       {page === 'calculators' && <Calculators {...commonProps}/>} 
-      {page === 'evacuation' && <EvacuationKit {...commonProps}/>} 
+      {(page === 'evacuationKit' || page === 'evacuation') && <EvacuationKit {...commonProps}/>} 
       {page === 'report' && <Report {...commonProps}/>} 
       {page === 'manual' && <Manual {...commonProps}/>} 
       {page === 'skills' && <SkillTree {...commonProps}/>} 
