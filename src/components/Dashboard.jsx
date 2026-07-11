@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertTriangle, BarChart3, Calculator, ClipboardCheck, Droplets, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
+import { AlertTriangle, BarChart3, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary } from './Inventory.jsx'
 import { getRecommendedTask } from '../data/tasks.js'
@@ -259,6 +259,11 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
           <button onClick={() => setPage('calculators')}>
             <Calculator size={18} />
             <span>硬核計算器</span>
+          </button>
+
+          <button onClick={() => setPage('report')}>
+            <FileText size={18} />
+            <span>作戰報告</span>
           </button>
 
           <button onClick={() => setPage('health')}>

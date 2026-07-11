@@ -904,3 +904,47 @@ button {
     font-size: 1.45rem;
   }
 }
+
+@media print {
+  body {
+    background: #fff9ea !important;
+    color: #241f18 !important;
+  }
+
+  .ink-header,
+  .ink-nav,
+  .report-actions {
+    display: none !important;
+  }
+
+  .ink-page,
+  main,
+  .report-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    background: #fff9ea !important;
+  }
+
+  .report-page {
+    padding-bottom: 0 !important;
+  }
+
+  .report-content,
+  .report-content .muji-card,
+  .report-content .muji-note {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .muji-card,
+  .muji-note {
+    box-shadow: none !important;
+    border: 1px solid rgba(60, 52, 40, 0.22) !important;
+    background: #fffdf6 !important;
+  }
+
+  .badge {
+    border: 1px solid rgba(60, 52, 40, 0.25) !important;
+  }
+}
