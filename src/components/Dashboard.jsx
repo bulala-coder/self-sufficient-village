@@ -2,6 +2,7 @@ import React from 'react'
 import { AlertTriangle, BarChart3, BookOpen, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary } from './Inventory.jsx'
+import { getHighestRisk, riskLevelClass } from './RiskMatrix.jsx'
 import { getRecommendedTask } from '../data/tasks.js'
 
 const routeLabels = {
@@ -104,6 +105,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const drillSummary = getDrillCompletion(state.drills || {})
   const supplySummary = getInventorySummary(state.inventory || [])
   const recommendedMission = getRecommendedTask(tasks, state)
+  const highestEnvironmentalRisk = getHighestRisk(state.riskProfile || {})
   const title = scoreTitle(score)
 
   return (
@@ -182,6 +184,18 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
               <span>即期/過期 {supplySummary.expiringSoonCount + supplySummary.expiredCount} 項</span>
             </div>
           </div>
+
+          {highestEnvironmentalRisk && (
+            <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-3 text-sm font-bold text-soil/75">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-soil/50">最高環境風險</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span>{highestEnvironmentalRisk.title}</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-black ${riskLevelClass(highestEnvironmentalRisk.riskScore)}`}>
+                  {highestEnvironmentalRisk.level} {highestEnvironmentalRisk.riskScore}
+                </span>
+              </div>
+            </div>
+          )}
         </aside>
       </section>
 
@@ -239,6 +253,11 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
           <button onClick={() => setPage('preparedness')}>
             <ShieldCheck size={18} />
             <span>72 小時備災</span>
+          </button>
+
+          <button onClick={() => setPage('risk')}>
+            <AlertTriangle size={18} />
+            <span>家庭風險矩陣</span>
           </button>
 
           <button onClick={() => setPage('inventory')}>

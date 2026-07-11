@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Clipboard, FileText, Printer, RefreshCw, ShieldAlert } from 'lucide-react'
 import { DRILLS, getDrillCompletion } from './Drills.jsx'
 import { getInventorySummary, normalizeInventoryItem } from './Inventory.jsx'
+import { getHighestRisk, getRiskCounts, residenceLabels } from './RiskMatrix.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 
 function scoreTitle(score) {
@@ -131,7 +132,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, priorityAction }) {
   return [
     '自足村 Survival OS 作戰報告',
     `報告時間：${generatedAt}`,
@@ -156,6 +157,11 @@ function buildTextReport({ generatedAt, score, title, supplySummary, drillSummar
     `完成率：${taskSummary.percent}%`,
     `未完成高風險任務：${taskSummary.highRiskOpen} 項`,
     `建議優先任務：${recommendation?.task.title || '無未完成任務'}`,
+    '',
+    '環境風險摘要',
+    `住所型態：${riskSummary.residenceType}`,
+    `最高風險：${riskSummary.highestRisk ? `${riskSummary.highestRisk.title}｜${riskSummary.highestRisk.level} ${riskSummary.highestRisk.riskScore}` : '尚未建立'}`,
+    `極高／高風險數：${riskSummary.extremeCount}/${riskSummary.highCount}`,
     '',
     '核心缺口',
     ...coreStatuses.map((item) => `${item.label}：${item.status}｜${item.reason}｜下一步：${item.action}`),
@@ -185,6 +191,14 @@ export default function Report({ state, tasks }) {
     highRiskOpen: tasks.filter((task) => task.riskLevel >= 4 && !completedMap[task.id]).length
   }
   const recommendation = getRecommendedTask(tasks, state)
+  const highestRisk = getHighestRisk(state.riskProfile || {})
+  const riskCounts = getRiskCounts(state.riskProfile || {})
+  const riskSummary = {
+    highestRisk,
+    extremeCount: riskCounts.極高 || 0,
+    highCount: riskCounts.高 || 0,
+    residenceType: residenceLabels[state.riskProfile?.residenceType] || '公寓'
+  }
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -199,6 +213,7 @@ export default function Report({ state, tasks }) {
     taskSummary,
     recommendation,
     coreStatuses,
+    riskSummary,
     priorityAction
   })
 
@@ -284,6 +299,22 @@ export default function Report({ state, tasks }) {
             <Metric label="未完成高風險任務" value={`${taskSummary.highRiskOpen} 項`} />
             <Metric label="建議優先任務" value={recommendation?.task.title || '無'} />
           </div>
+        </section>
+
+        <section className="muji-card">
+          <SectionTitle>環境風險摘要</SectionTitle>
+          <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <Metric label="住所型態" value={riskSummary.residenceType} />
+            <Metric label="最高風險" value={highestRisk ? highestRisk.title : '尚未建立'} />
+            <Metric label="極高風險" value={`${riskSummary.extremeCount} 項`} />
+            <Metric label="高風險" value={`${riskSummary.highCount} 項`} />
+          </div>
+          {highestRisk && (
+            <div className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4">
+              <p className="text-sm font-black text-bark">{highestRisk.level} {highestRisk.riskScore}｜{highestRisk.reason}</p>
+              <p className="mt-2 text-sm font-bold text-soil/75">建議行動：{highestRisk.action}</p>
+            </div>
+          )}
         </section>
 
         <section className="muji-card">

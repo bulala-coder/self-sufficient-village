@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Sprout, Home, ListChecks, Calculator, RotateCcw, ShieldCheck, Package, ClipboardCheck, FileText, BookOpen } from 'lucide-react'
+import { Sprout, Home, ListChecks, Calculator, RotateCcw, AlertTriangle, Package, ClipboardCheck, FileText, BookOpen } from 'lucide-react'
 import Welcome from './components/Welcome.jsx'
 import Onboarding from './components/Onboarding.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -8,6 +8,7 @@ import SkillTree from './components/SkillTree.jsx'
 import SelfScore from './components/SelfScore.jsx'
 import HealthSafety from './components/HealthSafety.jsx'
 import Preparedness from './components/Preparedness.jsx'
+import RiskMatrix from './components/RiskMatrix.jsx'
 import Inventory from './components/Inventory.jsx'
 import Plants from './components/Plants.jsx'
 import Drills from './components/Drills.jsx'
@@ -20,13 +21,13 @@ import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
 
 const STORAGE_KEY = 'self_sufficient_village_v1'
-const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, inventory: [], plants: [], drills: {}, calculators: {} }
+const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, riskProfile: {}, inventory: [], plants: [], drills: {}, calculators: {} }
 
 function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState } catch { return defaultState } }
 function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
 
 const navItems = [
-  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['preparedness','備災',ShieldCheck], ['inventory','庫存',Package], ['drills','演練',ClipboardCheck], ['calculators','計算',Calculator], ['report','報告',FileText], ['manual','手冊',BookOpen]
+  ['dashboard','首頁',Home], ['tasks','任務',ListChecks], ['risk','風險',AlertTriangle], ['inventory','庫存',Package], ['drills','演練',ClipboardCheck], ['calculators','計算',Calculator], ['report','報告',FileText], ['manual','手冊',BookOpen]
 ]
 
 export default function App() {
@@ -40,6 +41,9 @@ export default function App() {
   function finishOnboarding(profile) { const routeType = decideRoute(profile); update({ ...state, onboarded: true, profile, routeType, started: true }) }
   function togglePreparedness(itemId) {
     update({ ...state, preparedness: { ...(state.preparedness || {}), [itemId]: !state.preparedness?.[itemId] } })
+  }
+  function updateRiskProfile(values) {
+    update({ ...state, riskProfile: values || {} })
   }
   function addInventoryItem(item) {
     update({ ...state, inventory: [{ ...item, id: Date.now() }, ...(state.inventory || [])] })
@@ -84,7 +88,7 @@ export default function App() {
   if (!state.started) return <Welcome onStart={start} />
   if (!state.onboarded) return <Onboarding onFinish={finishOnboarding} />
 
-  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, waterPlant, toggleDrillItem, updateCalculator }
+  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, updateRiskProfile, addInventoryItem, deleteInventoryItem, addPlant, deletePlant, waterPlant, toggleDrillItem, updateCalculator }
 
   return <div className="ink-page min-h-screen pb-28">
     <header className="ink-header sticky top-0 z-20">
@@ -100,6 +104,7 @@ export default function App() {
       {page === 'dashboard' && <Dashboard {...commonProps}/>} 
       {page === 'tasks' && <TaskList {...commonProps}/>} 
       {page === 'preparedness' && <Preparedness {...commonProps}/>} 
+      {page === 'risk' && <RiskMatrix {...commonProps}/>} 
       {page === 'inventory' && <Inventory {...commonProps}/>} 
       {page === 'plants' && <Plants {...commonProps}/>} 
       {page === 'drills' && <Drills {...commonProps}/>} 
