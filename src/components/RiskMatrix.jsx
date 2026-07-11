@@ -1,6 +1,7 @@
 import React from 'react'
 import { AlertTriangle, BarChart3, RotateCcw, ShieldAlert } from 'lucide-react'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
+import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 
 export const residenceLabels = {
   apartment: '公寓',
@@ -25,6 +26,7 @@ const riskLabels = {
   medium: '中',
   high: '高'
 }
+const waterFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', none: '無' }
 
 const terrainOptions = [
   ['earthquake', '地震'],
@@ -230,6 +232,8 @@ function renderRiskEmphasis(text, maxMatches = 3) {
 
 export default function RiskMatrix({ state, updateRiskProfile }) {
   const water = getWaterIntelligenceSummary()
+  const water72h = simulateWaterEvent(water, { durationDays: 3, mode: 'planned' })
+  const water7d = simulateWaterEvent(water, { durationDays: 7, mode: 'planned' })
   const waterRisk = water.days.overallDays < 1 ? 'Critical' : water.days.overallDays < 3 ? 'High' : water.days.overallDays < 7 ? 'Moderate' : 'Lower'
   const riskProfile = state.riskProfile || {}
   const cards = getRiskCards(riskProfile)
@@ -294,12 +298,15 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
         <div className="muji-section-title"><ShieldAlert size={18}/><span>水資源風險情報</span></div>
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <WaterRiskMetric label="整體水支撐" value={`${Number(water.days.overallDays.toFixed(1))} 天`} />
-          <WaterRiskMetric label="72 小時停水" value={water.days.overallDays >= 3 ? '可承受' : '不可承受'} />
-          <WaterRiskMetric label="7 天停水" value={water.days.overallDays >= 7 ? '可承受' : '不可承受'} />
+          <WaterRiskMetric label="72 小時停水" value={water72h.result.label} />
+          <WaterRiskMetric label="7 天停水" value={water7d.result.label} />
           <WaterRiskMetric label="水風險等級" value={waterRisk} />
           <WaterRiskMetric label="72 小時飲水" value={water.days.drinkingDays >= 3 ? '足夠' : '不足'} />
           <WaterRiskMetric label="72 小時生活用水" value={water.days.utilityDays >= 3 ? '足夠' : '不足'} />
+          <WaterRiskMetric label="72 小時失敗點" value={waterFailureLabels[water72h.result.failurePoint]} />
+          <WaterRiskMetric label="7 天失敗點" value={waterFailureLabels[water7d.result.failurePoint]} />
         </div>
+        <p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-bold">事件風險提示：{water7d.recommendations[0]}</p>
         <p className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4 text-sm font-bold leading-7 text-soil/75"><span className="action-point">第一行動</span>：{water.recommendations[0]}</p>
       </section>
 

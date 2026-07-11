@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CheckCircle2, ChevronDown, ChevronUp, Circle, ClipboardCheck, ShieldAlert } from 'lucide-react'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
+import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 
 export const DRILLS = [
   {
@@ -190,13 +191,14 @@ export default function Drills({ state, toggleDrillItem }) {
         <div className="muji-section-title"><ClipboardCheck size={18}/><span>停水演練情報</span></div>
         <div className="mt-4 grid gap-3 lg:grid-cols-3">
           {[{ label: '24 小時', days: 1 }, { label: '72 小時', days: 3 }, { label: '7 天', days: 7 }].map((target) => {
-            const result = water.days.drinkingDays < target.days ? '失敗' : water.days.utilityDays < target.days ? '部分不足' : '通過'
-            const badge = result === '通過' ? 'bg-[#24483a] text-[#fff9ea]' : result === '部分不足' ? 'bg-[#c2a25c] text-[#241b10]' : 'bg-[#8b2f25] text-[#fff9ea]'
+            const simulation = simulateWaterEvent(water, { durationDays: target.days, mode: 'planned' })
+            const badge = simulation.result.status === 'pass' ? 'bg-[#24483a] text-[#fff9ea]' : simulation.result.status === 'partial' ? 'bg-[#c2a25c] text-[#241b10]' : 'bg-[#8b2f25] text-[#fff9ea]'
             return <article key={target.days} className="rounded-2xl border border-soil/15 bg-white/60 p-4">
-              <div className="flex items-start justify-between gap-3"><h3 className="font-black text-bark">{target.label}停水演練</h3><span className={`rounded-full px-3 py-1 text-xs font-black ${badge}`}>{result}</span></div>
+              <div className="flex items-start justify-between gap-3"><h3 className="font-black text-bark">{target.label}停水演練</h3><span className={`rounded-full px-3 py-1 text-xs font-black ${badge}`}>{simulation.result.label}</span></div>
               <div className="mt-3 space-y-1 text-sm font-bold text-soil/75">
-                <p>飲用水：{water.days.drinkingDays >= target.days ? '足夠' : '不足'}</p><p>生活用水：{water.days.utilityDays >= target.days ? '足夠' : '不足'}</p>
-                <p>補水來源：{water.capabilities.sourceCount > 0 ? `${water.capabilities.sourceCount} 個` : '不足'}</p><p>淨水方式：{water.capabilities.purificationCount > 0 ? `${water.capabilities.purificationCount} 種` : '不足'}</p><p>分配方案：{water.capabilities.allocationPlanCount > 0 ? `${water.capabilities.allocationPlanCount} 個` : '不足'}</p>
+                <p>模擬分數：{simulation.result.score} / 100</p><p>可撐天數：{Number(simulation.result.survivedDays.toFixed(1))} 天</p>
+                <p>飲水缺口：{Number(simulation.gaps.drinkingGap.toFixed(1))} L</p><p>生活用水缺口：{Number(simulation.gaps.utilityGap.toFixed(1))} L</p><p>總水量缺口：{Number(simulation.gaps.totalGap.toFixed(1))} L</p>
+                <p className="pt-1">建議：{simulation.recommendations[0]}</p>
               </div>
             </article>
           })}

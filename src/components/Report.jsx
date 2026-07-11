@@ -8,6 +8,7 @@ import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
+import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -23,6 +24,8 @@ function formatNumber(value) {
 const usageCategoryLabels = { drinking: '飲水', cooking: '煮食', cleaning: '清潔', toilet: '廁所', animals: '動物', irrigation: '灌溉', medical: '醫療', other: '其他' }
 function primaryUsageCategory(water) { const entry = Object.entries(water.usage.byCategory).sort((a, b) => b[1] - a[1])[0]; return entry && entry[1] > 0 ? usageCategoryLabels[entry[0]] : '無紀錄' }
 function usageCategorySummary(water) { return Object.entries(water.usage.byCategory).filter(([, liters]) => Number(liters) > 0).sort((a, b) => b[1] - a[1]).map(([category, liters]) => `${usageCategoryLabels[category]} ${formatNumber(liters)} L`) }
+const eventFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', none: '無' }
+function waterEventLine(item) { const result = item.simulation; return `${item.label}：${result.result.label}｜${result.result.score} 分｜可撐 ${formatNumber(result.result.survivedDays)} 天｜飲水缺口 ${formatNumber(result.gaps.drinkingGap)} L｜生活用水缺口 ${formatNumber(result.gaps.utilityGap)} L｜失敗點 ${eventFailureLabels[result.result.failurePoint]}` }
 
 function statusBadgeClass(status) {
   if (status === '基本成立') return 'bg-[#24483a] text-[#fff9ea]'
@@ -139,7 +142,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -171,6 +174,7 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     `預估可飲用水／總水量剩餘：${formatNumber(water.usage.projectedPotableDays)} / ${formatNumber(water.usage.projectedTotalWaterDays)} 天`,
     `主要用水分類：${primaryUsageCategory(water)}`,
     `分類用水摘要：${usageCategorySummary(water).join('、') || '尚無紀錄'}`,
+    ...waterEvents.map(waterEventLine),
     ...water.usage.warnings.slice(0, 3).map((item, index) => `用水警告 ${index + 1}：${item}`),
     ...water.recommendations.slice(0, 3).map((item, index) => `改善建議 ${index + 1}：${item}`),
     '',
@@ -269,6 +273,7 @@ export default function Report({ state, tasks }) {
   const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
   const roadmapSummary = getRoadmapSummary(state)
   const water = getWaterIntelligenceSummary()
+  const waterEvents = [{ label: '24 小時停水', days: 1 }, { label: '72 小時停水', days: 3 }, { label: '7 天停水', days: 7 }, { label: '14 天停水', days: 14 }].map((item) => ({ ...item, simulation: simulateWaterEvent(water, { durationDays: item.days, mode: 'planned' }) }))
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -289,6 +294,7 @@ export default function Report({ state, tasks }) {
     kitSummary,
     roadmapSummary,
     water,
+    waterEvents,
     priorityAction
   })
 
@@ -395,6 +401,7 @@ export default function Report({ state, tasks }) {
           </div>
           <ReportList title="水系統前 3 條改善建議" items={water.recommendations.slice(0, 3)} />
           <ReportList title="分類用水摘要" items={usageCategorySummary(water)} empty="尚無用水紀錄。" />
+          <ReportList title="停水事件模擬" items={waterEvents.map(waterEventLine)} />
           <ReportList title="前 3 條用水警告" items={water.usage.warnings.slice(0, 3)} />
         </section>
 
