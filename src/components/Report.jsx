@@ -7,6 +7,7 @@ import { getHighestRisk, getRiskCounts, residenceLabels } from './RiskMatrix.jsx
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
+import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -135,7 +136,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -150,6 +151,16 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     `30 天內到期：${supplySummary.expiringSoonCount} 項`,
     `已過期：${supplySummary.expiredCount} 項`,
     `物資輪替狀態：已過期 ${supplySummary.expiredCount} 項；30 天內到期 ${supplySummary.expiringSoonCount} 項；最早到期食物：${rotationList[0] ? `${rotationList[0].name}（${rotationList[0].expiresAt}）` : '尚未建立食物期限資料'}`,
+    '',
+    '水資源安全摘要',
+    `水系統分數：${water.score} / 100｜${water.status}`,
+    `可飲用／非飲用／需處理：${formatNumber(water.totals.potableLiters)} / ${formatNumber(water.totals.nonPotableLiters)} / ${formatNumber(water.totals.treatmentRequiredLiters)} L`,
+    `每日飲水／生活用水：${formatNumber(water.demand.dailyDrinking)} / ${formatNumber(water.demand.dailyUtility)} L`,
+    `飲水／生活／整體支撐：${formatNumber(water.days.drinkingDays)} / ${formatNumber(water.days.utilityDays)} / ${formatNumber(water.days.overallDays)} 天`,
+    `補水來源：${water.capabilities.sourceCount}（穩定 ${water.capabilities.stableSourceCount}）`,
+    `淨水方式：${water.capabilities.purificationCount}｜每日能力 ${formatNumber(water.capabilities.purificationDailyCapacity)} L`,
+    `停水分配方案：${water.capabilities.allocationPlanCount}｜雨水或替代水源：${water.capabilities.hasRainwater ? '有' : '無'}`,
+    ...water.recommendations.slice(0, 3).map((item, index) => `改善建議 ${index + 1}：${item}`),
     '',
     '食物生產摘要',
     `Food Production Score：${productionSummary.score}｜${productionSummary.scoreTitle}`,
@@ -245,6 +256,7 @@ export default function Report({ state, tasks }) {
   }
   const kitSummary = getEvacuationKitSummary(state.evacuationKit || {})
   const roadmapSummary = getRoadmapSummary(state)
+  const water = getWaterIntelligenceSummary()
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -264,6 +276,7 @@ export default function Report({ state, tasks }) {
     riskSummary,
     kitSummary,
     roadmapSummary,
+    water,
     priorityAction
   })
 
@@ -334,6 +347,28 @@ export default function Report({ state, tasks }) {
               最早到期食物：{rotationList[0] ? `${rotationList[0].name}（${rotationList[0].expiresAt}）` : '尚未建立食物期限資料'}。
             </p>
           </div>
+        </section>
+
+        <section className="muji-card border-[#24483a]/25">
+          <SectionTitle>水資源安全摘要</SectionTitle>
+          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Metric label="水系統分數" value={`${water.score} / 100`} />
+            <Metric label="水系統狀態" value={water.status} />
+            <Metric label="可飲用水" value={`${formatNumber(water.totals.potableLiters)} L`} />
+            <Metric label="非飲用水" value={`${formatNumber(water.totals.nonPotableLiters)} L`} />
+            <Metric label="需處理水量" value={`${formatNumber(water.totals.treatmentRequiredLiters)} L`} />
+            <Metric label="每日飲水需求" value={`${formatNumber(water.demand.dailyDrinking)} L`} />
+            <Metric label="每日生活用水" value={`${formatNumber(water.demand.dailyUtility)} L`} />
+            <Metric label="飲用水支撐" value={`${formatNumber(water.days.drinkingDays)} 天`} />
+            <Metric label="生活用水支撐" value={`${formatNumber(water.days.utilityDays)} 天`} />
+            <Metric label="整體支撐" value={`${formatNumber(water.days.overallDays)} 天`} />
+            <Metric label="補水來源" value={`${water.capabilities.sourceCount}（穩定 ${water.capabilities.stableSourceCount}）`} />
+            <Metric label="淨水方式" value={`${water.capabilities.purificationCount} 種`} />
+            <Metric label="每日淨水能力" value={`${formatNumber(water.capabilities.purificationDailyCapacity)} L`} />
+            <Metric label="停水分配方案" value={`${water.capabilities.allocationPlanCount} 個`} />
+            <Metric label="雨水或替代水源" value={water.capabilities.hasRainwater ? '有' : '無'} />
+          </div>
+          <ReportList title="水系統前 3 條改善建議" items={water.recommendations.slice(0, 3)} />
         </section>
 
         <section className="muji-card">

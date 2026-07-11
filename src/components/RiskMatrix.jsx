@@ -1,5 +1,6 @@
 import React from 'react'
 import { AlertTriangle, BarChart3, RotateCcw, ShieldAlert } from 'lucide-react'
+import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 
 export const residenceLabels = {
   apartment: '公寓',
@@ -228,6 +229,8 @@ function renderRiskEmphasis(text, maxMatches = 3) {
 }
 
 export default function RiskMatrix({ state, updateRiskProfile }) {
+  const water = getWaterIntelligenceSummary()
+  const waterRisk = water.days.overallDays < 1 ? 'Critical' : water.days.overallDays < 3 ? 'High' : water.days.overallDays < 7 ? 'Moderate' : 'Lower'
   const riskProfile = state.riskProfile || {}
   const cards = getRiskCards(riskProfile)
   const highestRisk = getHighestRisk(riskProfile)
@@ -285,6 +288,19 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
             <RiskCount label="低" value={counts.低} />
           </div>
         </aside>
+      </section>
+
+      <section className="muji-card border-[#24483a]/25">
+        <div className="muji-section-title"><ShieldAlert size={18}/><span>水資源風險情報</span></div>
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <WaterRiskMetric label="整體水支撐" value={`${Number(water.days.overallDays.toFixed(1))} 天`} />
+          <WaterRiskMetric label="72 小時停水" value={water.days.overallDays >= 3 ? '可承受' : '不可承受'} />
+          <WaterRiskMetric label="7 天停水" value={water.days.overallDays >= 7 ? '可承受' : '不可承受'} />
+          <WaterRiskMetric label="水風險等級" value={waterRisk} />
+          <WaterRiskMetric label="72 小時飲水" value={water.days.drinkingDays >= 3 ? '足夠' : '不足'} />
+          <WaterRiskMetric label="72 小時生活用水" value={water.days.utilityDays >= 3 ? '足夠' : '不足'} />
+        </div>
+        <p className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4 text-sm font-bold leading-7 text-soil/75"><span className="action-point">第一行動</span>：{water.recommendations[0]}</p>
       </section>
 
       <section className="muji-card">
@@ -360,6 +376,10 @@ function RiskCount({ label, value }) {
       <p className="mt-2 text-2xl font-black text-bark">{value} 項</p>
     </div>
   )
+}
+
+function WaterRiskMetric({ label, value }) {
+  return <div className="rounded-2xl border border-soil/15 bg-white/65 p-4"><p className="text-xs font-black text-soil/50">{label}</p><p className="mt-2 text-xl font-black text-bark">{value}</p></div>
 }
 
 function SelectField({ label, value, onChange, options }) {

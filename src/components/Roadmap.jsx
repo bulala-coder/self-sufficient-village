@@ -4,6 +4,7 @@ import { getInventorySummary } from './Inventory.jsx'
 import { getFoodProductionSummary } from './Plants.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getCompletedMap } from '../data/tasks.js'
+import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 
 export const abilityDomains = {
   water: '水',
@@ -207,6 +208,28 @@ function domainClass(domain) {
 
 export default function Roadmap({ state, updateRoadmap }) {
   const summary = getRoadmapSummary(state)
+  const water = getWaterIntelligenceSummary()
+  const ownedTreatments = (water.data.treatments || []).filter((item) => item?.owned === true)
+  const hasNonElectricTreatment = ownedTreatments.some((item) => !item?.requiresElectricity)
+  const hasConsumables = ownedTreatments.some((item) => !item?.requiresConsumables || Number(item?.consumablesRemaining) > 0)
+  const hasRotation = (water.data.storage || []).some((item) => item?.storedAt && item?.expiresAt)
+  const waterLevels = [
+    { level: 'Level 1：72 小時水安全', items: [
+      ['建立 72 小時飲水基準', water.days.drinkingDays >= 3, water.days.drinkingDays < 1],
+      ['建立 72 小時生活用水最低量', water.days.utilityDays >= 3, water.days.utilityDays < 1],
+      ['建立停水分配表', water.capabilities.allocationPlanCount > 0, false]
+    ]},
+    { level: 'Level 2：補水與淨水', items: [
+      ['建立第二補水來源', water.capabilities.sourceCount >= 2, water.capabilities.sourceCount === 0],
+      ['建立不依賴電力的淨水方法', hasNonElectricTreatment && water.capabilities.purificationDailyCapacity >= water.demand.dailyDrinking, water.capabilities.purificationCount === 0],
+      ['補齊淨水耗材', hasConsumables, false]
+    ]},
+    { level: 'Level 3：長期水韌性', items: [
+      ['建立雨水或替代水源', water.capabilities.hasRainwater, false],
+      ['完成 7 天停水演練', water.days.overallDays >= 7, water.days.overallDays < 3],
+      ['建立水儲備輪替制度', hasRotation, false]
+    ]}
+  ]
   const roadmap = state.roadmap || {}
   const checks = roadmap.checks || {}
 
@@ -247,6 +270,17 @@ export default function Roadmap({ state, updateRoadmap }) {
           <p className="summary-meta font-black">下一個最重要能力</p>
           <h2 className="mt-2 text-xl font-black text-bark">{summary.nextAbility?.title || '全部階段已達標，進入年度壓力測試。'}</h2>
           <p className="summary-text mt-2">{summary.nextAbility?.suggestedAction || '持續做年度補給、種植、修繕與社區互助系統檢查。'}</p>
+        </div>
+      </section>
+
+      <section className="muji-card border-[#24483a]/25">
+        <div className="muji-section-title"><Target size={18}/><span>水資源改善路線</span></div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          {waterLevels.map((group) => <article key={group.level} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><h3 className="font-black text-bark">{group.level}</h3><div className="mt-3 space-y-2">{group.items.map(([label,complete,priority]) => {
+            const status = complete ? '已完成' : priority ? '優先處理' : '需要加強'
+            const statusClass = complete ? 'bg-[#24483a] text-[#fff9ea]' : priority ? 'bg-[#8b2f25] text-[#fff9ea]' : 'bg-[#c2a25c] text-[#241b10]'
+            return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6 text-bark">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>
+          })}</div></article>)}
         </div>
       </section>
 

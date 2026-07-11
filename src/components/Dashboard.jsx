@@ -7,6 +7,7 @@ import { getHighestRisk, riskLevelClass } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
 import { getCompletedMap, getRecommendedTask } from '../data/tasks.js'
+import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -102,6 +103,7 @@ function formatSupplyNumber(value) {
 }
 
 export default function Dashboard({ state, tasks, completedCount, setPage }) {
+  const water = getWaterIntelligenceSummary()
   const statuses = getSystemStatus(state)
   const highestGap = statuses.find((item) => item.status === '缺口')
   const score = readinessScore({ statuses, state, tasks, completedCount })
@@ -133,6 +135,25 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
 
         <div className="muji-route">
           {routeLabels[state.routeType] || '未指定環境'}
+        </div>
+      </section>
+
+      <section className="muji-card border-[#24483a]/25">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 lg:max-w-xl">
+            <div className="muji-section-title"><Droplets size={18}/><span>水資源狀態</span></div>
+            <div className="mt-4 flex flex-wrap items-end gap-5">
+              <div><p className="text-xs font-black text-soil/50">水系統分數</p><strong className="text-4xl text-[#24483a]">{water.score} / 100</strong></div>
+              <div><p className="text-xs font-black text-soil/50">狀態等級</p><strong className="text-xl text-bark">{water.status}</strong></div>
+              <div><p className="text-xs font-black text-soil/50">整體支撐</p><strong className="text-xl text-bark">{formatSupplyNumber(water.days.overallDays)} 天</strong></div>
+            </div>
+            <p className="mt-4 text-sm leading-7 text-soil/75">{water.recommendations[0]}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:min-w-72">
+            <div className="rounded-2xl border border-soil/15 bg-white/60 p-4"><p className="text-xs font-black text-soil/50">飲用水支撐</p><strong className="text-xl">{formatSupplyNumber(water.days.drinkingDays)} 天</strong></div>
+            <div className="rounded-2xl border border-soil/15 bg-white/60 p-4"><p className="text-xs font-black text-soil/50">生活用水支撐</p><strong className="text-xl">{formatSupplyNumber(water.days.utilityDays)} 天</strong></div>
+            <button type="button" className="btn-primary col-span-2" onClick={() => setPage('waterSystem')}>打開水資源系統</button>
+          </div>
         </div>
       </section>
 
