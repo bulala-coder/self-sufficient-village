@@ -25,7 +25,14 @@ import { decideRoute } from './data/routes.js'
 const STORAGE_KEY = 'self_sufficient_village_v1'
 const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, riskProfile: {}, inventory: [], plants: [], drills: {}, calculators: {}, evacuationKit: {} }
 
-function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState } catch { return defaultState } }
+function loadState() {
+  try {
+    const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY))
+    return savedState && typeof savedState === 'object' ? { ...defaultState, ...savedState } : defaultState
+  } catch {
+    return defaultState
+  }
+}
 function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
 
 const navItems = [
