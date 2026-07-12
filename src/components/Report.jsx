@@ -13,6 +13,7 @@ import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/co
 import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
 import { getEnergySystemSummary } from '../utils/energyStorage.js'
 import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
+import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -151,7 +152,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, energy, sanitation, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, energy, sanitation, medical, priorityAction }) {
   const executiveActions = uniqueItems([priorityAction, ...fortressCore.recommendations]).slice(0, 3)
   return [
     'Fortress OS｜自足堡壘 作戰報告',
@@ -185,6 +186,13 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     `整體衛生支撐：${formatNumber(sanitation.days.overallDays)} 天`,
     `廁所方案／室內安全／密封垃圾／個人衛生耗材／清潔用品／衛生方案：${sanitation.capabilities.toiletPlanCount} / ${sanitation.capabilities.indoorSafeToiletCount} / ${sanitation.capabilities.sealedWasteCount} / ${sanitation.capabilities.hygieneSupplyCount} / ${sanitation.capabilities.cleaningSupplyCount} / ${sanitation.capabilities.sanitationPlanCount}`,
     ...uniqueItems(sanitation.recommendations).slice(0,3).map((item,index)=>`衛生建議 ${index+1}：${item}`),
+    '',
+    '醫療安全摘要',
+    `Medical Score：${medical.score} / 100｜${medical.status}`,
+    `家庭人數：${formatNumber(medical.totals.householdSize)} 人`,
+    `急救／常備藥／慢性需求／寵物醫療／整體支撐：${formatNumber(medical.days.firstAidDays)} / ${formatNumber(medical.days.medicineDays)} / ${formatNumber(medical.days.chronicDays)} / ${formatNumber(medical.days.petMedicalDays)} / ${formatNumber(medical.days.overallDays)} 天`,
+    `急救用品／常備藥／慢性需求／寵物用品／聯絡人／獸醫／照護方案／效期缺口：${medical.data.firstAidItems.length} / ${medical.totals.medicineItemCount} / ${medical.totals.chronicNeedCount} / ${medical.totals.petMedicalItemCount} / ${medical.capabilities.medicalContactCount} / ${medical.capabilities.vetContactCount} / ${medical.capabilities.carePlanCount} / ${medical.capabilities.expiringItemCount}`,
+    ...uniqueItems(medical.recommendations).slice(0,3).map((item,index)=>`醫療建議 ${index+1}：${item}`),
     '',
     '補給摘要',
     `飲水總量：${formatNumber(supplySummary.waterLiters)} L`,
@@ -317,7 +325,8 @@ export default function Report({ state, tasks }) {
   const compoundEvents = buildPresetCompoundEvents().map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
   const energy = getEnergySystemSummary()
   const sanitation = getSanitationSystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation)
+  const medical = getMedicalSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical)
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -344,6 +353,7 @@ export default function Report({ state, tasks }) {
     fortressCore,
     energy,
     sanitation,
+    medical,
     priorityAction
   })
 
@@ -431,6 +441,8 @@ export default function Report({ state, tasks }) {
         <section className="muji-card energy-summary-card border-[#c2a25c]/40"><SectionTitle>能源安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Energy Score" value={`${energy.score} / 100`}/><Metric label="狀態" value={energy.status}/><Metric label="可用電量" value={`${formatNumber(energy.totals.usablePowerWh)} Wh`}/><Metric label="每日耗電" value={`${formatNumber(energy.totals.dailyWh)} Wh`}/><Metric label="必要設備支撐" value={`${formatNumber(energy.days.essentialElectricDays)} 天`}/><Metric label="烹調支撐" value={`${formatNumber(energy.days.cookingDays)} 天`}/><Metric label="非市電來源" value={`${energy.capabilities.nonGridPowerSourceCount} 個`}/><Metric label="能源方案" value={`${energy.capabilities.planCount} 個`}/></div><ReportList title="前 3 條能源改善建議" items={uniqueItems(energy.recommendations).slice(0,3)}/></section>
 
         <section className="muji-card sanitation-summary-card"><SectionTitle>衛生安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Sanitation Score" value={`${sanitation.score} / 100`}/><Metric label="狀態" value={sanitation.status}/><Metric label="家庭人數" value={`${formatNumber(sanitation.totals.householdSize)} 人`}/><Metric label="每日排泄估算" value={`${formatNumber(sanitation.totals.dailyToiletUses)} 次`}/><Metric label="廁所支撐" value={`${formatNumber(sanitation.days.toiletDays)} 天`}/><Metric label="個人衛生支撐" value={`${formatNumber(sanitation.days.hygieneDays)} 天`}/><Metric label="垃圾處理支撐" value={`${formatNumber(sanitation.days.wasteDays)} 天`}/><Metric label="清潔消毒支撐" value={`${formatNumber(sanitation.days.cleaningDays)} 天`}/><Metric label="寵物排泄支撐" value={`${formatNumber(sanitation.days.petWasteDays)} 天`}/><Metric label="整體衛生支撐" value={`${formatNumber(sanitation.days.overallDays)} 天`}/><Metric label="廁所／室內安全方案" value={`${sanitation.capabilities.toiletPlanCount} / ${sanitation.capabilities.indoorSafeToiletCount}`}/><Metric label="密封垃圾處理" value={`${sanitation.capabilities.sealedWasteCount} 個`}/><Metric label="個人衛生耗材" value={`${sanitation.capabilities.hygieneSupplyCount} 項`}/><Metric label="清潔消毒用品" value={`${sanitation.capabilities.cleaningSupplyCount} 項`}/><Metric label="衛生分配方案" value={`${sanitation.capabilities.sanitationPlanCount} 個`}/></div><ReportList title="前 3 條衛生改善建議" items={uniqueItems(sanitation.recommendations).slice(0,3)}/></section>
+
+        <section className="muji-card medical-summary-card"><SectionTitle>醫療安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Medical Score" value={`${medical.score} / 100`}/><Metric label="狀態" value={medical.status}/><Metric label="家庭人數" value={`${formatNumber(medical.totals.householdSize)} 人`}/><Metric label="急救支撐" value={`${formatNumber(medical.days.firstAidDays)} 天`}/><Metric label="常備藥支撐" value={`${formatNumber(medical.days.medicineDays)} 天`}/><Metric label="慢性需求支撐" value={`${formatNumber(medical.days.chronicDays)} 天`}/><Metric label="寵物醫療支撐" value={`${formatNumber(medical.days.petMedicalDays)} 天`}/><Metric label="整體醫療支撐" value={`${formatNumber(medical.days.overallDays)} 天`}/><Metric label="急救用品" value={`${medical.data.firstAidItems.length} 項`}/><Metric label="常備藥" value={`${medical.totals.medicineItemCount} 項`}/><Metric label="慢性需求" value={`${medical.totals.chronicNeedCount} 項`}/><Metric label="寵物醫療用品" value={`${medical.totals.petMedicalItemCount} 項`}/><Metric label="醫療／獸醫聯絡人" value={`${medical.capabilities.medicalContactCount} / ${medical.capabilities.vetContactCount}`}/><Metric label="照護方案" value={`${medical.capabilities.carePlanCount} 個`}/><Metric label="即期或缺效期" value={`${medical.capabilities.expiringItemCount} 項`}/></div><ReportList title="前 3 條醫療改善建議" items={uniqueItems(medical.recommendations).slice(0,3)}/></section>
 
         <section className="muji-card border-[#24483a]/25">
           <SectionTitle>水資源安全摘要</SectionTitle>

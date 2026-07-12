@@ -9,6 +9,7 @@ import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/co
 import { getCoreSystemSummary } from '../utils/coreSystem.js'
 import { getEnergySystemSummary } from '../utils/energyStorage.js'
 import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
+import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 
 export const abilityDomains = {
   water: '水',
@@ -215,7 +216,8 @@ export default function Roadmap({ state, updateRoadmap }) {
   const water = getWaterIntelligenceSummary()
   const energy = getEnergySystemSummary()
   const sanitation = getSanitationSystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation)
+  const medical = getMedicalSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical)
   const ownedTreatments = (water.data.treatments || []).filter((item) => item?.owned === true)
   const hasNonElectricTreatment = ownedTreatments.some((item) => !item?.requiresElectricity)
   const hasConsumables = ownedTreatments.some((item) => !item?.requiresConsumables || Number(item?.consumablesRemaining) > 0)
@@ -265,6 +267,8 @@ export default function Roadmap({ state, updateRoadmap }) {
     { level: 'Level 2：7 天衛生韌性', items: [['建立 7 天垃圾袋與排泄袋',sanitation.days.wasteDays>=7&&sanitation.days.toiletDays>=7],['建立清潔消毒分配方案',sanitation.capabilities.sanitationPlanCount>0&&sanitation.days.cleaningDays>=7],['建立除臭與室內安全處理',sanitation.capabilities.odorControlCount>0&&sanitation.capabilities.indoorSafeToiletCount>0],['建立特殊衛生用品',hasSpecialHygiene]] },
     { level: 'Level 3：長期衛生安全', items: [['建立 14 天衛生壓力測試',sanitation.days.overallDays>=14],['建立污水與污染物隔離規則',sanitation.data.wasteSupplies.some((item)=>item?.sealed&&item?.notes)],['建立家庭衛生角色分工',sanitation.data.sanitationPlans.some((item)=>item?.notes)],['建立災後清潔與消毒流程',sanitation.data.cleaningSupplies.some((item)=>item?.notes)]] }
   ]
+  const specialMedical=Number(medical.data.household.children)+Number(medical.data.household.seniors)+Number(medical.data.household.specialNeeds)
+  const medicalLevels=[{level:'Level 1：72 小時家庭急救',items:[['建立基本急救包',medical.data.firstAidItems.length>0],['建立消毒、生理食鹽水與手套',medical.capabilities.antisepticCount+medical.capabilities.salineCount>0&&medical.capabilities.gloveCount>0],['建立常備藥清單',medical.totals.medicineItemCount>0],['建立醫療與獸醫聯絡人',medical.capabilities.medicalContactCount>0&&(medical.data.household.pets<=0||medical.capabilities.vetContactCount>0)],['建立寵物基本醫療用品',medical.data.household.pets<=0||medical.totals.petMedicalItemCount>0]]},{level:'Level 2：7 天醫療支撐',items:[['建立 7 天慢性病藥物緩衝',!medical.data.chronicNeeds.length||medical.days.chronicDays>=7],['建立特殊需求用品',specialMedical<=0||medical.data.chronicNeeds.length>0||medical.data.medicines.some((item)=>item?.forChildren)],['建立寵物慢性照護用品',medical.data.household.pets<=0||medical.data.petMedicalItems.some((item)=>['chronic','medication','digestive'].includes(item?.type))],['建立醫療照護方案',medical.capabilities.carePlanCount>0]]},{level:'Level 3：重大災害醫療備援',items:[['建立 14 天醫療壓力測試',medical.days.overallDays>=14],['建立藥品效期檢查制度',medical.capabilities.expiringItemCount===0&&(medical.data.firstAidItems.length+medical.data.medicines.length)>0],['建立外傷、感染、中毒與轉診判斷流程',medical.data.carePlans.some((item)=>item?.notes)],['建立家庭醫療角色分工',medical.data.emergencyContacts.some((item)=>['family','neighbor'].includes(item?.role))]]}]
   const roadmap = state.roadmap || {}
   const checks = roadmap.checks || {}
   const immediateActions = [...new Set(fortressCore.recommendations)].slice(0, 3)
@@ -349,6 +353,8 @@ export default function Roadmap({ state, updateRoadmap }) {
       </section>
 
       <section className="muji-card sanitation-summary-card"><div className="muji-section-title"><Target size={18}/><span>Sanitation System Roadmap｜衛生韌性路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{sanitationLevels.map((group)=><article key={group.level} className="sanitation-roadmap-card"><div className="flex items-start justify-between gap-2"><h3>{group.level}</h3><span className="badge">{sanitation.status}</span></div><div className="mt-3 space-y-2">{group.items.map(([label,complete])=>{const priority=!complete&&sanitation.score<30;const status=complete?'已完成':priority?'優先處理':'需要加強';const statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>})}</div></article>)}</div></section>
+
+      <section className="muji-card medical-summary-card"><div className="muji-section-title"><Target size={18}/><span>Medical System Roadmap｜醫療韌性路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{medicalLevels.map((group)=><article key={group.level} className="medical-roadmap-card"><div className="flex items-start justify-between gap-2"><h3>{group.level}</h3><span className="badge">{medical.status}</span></div><div className="mt-3 space-y-2">{group.items.map(([label,complete])=>{const priority=!complete&&medical.score<30,status=complete?'已完成':priority?'優先處理':'需要加強',statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="roadmap-card"><span>{label}</span><span className={`status-pill ${statusClass}`}>{status}</span></div>})}</div></article>)}</div></section>
 
       <section className="muji-card energy-summary-card border-[#c2a25c]/40"><div className="muji-section-title"><Target size={18}/><span>Energy System Roadmap｜能源韌性路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{energyLevels.map((group)=><article key={group.level} className="energy-roadmap-card"><div className="flex items-start justify-between gap-2"><h3 className="font-black text-bark">{group.level}</h3><span className="badge">{energy.status}</span></div><div className="mt-3 space-y-2">{group.items.map(([label,complete])=>{const priority=!complete&&energy.score<30;const status=complete?'已完成':priority?'優先處理':'需要加強';const statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>})}</div></article>)}</div></section>
 
