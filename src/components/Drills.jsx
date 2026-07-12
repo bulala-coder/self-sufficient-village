@@ -5,6 +5,7 @@ import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
 import { getEnergySystemSummary } from '../utils/energyStorage.js'
+import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 
 const compoundFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', water: '水資源', power: '電力', logistics: '交通補給', contamination: '水質', sanitation: '衛生', none: '無' }
 
@@ -157,7 +158,8 @@ export default function Drills({ state, toggleDrillItem }) {
   const water = getWaterIntelligenceSummary()
   const compoundDrills = buildPresetCompoundEvents().filter((event)=>['water-power-72h','water-road-7d','typhoon-supply-7d'].includes(event.id)).map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
   const energy = getEnergySystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy)
+  const sanitation = getSanitationSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation)
   const [openDrills, setOpenDrills] = useState({ 'water-24h': true })
   const drills = state.drills || {}
   const summary = getDrillCompletion(drills)
@@ -194,6 +196,8 @@ export default function Drills({ state, toggleDrillItem }) {
           <div className="h-full rounded-full bg-[#24483a]" style={{ width: `${summary.percent}%` }} />
         </div>
       </section>
+
+      <section className="muji-card sanitation-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>衛生演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{[{name:'24 小時停水衛生',days:1},{name:'72 小時停水衛生',days:3},{name:'7 天停水衛生',days:7}].map((target)=>{const toilet=sanitation.days.toiletDays>=target.days;const waste=sanitation.days.wasteDays>=target.days;const cleaning=sanitation.days.cleaningDays>=target.days;const pet=sanitation.data.household.pets<=0||sanitation.days.petWasteDays>=target.days;const passed=[toilet,waste,cleaning,pet].filter(Boolean).length;const result=passed===4?'通過':passed>=2?'部分不足':'失敗';const badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={target.days} className="sanitation-plan-card"><div className="flex justify-between gap-2"><h3>{target.name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 text-sm font-bold"><p>廁所方案：{toilet?'足夠':'不足'}</p><p>垃圾處理：{waste?'足夠':'不足'}</p><p>清潔消毒：{cleaning?'足夠':'不足'}</p><p>寵物排泄：{pet?'足夠':'不足'}</p><p className="pt-1">建議：{sanitation.recommendations[0]}</p></div></article>})}</div></section>
 
       <section className="muji-card border-[#24483a]/25">
         <div className="muji-section-title"><ClipboardCheck size={18}/><span>停水演練情報</span></div>

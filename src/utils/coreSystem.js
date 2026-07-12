@@ -2,6 +2,7 @@ import { getWaterIntelligenceSummary } from './waterStorage.js'
 import { simulateWaterEvent } from './waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from './compoundDisasterSimulator.js'
 import { getEnergySystemSummary } from './energyStorage.js'
+import { getSanitationSystemSummary } from './sanitationStorage.js'
 
 export const CORE_DOMAIN_WEIGHTS = { water: 25, food: 20, energy: 15, sanitation: 15, medical: 15, communication: 10 }
 export const CORE_DOMAIN_LABELS = { water: 'Water｜水', food: 'Food｜食物', energy: 'Energy｜能源', sanitation: 'Sanitation｜衛生與排泄', medical: 'Medical｜醫療與急救', communication: 'Communication｜通訊與資訊' }
@@ -64,7 +65,7 @@ function estimatedDomain(domain, state = {}) {
   return { score, status: getCoreReadinessLevel(score).label, days, confidence, source, primaryWeaknesses: [weakness], topRecommendation: recommendations[domain], evidenceCount: matched.length }
 }
 
-export function calculateCoreDomainScores(state = {}, waterInput, energyInput) {
+export function calculateCoreDomainScores(state = {}, waterInput, energyInput, sanitationInput) {
   const water = waterInput && typeof waterInput === 'object' ? waterInput : getWaterIntelligenceSummary()
   const waterScore = Math.round(clamp(water?.score))
   const waterWeaknesses = list(water?.recommendations).slice(0, 2)
@@ -72,11 +73,15 @@ export function calculateCoreDomainScores(state = {}, waterInput, energyInput) {
   const hasEnergyData = ['devices','powerSources','fuelSources','energyPlans'].some((key)=>list(energy?.data?.[key]).length>0)
   const estimatedEnergy = estimatedDomain('energy', state)
   const energyDomain = hasEnergyData ? { score: Math.round(clamp(energy.score)), status: getCoreReadinessLevel(energy.score).label, days: number(energy.days?.overallDays || energy.days?.essentialElectricDays), confidence: 'high', source: 'energySystem', primaryWeaknesses: list(energy.recommendations).slice(0,2), topRecommendation: energy.recommendations?.[0] || '持續實測能源容量與停電分配。' } : estimatedEnergy
+  const sanitation = sanitationInput && typeof sanitationInput === 'object' ? sanitationInput : getSanitationSystemSummary()
+  const hasSanitationData = ['toiletPlans','hygieneSupplies','wasteSupplies','cleaningSupplies','petWasteSupplies','sanitationPlans'].some((key)=>list(sanitation?.data?.[key]).length>0)
+  const estimatedSanitation = estimatedDomain('sanitation', state)
+  const sanitationDomain = hasSanitationData ? { score: Math.round(clamp(sanitation.score)), status: getCoreReadinessLevel(sanitation.score).label, days: number(sanitation.days?.overallDays), confidence: 'high', source: 'sanitationSystem', primaryWeaknesses: list(sanitation.recommendations).slice(0,2), topRecommendation: sanitation.recommendations?.[0] || '持續輪替衛生耗材並完成停水演練。' } : estimatedSanitation
   return {
     water: { score: waterScore, status: getCoreReadinessLevel(waterScore).label, days: number(water?.days?.overallDays), confidence: 'high', source: 'waterSystem', primaryWeaknesses: waterWeaknesses.length ? waterWeaknesses : ['尚無水系統改善建議。'], topRecommendation: waterWeaknesses[0] || '持續輪替儲水並演練停水分配。' },
     food: estimatedDomain('food', state),
     energy: energyDomain,
-    sanitation: estimatedDomain('sanitation', state),
+    sanitation: sanitationDomain,
     medical: estimatedDomain('medical', state),
     communication: estimatedDomain('communication', state)
   }
@@ -140,10 +145,10 @@ export function buildCoreRecommendations(summary = {}) {
   return [...new Set(recommendations)].slice(0, 8)
 }
 
-export function getCoreSystemSummary(state = {}, waterInput, energyInput) {
+export function getCoreSystemSummary(state = {}, waterInput, energyInput, sanitationInput) {
   const safeState = state && typeof state === 'object' && !Array.isArray(state) ? state : {}
   const water = waterInput && typeof waterInput === 'object' ? waterInput : getWaterIntelligenceSummary()
-  const domains = calculateCoreDomainScores(safeState, water, energyInput)
+  const domains = calculateCoreDomainScores(safeState, water, energyInput, sanitationInput)
   const totalScore = calculateCoreSurvivalScore(domains)
   const readinessLevel = getCoreReadinessLevel(totalScore)
   const draft = { domains, totalScore, readinessLevel, weakestDomains: weakestDomainIds(domains, 3) }

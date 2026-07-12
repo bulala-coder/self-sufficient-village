@@ -1,5 +1,5 @@
 import React from 'react'
-import { Backpack, Battery, BookOpen, Calculator, Droplets, Leaf, ShieldCheck } from 'lucide-react'
+import { Backpack, Battery, BookOpen, Calculator, Droplets, Leaf, ShieldCheck, Trash2 } from 'lucide-react'
 
 const tools = [
   {
@@ -15,6 +15,13 @@ const tools = [
     description: '管理家庭停電時的電力、照明、通訊、烹調燃料與必要設備續航。',
     button: '打開能源系統',
     icon: Battery
+  },
+  {
+    id: 'sanitationSystem',
+    title: 'Sanitation System 1.0',
+    description: '管理停水停電時的廁所、排泄、垃圾、清潔、消毒與寵物排泄支撐能力。',
+    button: '打開衛生系統',
+    icon: Trash2
   },
   {
     id: 'evacuationKit',

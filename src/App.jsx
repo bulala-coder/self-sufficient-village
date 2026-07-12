@@ -22,6 +22,7 @@ import Journal from './components/Journal.jsx'
 import VillageElder from './components/VillageElder.jsx'
 import WaterSystem from './components/WaterSystem.jsx'
 import EnergySystem from './components/EnergySystem.jsx'
+import SanitationSystem from './components/SanitationSystem.jsx'
 import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
 
@@ -133,6 +134,7 @@ export default function App() {
       {page === 'tools' && <Tools {...commonProps}/>} 
       {page === 'waterSystem' && <WaterSystem {...commonProps}/>}
       {page === 'energySystem' && <EnergySystem {...commonProps}/>}
+      {page === 'sanitationSystem' && <SanitationSystem {...commonProps}/>}
       {page === 'plants' && <Plants {...commonProps}/>} 
       {page === 'drills' && <Drills {...commonProps}/>} 
       {page === 'calculators' && <Calculators {...commonProps}/>} 

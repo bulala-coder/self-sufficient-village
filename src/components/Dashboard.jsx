@@ -12,6 +12,7 @@ import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
 import { getEnergySystemSummary } from '../utils/energyStorage.js'
+import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -111,7 +112,8 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const waterOutage72h = simulateWaterEvent(water, { durationDays: 3, mode: 'planned' })
   const compound72h = simulateCompoundDisaster(water, buildPresetCompoundEvents()[0], { mode: 'planned', strictness: 'standard' })
   const energy = getEnergySystemSummary()
-  const core = getCoreSystemSummary(state, water, energy)
+  const sanitation = getSanitationSystemSummary()
+  const core = getCoreSystemSummary(state, water, energy, sanitation)
   const statuses = getSystemStatus(state)
   const highestGap = statuses.find((item) => item.status === '缺口')
   const score = readinessScore({ statuses, state, tasks, completedCount })
@@ -135,9 +137,10 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
     water.capabilities.allocationPlanCount === 0 ? '建立停水分配方案' : null,
     energy.capabilities.nonGridPowerSourceCount === 0 ? '建立非市電照明與充電能力' : null,
     energy.capabilities.planCount === 0 ? '建立 72 小時能源分配方案' : null,
+    sanitation.days.overallDays < 3 ? sanitation.recommendations[0] : null,
     ...core.recommendations
   ].filter(Boolean))].slice(0, 3)
-  const quickEntries = [['waterSystem','Water System'],['energySystem','Energy System'],['inventory','Inventory'],['risk','Risk Matrix'],['drills','Drills'],['report','Report'],['roadmap','Roadmap']]
+  const quickEntries = [['waterSystem','Water System'],['energySystem','Energy System'],['sanitationSystem','Sanitation'],['inventory','Inventory'],['risk','Risk Matrix'],['drills','Drills'],['report','Report'],['roadmap','Roadmap']]
 
   return (
     <div className="muji-dashboard space-y-5 pb-32">
@@ -155,11 +158,11 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
         </div>
       </section>
 
-      <section className="muji-card core-summary-card border-[#24483a]/25"><p className="muji-kicker">Fortress Core</p><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><h2 className="text-2xl font-black text-bark">家庭核心生存狀態</h2><p className="mt-2 text-soil/70">六大核心域總控快照；非水與能源域採保守推估。</p></div><div className="core-score-card"><span>Core Survival Score</span><strong>{core.totalScore}</strong><small>{core.readinessLevel.level}｜{core.readinessLevel.label}</small></div></div><div className="mt-3 grid gap-2 sm:grid-cols-3"><div className="rounded-xl border border-soil/15 bg-white/60 p-3"><p className="text-xs font-black">最弱核心域</p><strong className="text-sm">{core.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}</strong></div>{core.scenarioReadiness.filter((item)=>['water-power-72h','supply-7d'].includes(item.id)).map((item)=><div key={item.id} className="rounded-xl border border-soil/15 bg-white/60 p-3"><p className="text-xs font-black">{item.name}</p><strong className="text-sm">{item.label} · {item.score}</strong></div>)}</div><div className="core-domain-grid mt-3">{Object.entries(core.domains).map(([id,domain])=><button type="button" key={id} className={`core-domain-card core-domain-${id}`} onClick={id==='water'?()=>setPage('waterSystem'):id==='energy'?()=>setPage('energySystem'):undefined}><div className="flex items-start justify-between gap-2"><h3>{CORE_DOMAIN_LABELS[id]}</h3><span>{domain.confidence}</span></div><strong>{domain.score}</strong><p>{domain.status}</p><small>{domain.topRecommendation}</small></button>)}</div></section>
+      <section className="muji-card core-summary-card border-[#24483a]/25"><p className="muji-kicker">Fortress Core</p><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><h2 className="text-2xl font-black text-bark">家庭核心生存狀態</h2><p className="mt-2 text-soil/70">六大核心域總控快照；已整合水、能源與衛生系統。</p></div><div className="core-score-card"><span>Core Survival Score</span><strong>{core.totalScore}</strong><small>{core.readinessLevel.level}｜{core.readinessLevel.label}</small></div></div><div className="mt-3 grid gap-2 sm:grid-cols-3"><div className="rounded-xl border border-soil/15 bg-white/60 p-3"><p className="text-xs font-black">最弱核心域</p><strong className="text-sm">{core.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}</strong></div>{core.scenarioReadiness.filter((item)=>['water-power-72h','supply-7d'].includes(item.id)).map((item)=><div key={item.id} className="rounded-xl border border-soil/15 bg-white/60 p-3"><p className="text-xs font-black">{item.name}</p><strong className="text-sm">{item.label} · {item.score}</strong></div>)}</div><div className="core-domain-grid mt-3">{Object.entries(core.domains).map(([id,domain])=><button type="button" key={id} className={`core-domain-card core-domain-${id}`} onClick={id==='water'?()=>setPage('waterSystem'):id==='energy'?()=>setPage('energySystem'):id==='sanitation'?()=>setPage('sanitationSystem'):undefined}><div className="flex items-start justify-between gap-2"><h3>{CORE_DOMAIN_LABELS[id]}</h3><span>{domain.confidence}</span></div><strong>{domain.score}</strong><p>{domain.status}</p><small>{domain.topRecommendation}</small></button>)}</div></section>
 
       <section className="muji-card compact-card"><div className="muji-section-title"><ListChecks size={18}/><span>今日最重要 3 件事</span></div><ol className="dense-list mt-3">{todayActions.map((item,index)=><li key={item} className="rounded-xl border border-soil/10 bg-white/60 px-3 py-2 text-sm font-bold"><span className="mr-2 text-[#8b2f25]">{index+1}.</span>{item}</li>)}</ol></section>
 
-      <section className="muji-card compact-card"><div className="muji-section-title"><Route size={18}/><span>常用入口</span></div><div className="quick-entry-grid mt-3">{quickEntries.map(([page,label])=><button key={page} className="btn-secondary" onClick={()=>setPage(page)}>{label}</button>)}</div><div className="mt-4 grid gap-2 sm:grid-cols-2"><p className="rounded-xl bg-[#edf1e9] p-3 text-sm font-bold">已具備：水、能源、庫存、風險、演練、報告、路線圖</p><p className="rounded-xl bg-[#f5edda] p-3 text-sm font-bold">下一步：衛生與排泄、醫療急救、食物支撐、通訊</p></div></section>
+      <section className="muji-card compact-card"><div className="muji-section-title"><Route size={18}/><span>常用入口</span></div><div className="quick-entry-grid mt-3">{quickEntries.map(([page,label])=><button key={page} className="btn-secondary" onClick={()=>setPage(page)}>{label}</button>)}</div><div className="mt-4 grid gap-2 sm:grid-cols-2"><p className="rounded-xl bg-[#edf1e9] p-3 text-sm font-bold">已具備：水、能源、衛生、庫存、風險、演練、報告、路線圖</p><p className="rounded-xl bg-[#f5edda] p-3 text-sm font-bold">下一步：醫療急救、食物支撐、通訊</p></div></section>
 
       <section className="muji-card border-[#24483a]/25">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -189,6 +192,8 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
       </section>
 
       <section className="muji-card energy-summary-card border-[#c2a25c]/40"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="muji-section-title"><Zap size={18}/><span>能源系統狀態</span></div><div className="mt-4 flex flex-wrap items-end gap-5"><div><p className="text-xs font-black">Energy Score</p><strong className="text-4xl text-[#24483a]">{energy.score} / 100</strong></div><div><p className="text-xs font-black">狀態</p><strong className="text-xl">{energy.status}</strong></div><div><p className="text-xs font-black">必要設備支撐</p><strong className="text-xl">{formatSupplyNumber(energy.days.essentialElectricDays)} 天</strong></div></div><p className="mt-3 text-sm font-bold">可用電量 {formatSupplyNumber(energy.totals.usablePowerWh)} Wh · 烹調支撐 {formatSupplyNumber(energy.days.cookingDays)} 天</p><p className="mt-2 text-sm font-black text-[#8b2f25]">{energy.recommendations[0]}</p></div><button className="btn-primary" onClick={()=>setPage('energySystem')}>打開能源系統</button></div></section>
+
+      <section className="muji-card sanitation-summary-card"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="muji-section-title"><ShieldCheck size={18}/><span>衛生系統狀態</span></div><div className="mt-3 flex flex-wrap gap-5"><div><p className="text-xs font-black">Sanitation Score</p><strong className="text-4xl text-[#24483a]">{sanitation.score} / 100</strong></div><div><p className="text-xs font-black">狀態</p><strong className="text-xl">{sanitation.status}</strong></div><div><p className="text-xs font-black">整體支撐</p><strong className="text-xl">{formatSupplyNumber(sanitation.days.overallDays)} 天</strong></div></div><p className="mt-3 text-sm font-bold">廁所 {formatSupplyNumber(sanitation.days.toiletDays)} 天 · 垃圾處理 {formatSupplyNumber(sanitation.days.wasteDays)} 天</p><p className="mt-2 text-sm font-black text-[#8b2f25]">{sanitation.recommendations[0]}</p></div><button className="btn-primary" onClick={()=>setPage('sanitationSystem')}>打開衛生系統</button></div></section>
 
       <section className="grid lg:grid-cols-3 gap-4">
         <div className="muji-card lg:col-span-2">

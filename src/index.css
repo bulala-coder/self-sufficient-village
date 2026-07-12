@@ -1200,9 +1200,23 @@ textarea {
 .energy-device-card > strong, .energy-source-card > strong, .energy-fuel-card > strong, .energy-plan-card > strong { display: block; margin-top: 0.7rem; font-size: 1.15rem; color: #24483a; }
 .energy-risk-card { background: linear-gradient(145deg, rgba(245,237,218,0.88), rgba(255,249,234,0.92)); }
 
+.sanitation-summary-card, .sanitation-risk-card { background: linear-gradient(145deg, rgba(226,235,225,0.92), rgba(255,249,234,0.94)); border-color: rgba(36,72,58,0.24); }
+.sanitation-score-card { display: grid; min-width: 11rem; padding: 0.85rem; border-radius: 1rem; color: #fff9ea; background: #24483a; }
+.sanitation-score-card span, .sanitation-score-card small { font-size: 0.75rem; font-weight: 900; }
+.sanitation-score-card strong { font-size: 2.6rem; line-height: 1; }
+.sanitation-form { margin-top: 0.85rem; padding: 0.85rem; border: 1px solid rgba(86,72,53,0.18); border-radius: 1rem; background: rgba(255,255,255,0.55); }
+.sanitation-form-grid, .sanitation-card-grid { display: grid; gap: 0.75rem; }
+.sanitation-form input, .sanitation-form select, .sanitation-form textarea, .sanitation-system select, .sanitation-system input { width: 100%; }
+.sanitation-card-grid { margin-top: 0.85rem; }
+.sanitation-supply-card, .sanitation-plan-card, .sanitation-roadmap-card { min-width: 0; padding: 0.85rem; border: 1px solid rgba(86,72,53,0.16); border-radius: 1rem; background: rgba(255,255,255,0.62); }
+.sanitation-supply-card h3, .sanitation-plan-card h3, .sanitation-roadmap-card h3 { font-weight: 900; color: #3c3428; }
+.sanitation-supply-card p, .sanitation-supply-card small, .sanitation-plan-card small { display: block; font-size: 0.78rem; color: rgba(60,52,40,0.72); }
+
 @media (min-width: 640px) {
   .energy-form-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .energy-card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .sanitation-form-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .sanitation-card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 @media (min-width: 900px) {

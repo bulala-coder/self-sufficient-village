@@ -8,6 +8,7 @@ import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 import { getCoreSystemSummary } from '../utils/coreSystem.js'
 import { getEnergySystemSummary } from '../utils/energyStorage.js'
+import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 
 export const abilityDomains = {
   water: '水',
@@ -213,7 +214,8 @@ export default function Roadmap({ state, updateRoadmap }) {
   const summary = getRoadmapSummary(state)
   const water = getWaterIntelligenceSummary()
   const energy = getEnergySystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy)
+  const sanitation = getSanitationSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation)
   const ownedTreatments = (water.data.treatments || []).filter((item) => item?.owned === true)
   const hasNonElectricTreatment = ownedTreatments.some((item) => !item?.requiresElectricity)
   const hasConsumables = ownedTreatments.some((item) => !item?.requiresConsumables || Number(item?.consumablesRemaining) > 0)
@@ -256,6 +258,12 @@ export default function Roadmap({ state, updateRoadmap }) {
       ['完成 7 天停水演練', water.days.overallDays >= 7, water.days.overallDays < 3],
       ['建立水儲備輪替制度', hasRotation, false]
     ]}
+  ]
+  const hasSpecialHygiene = sanitation.data.hygieneSupplies.some((item)=>['menstrualProducts','diapers','towels','gloves'].includes(item?.type))
+  const sanitationLevels = [
+    { level: 'Level 1：72 小時基本衛生', items: [['建立停水廁所替代方案',sanitation.data.toiletPlans.some((item)=>item?.type!=='flushToilet')],['建立垃圾與排泄物密封處理',sanitation.capabilities.sealedWasteCount>0],['建立乾洗手、肥皂與濕紙巾',sanitation.data.hygieneSupplies.some((item)=>['handSanitizer','soap','wetWipes'].includes(item?.type))],['建立基本消毒用品',sanitation.capabilities.cleaningSupplyCount>0],['建立寵物排泄方案',sanitation.data.household.pets<=0||sanitation.capabilities.petWasteSupplyCount>0]] },
+    { level: 'Level 2：7 天衛生韌性', items: [['建立 7 天垃圾袋與排泄袋',sanitation.days.wasteDays>=7&&sanitation.days.toiletDays>=7],['建立清潔消毒分配方案',sanitation.capabilities.sanitationPlanCount>0&&sanitation.days.cleaningDays>=7],['建立除臭與室內安全處理',sanitation.capabilities.odorControlCount>0&&sanitation.capabilities.indoorSafeToiletCount>0],['建立特殊衛生用品',hasSpecialHygiene]] },
+    { level: 'Level 3：長期衛生安全', items: [['建立 14 天衛生壓力測試',sanitation.days.overallDays>=14],['建立污水與污染物隔離規則',sanitation.data.wasteSupplies.some((item)=>item?.sealed&&item?.notes)],['建立家庭衛生角色分工',sanitation.data.sanitationPlans.some((item)=>item?.notes)],['建立災後清潔與消毒流程',sanitation.data.cleaningSupplies.some((item)=>item?.notes)]] }
   ]
   const roadmap = state.roadmap || {}
   const checks = roadmap.checks || {}
@@ -339,6 +347,8 @@ export default function Roadmap({ state, updateRoadmap }) {
           })}</div></article>)}
         </div>
       </section>
+
+      <section className="muji-card sanitation-summary-card"><div className="muji-section-title"><Target size={18}/><span>Sanitation System Roadmap｜衛生韌性路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{sanitationLevels.map((group)=><article key={group.level} className="sanitation-roadmap-card"><div className="flex items-start justify-between gap-2"><h3>{group.level}</h3><span className="badge">{sanitation.status}</span></div><div className="mt-3 space-y-2">{group.items.map(([label,complete])=>{const priority=!complete&&sanitation.score<30;const status=complete?'已完成':priority?'優先處理':'需要加強';const statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>})}</div></article>)}</div></section>
 
       <section className="muji-card energy-summary-card border-[#c2a25c]/40"><div className="muji-section-title"><Target size={18}/><span>Energy System Roadmap｜能源韌性路線</span></div><div className="mt-4 grid gap-4 lg:grid-cols-3">{energyLevels.map((group)=><article key={group.level} className="energy-roadmap-card"><div className="flex items-start justify-between gap-2"><h3 className="font-black text-bark">{group.level}</h3><span className="badge">{energy.status}</span></div><div className="mt-3 space-y-2">{group.items.map(([label,complete])=>{const priority=!complete&&energy.score<30;const status=complete?'已完成':priority?'優先處理':'需要加強';const statusClass=complete?'bg-[#24483a] text-[#fff9ea]':priority?'bg-[#8b2f25] text-[#fff9ea]':'bg-[#c2a25c] text-[#241b10]';return <div key={label} className="rounded-xl border border-soil/10 bg-white/60 p-3"><div className="flex items-start justify-between gap-2"><span className="text-sm font-bold leading-6">{label}</span><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${statusClass}`}>{status}</span></div></div>})}</div></article>)}</div></section>
 
