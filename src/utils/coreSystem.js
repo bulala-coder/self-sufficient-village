@@ -4,6 +4,7 @@ import { buildPresetCompoundEvents, simulateCompoundDisaster } from './compoundD
 import { getEnergySystemSummary } from './energyStorage.js'
 import { getSanitationSystemSummary } from './sanitationStorage.js'
 import { getMedicalSystemSummary } from './medicalStorage.js'
+import { getFoodSystemSummary } from './foodStorage.js'
 
 export const CORE_DOMAIN_WEIGHTS = { water: 25, food: 20, energy: 15, sanitation: 15, medical: 15, communication: 10 }
 export const CORE_DOMAIN_LABELS = { water: 'Water｜水', food: 'Food｜食物', energy: 'Energy｜能源', sanitation: 'Sanitation｜衛生與排泄', medical: 'Medical｜醫療與急救', communication: 'Communication｜通訊與資訊' }
@@ -66,7 +67,7 @@ function estimatedDomain(domain, state = {}) {
   return { score, status: getCoreReadinessLevel(score).label, days, confidence, source, primaryWeaknesses: [weakness], topRecommendation: recommendations[domain], evidenceCount: matched.length }
 }
 
-export function calculateCoreDomainScores(state = {}, waterInput, energyInput, sanitationInput, medicalInput) {
+export function calculateCoreDomainScores(state = {}, waterInput, energyInput, sanitationInput, medicalInput, foodInput) {
   const water = waterInput && typeof waterInput === 'object' ? waterInput : getWaterIntelligenceSummary()
   const waterScore = Math.round(clamp(water?.score))
   const waterWeaknesses = list(water?.recommendations).slice(0, 2)
@@ -82,9 +83,10 @@ export function calculateCoreDomainScores(state = {}, waterInput, energyInput, s
   const hasMedicalData = ['firstAidItems','medicines','chronicNeeds','petMedicalItems','emergencyContacts','carePlans'].some((key)=>list(medical?.data?.[key]).length>0)
   const estimatedMedical = estimatedDomain('medical', state)
   const medicalDomain = hasMedicalData ? { score: Math.round(clamp(medical.score)), status: getCoreReadinessLevel(medical.score).label, days: number(medical.days?.overallDays), confidence: 'high', source: 'medicalSystem', primaryWeaknesses: list(medical.recommendations).slice(0,2), topRecommendation: medical.recommendations?.[0] || '持續輪替急救用品並演練照護方案。' } : estimatedMedical
+  const food=foodInput&&typeof foodInput==='object'?foodInput:getFoodSystemSummary(),hasFoodData=['foodItems','petFoodItems','cookingPlans','rationPlans'].some((key)=>list(food?.data?.[key]).length>0),estimatedFood=estimatedDomain('food',state),foodDomain=hasFoodData?{score:Math.round(clamp(food.score)),status:getCoreReadinessLevel(food.score).label,days:number(food.days?.overallDays),confidence:'high',source:'foodSystem',primaryWeaknesses:list(food.recommendations).slice(0,2),topRecommendation:food.recommendations?.[0]||'持續輪替食物並演練配給。'}:estimatedFood
   return {
     water: { score: waterScore, status: getCoreReadinessLevel(waterScore).label, days: number(water?.days?.overallDays), confidence: 'high', source: 'waterSystem', primaryWeaknesses: waterWeaknesses.length ? waterWeaknesses : ['尚無水系統改善建議。'], topRecommendation: waterWeaknesses[0] || '持續輪替儲水並演練停水分配。' },
-    food: estimatedDomain('food', state),
+    food: foodDomain,
     energy: energyDomain,
     sanitation: sanitationDomain,
     medical: medicalDomain,
@@ -150,10 +152,10 @@ export function buildCoreRecommendations(summary = {}) {
   return [...new Set(recommendations)].slice(0, 8)
 }
 
-export function getCoreSystemSummary(state = {}, waterInput, energyInput, sanitationInput, medicalInput) {
+export function getCoreSystemSummary(state = {}, waterInput, energyInput, sanitationInput, medicalInput, foodInput) {
   const safeState = state && typeof state === 'object' && !Array.isArray(state) ? state : {}
   const water = waterInput && typeof waterInput === 'object' ? waterInput : getWaterIntelligenceSummary()
-  const domains = calculateCoreDomainScores(safeState, water, energyInput, sanitationInput, medicalInput)
+  const domains = calculateCoreDomainScores(safeState, water, energyInput, sanitationInput, medicalInput, foodInput)
   const totalScore = calculateCoreSurvivalScore(domains)
   const readinessLevel = getCoreReadinessLevel(totalScore)
   const draft = { domains, totalScore, readinessLevel, weakestDomains: weakestDomainIds(domains, 3) }

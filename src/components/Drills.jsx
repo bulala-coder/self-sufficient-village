@@ -7,6 +7,7 @@ import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js
 import { getEnergySystemSummary } from '../utils/energyStorage.js'
 import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
+import { getFoodSystemSummary } from '../utils/foodStorage.js'
 
 const compoundFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', water: '水資源', power: '電力', logistics: '交通補給', contamination: '水質', sanitation: '衛生', none: '無' }
 
@@ -161,7 +162,8 @@ export default function Drills({ state, toggleDrillItem }) {
   const energy = getEnergySystemSummary()
   const sanitation = getSanitationSystemSummary()
   const medical = getMedicalSystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical)
+  const food=getFoodSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food)
   const [openDrills, setOpenDrills] = useState({ 'water-24h': true })
   const drills = state.drills || {}
   const summary = getDrillCompletion(drills)
@@ -202,6 +204,8 @@ export default function Drills({ state, toggleDrillItem }) {
       <section className="muji-card sanitation-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>衛生演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{[{name:'24 小時停水衛生',days:1},{name:'72 小時停水衛生',days:3},{name:'7 天停水衛生',days:7}].map((target)=>{const toilet=sanitation.days.toiletDays>=target.days;const waste=sanitation.days.wasteDays>=target.days;const cleaning=sanitation.days.cleaningDays>=target.days;const pet=sanitation.data.household.pets<=0||sanitation.days.petWasteDays>=target.days;const passed=[toilet,waste,cleaning,pet].filter(Boolean).length;const result=passed===4?'通過':passed>=2?'部分不足':'失敗';const badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={target.days} className="sanitation-plan-card"><div className="flex justify-between gap-2"><h3>{target.name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 text-sm font-bold"><p>廁所方案：{toilet?'足夠':'不足'}</p><p>垃圾處理：{waste?'足夠':'不足'}</p><p>清潔消毒：{cleaning?'足夠':'不足'}</p><p>寵物排泄：{pet?'足夠':'不足'}</p><p className="pt-1">建議：{sanitation.recommendations[0]}</p></div></article>})}</div></section>
 
       <section className="muji-card medical-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>醫療演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{[{name:'24 小時家庭急救',days:1},{name:'72 小時醫療支撐',days:3},{name:'7 天慢性需求與寵物照護',days:7}].map((target)=>{const first=medical.days.firstAidDays>=target.days,meds=medical.days.medicineDays>=target.days,chronic=!medical.data.chronicNeeds.length||medical.days.chronicDays>=target.days,pet=medical.data.household.pets<=0||medical.days.petMedicalDays>=target.days,contacts=medical.capabilities.medicalContactCount>0;const passed=[first,meds,chronic,pet,contacts].filter(Boolean).length,result=passed===5?'通過':passed>=3?'部分不足':'失敗',badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={target.days} className="medical-item-card"><div className="flex justify-between gap-2"><h3>{target.name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 font-bold"><p>急救用品：{first?'足夠':'不足'}</p><p>常備藥：{meds?'足夠':'不足'}</p><p>慢性需求：{chronic?'足夠':'不足'}</p><p>寵物醫療：{pet?'足夠':'不足'}</p><p>聯絡人：{contacts?'具備':'不足'}</p><p>建議：{medical.recommendations[0]}</p></div></article>})}</div></section>
+
+      <section className="muji-card food-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>食物演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{[{name:'24 小時食物支撐',days:1},{name:'72 小時補給中斷',days:3},{name:'7 天食物配給',days:7}].map((target)=>{const calories=food.days.foodDays>=target.days,ready=food.days.readyToEatDays>=Math.min(target.days,3),cooking=food.capabilities.cookingPlanCount>0||food.capabilities.readyToEatItemCount>0,pet=food.data.household.pets<=0||food.days.petFoodDays>=target.days,passed=[calories,ready,cooking,pet].filter(Boolean).length,result=passed===4?'通過':passed>=2?'部分不足':'失敗',badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={target.days} className="food-item-card"><div className="flex justify-between gap-2"><h3>{target.name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 font-bold"><p>食物熱量：{calories?'足夠':'不足'}</p><p>免烹調食物：{ready?'足夠':'不足'}</p><p>烹調方案：{cooking?'具備':'不足'}</p><p>寵物食物：{pet?'足夠':'不足'}</p><p>建議：{food.recommendations[0]}</p></div></article>})}</div></section>
 
       <section className="muji-card border-[#24483a]/25">
         <div className="muji-section-title"><ClipboardCheck size={18}/><span>停水演練情報</span></div>

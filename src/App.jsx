@@ -24,6 +24,7 @@ import WaterSystem from './components/WaterSystem.jsx'
 import EnergySystem from './components/EnergySystem.jsx'
 import SanitationSystem from './components/SanitationSystem.jsx'
 import MedicalSystem from './components/MedicalSystem.jsx'
+import FoodSystem from './components/FoodSystem.jsx'
 import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
 
@@ -137,6 +138,7 @@ export default function App() {
       {page === 'energySystem' && <EnergySystem {...commonProps}/>}
       {page === 'sanitationSystem' && <SanitationSystem {...commonProps}/>}
       {page === 'medicalSystem' && <MedicalSystem {...commonProps}/>}
+      {page === 'foodSystem' && <FoodSystem {...commonProps}/>}
       {page === 'plants' && <Plants {...commonProps}/>} 
       {page === 'drills' && <Drills {...commonProps}/>} 
       {page === 'calculators' && <Calculators {...commonProps}/>} 

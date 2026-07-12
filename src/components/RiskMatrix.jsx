@@ -7,6 +7,7 @@ import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js
 import { getEnergySystemSummary } from '../utils/energyStorage.js'
 import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
+import { getFoodSystemSummary } from '../utils/foodStorage.js'
 
 export const residenceLabels = {
   apartment: '公寓',
@@ -245,7 +246,8 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
   const energy = getEnergySystemSummary()
   const sanitation = getSanitationSystemSummary()
   const medical = getMedicalSystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical)
+  const food=getFoodSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food)
   const waterRisk = water.days.overallDays < 1 ? 'Critical' : water.days.overallDays < 3 ? 'High' : water.days.overallDays < 7 ? 'Moderate' : 'Lower'
   const riskProfile = state.riskProfile || {}
   const cards = getRiskCards(riskProfile)
@@ -327,6 +329,8 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
       <section className="muji-card sanitation-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>衛生風險情報</span></div><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><WaterRiskMetric label="整體衛生支撐" value={`${Number(sanitation.days.overallDays.toFixed(1))} 天`}/><WaterRiskMetric label="72 小時停水衛生" value={sanitation.days.overallDays>=3?'可承受':'不可承受'}/><WaterRiskMetric label="室內安全排泄" value={sanitation.capabilities.indoorSafeToiletCount>0?'有':'無'}/><WaterRiskMetric label="垃圾密封處理" value={sanitation.capabilities.sealedWasteCount>0?'有':'無'}/><WaterRiskMetric label="清潔消毒用品" value={sanitation.capabilities.cleaningSupplyCount>0?'有':'無'}/><WaterRiskMetric label="寵物排泄方案" value={sanitation.data.household.pets<=0?'無需求':sanitation.capabilities.petWasteSupplyCount>0?'有':'無'}/></div><p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-bold">首要衛生弱點：{sanitation.recommendations[0]}</p></section>
 
       <section className="muji-card medical-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>醫療風險情報</span></div><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><WaterRiskMetric label="整體醫療支撐" value={`${Number(medical.days.overallDays.toFixed(1))} 天`}/><WaterRiskMetric label="72 小時醫療" value={medical.days.overallDays>=3?'可承受':'不可承受'}/><WaterRiskMetric label="急救用品" value={medical.data.firstAidItems.length>0?'有':'無'}/><WaterRiskMetric label="消毒／食鹽水" value={medical.capabilities.antisepticCount+medical.capabilities.salineCount>0?'有':'無'}/><WaterRiskMetric label="常備藥" value={medical.totals.medicineItemCount>0?'有':'無'}/><WaterRiskMetric label="慢性需求缺口" value={medical.data.chronicNeeds.some((item)=>item?.critical&&Number(item?.availableDays)<7)?'有':'無'}/><WaterRiskMetric label="醫療／獸醫聯絡" value={`${medical.capabilities.medicalContactCount}/${medical.capabilities.vetContactCount}`}/></div><p className="recommendation mt-4">首要醫療弱點：{medical.recommendations[0]}</p></section>
+
+      <section className="muji-card food-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>食物風險情報</span></div><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><WaterRiskMetric label="整體食物支撐" value={`${Number(food.days.overallDays.toFixed(1))} 天`}/><WaterRiskMetric label="72 小時食物" value={food.days.overallDays>=3?'可承受':'不可承受'}/><WaterRiskMetric label="7 天補給中斷" value={food.days.overallDays>=7?'可承受':'不可承受'}/><WaterRiskMetric label="免烹調食物" value={food.capabilities.readyToEatItemCount>0?'有':'無'}/><WaterRiskMetric label="低用水食物" value={food.capabilities.lowWaterItemCount>0?'有':'無'}/><WaterRiskMetric label="烹調方案" value={food.capabilities.cookingPlanCount>0?'有':'無'}/><WaterRiskMetric label="寵物食物" value={food.data.household.pets<=0?'無需求':food.data.petFoodItems.length>0?'有':'無'}/></div><p className="recommendation mt-4">首要食物弱點：{food.recommendations[0]}</p></section>
 
       <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><ShieldAlert size={18}/><span>複合災害風險情報</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{compoundRisks.map((event)=><article key={event.id} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><h3 className="font-black text-bark">{event.name}</h3><p className="mt-2 text-sm font-black">{event.simulation.result.label} · {event.simulation.result.riskLevel}</p><p className="mt-1 text-sm">總風險 {event.simulation.riskBreakdown.overallRisk} · 分數 {event.simulation.result.score}</p></article>)}</div><div className="mt-4 grid gap-3 sm:grid-cols-2"><WaterRiskMetric label="最高風險情境" value={highestCompoundRisk?.name||'無資料'}/><WaterRiskMetric label="主要共通弱點" value={waterFailureLabels[commonCompoundWeakness]||commonCompoundWeakness}/></div><p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-bold">{highestCompoundRisk?.simulation.recommendations[0]}</p></section>
 

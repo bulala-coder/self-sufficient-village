@@ -1,35 +1,36 @@
 import React from 'react'
-import { Backpack, Battery, BookOpen, Calculator, Droplets, HeartPulse, Leaf, ShieldCheck, Trash2 } from 'lucide-react'
+import { Apple, Backpack, Battery, BookOpen, Calculator, Droplets, HeartPulse, Leaf, ShieldCheck, Trash2 } from 'lucide-react'
 
 const tools = [
   {
     id: 'waterSystem',
-    title: 'Water System 2.0',
+    title: '水資源系統', subtitle: 'Water System 2.0',
     description: '管理家庭與動物飲水、儲水、補水、淨水與停水分配方案。',
     button: '打開水資源系統',
     icon: Droplets
   },
   {
     id: 'energySystem',
-    title: 'Energy System 1.0',
+    title: '能源系統', subtitle: 'Energy System 1.0',
     description: '管理家庭停電時的電力、照明、通訊、烹調燃料與必要設備續航。',
     button: '打開能源系統',
     icon: Battery
   },
   {
     id: 'sanitationSystem',
-    title: 'Sanitation System 1.0',
+    title: '衛生系統', subtitle: 'Sanitation System 1.0',
     description: '管理停水停電時的廁所、排泄、垃圾、清潔、消毒與寵物排泄支撐能力。',
     button: '打開衛生系統',
     icon: Trash2
   },
   {
     id: 'medicalSystem',
-    title: 'Medical System 1.0',
+    title: '醫療系統', subtitle: 'Medical System 1.0',
     description: '管理家庭與寵物的急救用品、常備藥、慢性需求、醫療聯絡人與災害照護方案。',
     button: '打開醫療系統',
     icon: HeartPulse
   },
+  { id:'foodSystem', title:'食物系統', subtitle:'Food System 1.0', description:'管理家庭與寵物食物、熱量、份數、保存期限、免烹調食物與配給方案。', button:'打開食物系統', icon:Apple },
   {
     id: 'evacuationKit',
     title: '撤離包',
@@ -90,6 +91,7 @@ export default function Tools({ setPage }) {
                 </div>
                 <div className="min-w-0">
                   <h2>{tool.title}</h2>
+                  {tool.subtitle && <small className="tool-subtitle">{tool.subtitle}</small>}
                   <p>{tool.description}</p>
                 </div>
               </div>
