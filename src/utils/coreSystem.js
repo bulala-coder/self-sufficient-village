@@ -1,6 +1,7 @@
 import { getWaterIntelligenceSummary } from './waterStorage.js'
 import { simulateWaterEvent } from './waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from './compoundDisasterSimulator.js'
+import { getEnergySystemSummary } from './energyStorage.js'
 
 export const CORE_DOMAIN_WEIGHTS = { water: 25, food: 20, energy: 15, sanitation: 15, medical: 15, communication: 10 }
 export const CORE_DOMAIN_LABELS = { water: 'Water｜水', food: 'Food｜食物', energy: 'Energy｜能源', sanitation: 'Sanitation｜衛生與排泄', medical: 'Medical｜醫療與急救', communication: 'Communication｜通訊與資訊' }
@@ -63,14 +64,18 @@ function estimatedDomain(domain, state = {}) {
   return { score, status: getCoreReadinessLevel(score).label, days, confidence, source, primaryWeaknesses: [weakness], topRecommendation: recommendations[domain], evidenceCount: matched.length }
 }
 
-export function calculateCoreDomainScores(state = {}, waterInput) {
+export function calculateCoreDomainScores(state = {}, waterInput, energyInput) {
   const water = waterInput && typeof waterInput === 'object' ? waterInput : getWaterIntelligenceSummary()
   const waterScore = Math.round(clamp(water?.score))
   const waterWeaknesses = list(water?.recommendations).slice(0, 2)
+  const energy = energyInput && typeof energyInput === 'object' ? energyInput : getEnergySystemSummary()
+  const hasEnergyData = ['devices','powerSources','fuelSources','energyPlans'].some((key)=>list(energy?.data?.[key]).length>0)
+  const estimatedEnergy = estimatedDomain('energy', state)
+  const energyDomain = hasEnergyData ? { score: Math.round(clamp(energy.score)), status: getCoreReadinessLevel(energy.score).label, days: number(energy.days?.overallDays || energy.days?.essentialElectricDays), confidence: 'high', source: 'energySystem', primaryWeaknesses: list(energy.recommendations).slice(0,2), topRecommendation: energy.recommendations?.[0] || '持續實測能源容量與停電分配。' } : estimatedEnergy
   return {
     water: { score: waterScore, status: getCoreReadinessLevel(waterScore).label, days: number(water?.days?.overallDays), confidence: 'high', source: 'waterSystem', primaryWeaknesses: waterWeaknesses.length ? waterWeaknesses : ['尚無水系統改善建議。'], topRecommendation: waterWeaknesses[0] || '持續輪替儲水並演練停水分配。' },
     food: estimatedDomain('food', state),
-    energy: estimatedDomain('energy', state),
+    energy: energyDomain,
     sanitation: estimatedDomain('sanitation', state),
     medical: estimatedDomain('medical', state),
     communication: estimatedDomain('communication', state)
@@ -135,10 +140,10 @@ export function buildCoreRecommendations(summary = {}) {
   return [...new Set(recommendations)].slice(0, 8)
 }
 
-export function getCoreSystemSummary(state = {}, waterInput) {
+export function getCoreSystemSummary(state = {}, waterInput, energyInput) {
   const safeState = state && typeof state === 'object' && !Array.isArray(state) ? state : {}
   const water = waterInput && typeof waterInput === 'object' ? waterInput : getWaterIntelligenceSummary()
-  const domains = calculateCoreDomainScores(safeState, water)
+  const domains = calculateCoreDomainScores(safeState, water, energyInput)
   const totalScore = calculateCoreSurvivalScore(domains)
   const readinessLevel = getCoreReadinessLevel(totalScore)
   const draft = { domains, totalScore, readinessLevel, weakestDomains: weakestDomainIds(domains, 3) }

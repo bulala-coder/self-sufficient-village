@@ -4,6 +4,7 @@ import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
+import { getEnergySystemSummary } from '../utils/energyStorage.js'
 
 export const residenceLabels = {
   apartment: '公寓',
@@ -239,7 +240,8 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
   const compoundRisks = buildPresetCompoundEvents().filter((event)=>['water-power-72h','water-road-7d','earthquake-pipeline-14d'].includes(event.id)).map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
   const highestCompoundRisk = [...compoundRisks].sort((a,b)=>b.simulation.riskBreakdown.overallRisk-a.simulation.riskBreakdown.overallRisk)[0]
   const commonCompoundWeakness = [...compoundRisks].sort((a,b)=>b.simulation.riskBreakdown.waterRisk-a.simulation.riskBreakdown.waterRisk)[0]?.simulation.result.primaryFailurePoint || 'none'
-  const fortressCore = getCoreSystemSummary(state, water)
+  const energy = getEnergySystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy)
   const waterRisk = water.days.overallDays < 1 ? 'Critical' : water.days.overallDays < 3 ? 'High' : water.days.overallDays < 7 ? 'Moderate' : 'Lower'
   const riskProfile = state.riskProfile || {}
   const cards = getRiskCards(riskProfile)
@@ -315,6 +317,8 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
         <p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-bold">事件風險提示：{water7d.recommendations[0]}</p>
         <p className="mt-4 rounded-2xl border border-soil/15 bg-white/60 p-4 text-sm font-bold leading-7 text-soil/75"><span className="action-point">第一行動</span>：{water.recommendations[0]}</p>
       </section>
+
+      <section className="muji-card energy-risk-card border-[#c2a25c]/40"><div className="muji-section-title"><BarChart3 size={18}/><span>能源風險情報</span></div><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><WaterRiskMetric label="必要設備支撐" value={`${Number(energy.days.essentialElectricDays.toFixed(1))} 天`}/><WaterRiskMetric label="72 小時停電" value={energy.days.essentialElectricDays>=3?'可承受':'不可承受'}/><WaterRiskMetric label="非市電來源" value={energy.capabilities.nonGridPowerSourceCount>0?'有':'無'}/><WaterRiskMetric label="照明能力" value={energy.capabilities.lightingDeviceCount>0?'有':'無'}/><WaterRiskMetric label="通訊能力" value={energy.capabilities.communicationDeviceCount>0?'有':'無'}/><WaterRiskMetric label="烹調燃料" value={energy.totals.cookingUsesAvailable>0?'有':'無'}/></div><p className="mt-4 rounded-2xl bg-[#f5edda] p-4 text-sm font-bold">首要能源弱點：{energy.recommendations[0]}</p></section>
 
       <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><ShieldAlert size={18}/><span>複合災害風險情報</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{compoundRisks.map((event)=><article key={event.id} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><h3 className="font-black text-bark">{event.name}</h3><p className="mt-2 text-sm font-black">{event.simulation.result.label} · {event.simulation.result.riskLevel}</p><p className="mt-1 text-sm">總風險 {event.simulation.riskBreakdown.overallRisk} · 分數 {event.simulation.result.score}</p></article>)}</div><div className="mt-4 grid gap-3 sm:grid-cols-2"><WaterRiskMetric label="最高風險情境" value={highestCompoundRisk?.name||'無資料'}/><WaterRiskMetric label="主要共通弱點" value={waterFailureLabels[commonCompoundWeakness]||commonCompoundWeakness}/></div><p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-bold">{highestCompoundRisk?.simulation.recommendations[0]}</p></section>
 

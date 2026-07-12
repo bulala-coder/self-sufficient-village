@@ -4,6 +4,7 @@ import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
+import { getEnergySystemSummary } from '../utils/energyStorage.js'
 
 const compoundFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', water: '水資源', power: '電力', logistics: '交通補給', contamination: '水質', sanitation: '衛生', none: '無' }
 
@@ -155,7 +156,8 @@ function renderDrillItem(item) {
 export default function Drills({ state, toggleDrillItem }) {
   const water = getWaterIntelligenceSummary()
   const compoundDrills = buildPresetCompoundEvents().filter((event)=>['water-power-72h','water-road-7d','typhoon-supply-7d'].includes(event.id)).map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
-  const fortressCore = getCoreSystemSummary(state, water)
+  const energy = getEnergySystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy)
   const [openDrills, setOpenDrills] = useState({ 'water-24h': true })
   const drills = state.drills || {}
   const summary = getDrillCompletion(drills)
@@ -210,6 +212,8 @@ export default function Drills({ state, toggleDrillItem }) {
           })}
         </div>
       </section>
+
+      <section className="muji-card energy-risk-card border-[#c2a25c]/40"><div className="muji-section-title"><ShieldAlert size={18}/><span>停電演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{[{name:'24 小時停電',days:1},{name:'72 小時停電',days:3},{name:'7 天停電',days:7}].map((target)=>{const electricEnough=energy.days.essentialElectricDays>=target.days;const lighting=energy.capabilities.lightingDeviceCount>0;const communication=energy.capabilities.communicationDeviceCount>0;const cooking=energy.days.cookingDays>=target.days;const result=electricEnough&&lighting&&communication&&cooking?'通過':electricEnough?'部分不足':'失敗';const badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={target.days} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><div className="flex justify-between gap-2"><h3 className="font-black">{target.name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 text-sm font-bold"><p>必要設備：{electricEnough?'足夠':'不足'}</p><p>照明：{lighting?'具備':'不足'}</p><p>通訊：{communication?'具備':'不足'}</p><p>烹調能源：{cooking?'具備':'不足'}</p><p className="pt-1">建議：{energy.recommendations[0]}</p></div></article>})}</div></section>
 
       <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><ShieldAlert size={18}/><span>複合災害演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{compoundDrills.map((event)=>{const simulation=event.simulation;const badge=simulation.result.status==='pass'?'bg-[#24483a] text-[#fff9ea]':simulation.result.status==='strained'||simulation.result.status==='partial'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={event.id} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><div className="flex items-start justify-between gap-3"><h3 className="font-black text-bark">{event.name}</h3><span className={`rounded-full px-3 py-1 text-xs font-black ${badge}`}>{simulation.result.label}</span></div><div className="mt-3 space-y-1 text-sm font-bold text-soil/75"><p>分數：{simulation.result.score} / 100</p><p>風險等級：{simulation.result.riskLevel}</p><p>主要失敗點：{compoundFailureLabels[simulation.result.primaryFailurePoint]||simulation.result.primaryFailurePoint}</p><p className="pt-1">建議：{simulation.recommendations[0]}</p></div></article>})}</div></section>
 

@@ -11,6 +11,7 @@ import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
 import { simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
 import { CORE_DOMAIN_LABELS, getCoreSystemSummary } from '../utils/coreSystem.js'
+import { getEnergySystemSummary } from '../utils/energyStorage.js'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -146,7 +147,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, energy, priorityAction }) {
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
@@ -158,6 +159,14 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     ...Object.entries(fortressCore.domains).map(([id,domain])=>`${CORE_DOMAIN_LABELS[id]}：${domain.score}｜${domain.status}｜confidence ${domain.confidence}｜source ${domain.source}`),
     ...fortressCore.scenarioReadiness.map((item)=>`核心情境 ${item.name}：${item.label}｜${item.score}｜最弱 ${item.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`),
     ...fortressCore.recommendations.slice(0,5).map((item,index)=>`核心建議 ${index+1}：${item}`),
+    '',
+    '能源安全摘要',
+    `Energy Score：${energy.score} / 100｜${energy.status}`,
+    `可用電量／每日耗電／必要設備耗電：${formatNumber(energy.totals.usablePowerWh)} / ${formatNumber(energy.totals.dailyWh)} / ${formatNumber(energy.totals.essentialDailyWh)} Wh`,
+    `必要設備／烹調／整體支撐：${formatNumber(energy.days.essentialElectricDays)} / ${formatNumber(energy.days.cookingDays)} / ${formatNumber(energy.days.overallDays)} 天`,
+    `照明／通訊／醫療設備：${energy.capabilities.lightingDeviceCount} / ${energy.capabilities.communicationDeviceCount} / ${energy.capabilities.medicalDeviceCount}`,
+    `非市電／太陽能來源／能源方案：${energy.capabilities.nonGridPowerSourceCount} / ${energy.capabilities.solarSourceCount} / ${energy.capabilities.planCount}`,
+    ...energy.recommendations.slice(0,3).map((item,index)=>`能源建議 ${index+1}：${item}`),
     '',
     '補給摘要',
     `飲水總量：${formatNumber(supplySummary.waterLiters)} L`,
@@ -288,7 +297,8 @@ export default function Report({ state, tasks }) {
   const water = getWaterIntelligenceSummary()
   const waterEvents = [{ label: '24 小時停水', days: 1 }, { label: '72 小時停水', days: 3 }, { label: '7 天停水', days: 7 }, { label: '14 天停水', days: 14 }].map((item) => ({ ...item, simulation: simulateWaterEvent(water, { durationDays: item.days, mode: 'planned' }) }))
   const compoundEvents = buildPresetCompoundEvents().map((event)=>({...event,simulation:simulateCompoundDisaster(water,event,{mode:'planned',strictness:'standard'})}))
-  const fortressCore = getCoreSystemSummary(state, water)
+  const energy = getEnergySystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy)
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -312,6 +322,7 @@ export default function Report({ state, tasks }) {
     waterEvents,
     compoundEvents,
     fortressCore,
+    energy,
     priorityAction
   })
 
@@ -385,6 +396,8 @@ export default function Report({ state, tasks }) {
         </section>
 
         <section className="muji-card core-summary-card border-[#24483a]/25"><SectionTitle>Fortress Core Summary｜家庭核心生存摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Core Survival Score" value={`${fortressCore.totalScore} / 100`}/><Metric label="Readiness Level" value={`${fortressCore.readinessLevel.level}｜${fortressCore.readinessLevel.label}`}/><Metric label="最弱核心域" value={fortressCore.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}/><Metric label="資料時間" value={new Date(fortressCore.generatedAt).toLocaleString('zh-TW')}/>{Object.entries(fortressCore.domains).map(([id,domain])=><Metric key={id} label={CORE_DOMAIN_LABELS[id]} value={`${domain.score}｜${domain.status}｜${domain.confidence}｜${domain.source}`}/>)}</div><ReportList title="核心情境準備度" items={fortressCore.scenarioReadiness.map((item)=>`${item.name}：${item.label}｜${item.score}｜最弱 ${item.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`)}/><ReportList title="核心改善建議" items={fortressCore.recommendations.slice(0,5)}/></section>
+
+        <section className="muji-card energy-summary-card border-[#c2a25c]/40"><SectionTitle>能源安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Energy Score" value={`${energy.score} / 100`}/><Metric label="狀態" value={energy.status}/><Metric label="可用電量" value={`${formatNumber(energy.totals.usablePowerWh)} Wh`}/><Metric label="每日耗電" value={`${formatNumber(energy.totals.dailyWh)} Wh`}/><Metric label="必要設備耗電" value={`${formatNumber(energy.totals.essentialDailyWh)} Wh / 日`}/><Metric label="必要設備支撐" value={`${formatNumber(energy.days.essentialElectricDays)} 天`}/><Metric label="烹調支撐" value={`${formatNumber(energy.days.cookingDays)} 天`}/><Metric label="整體能源支撐" value={`${formatNumber(energy.days.overallDays)} 天`}/><Metric label="照明設備" value={`${energy.capabilities.lightingDeviceCount} 個`}/><Metric label="通訊設備" value={`${energy.capabilities.communicationDeviceCount} 個`}/><Metric label="醫療設備" value={`${energy.capabilities.medicalDeviceCount} 個`}/><Metric label="非市電來源" value={`${energy.capabilities.nonGridPowerSourceCount} 個`}/><Metric label="太陽能來源" value={`${energy.capabilities.solarSourceCount} 個`}/><Metric label="能源方案" value={`${energy.capabilities.planCount} 個`}/></div><ReportList title="前 3 條能源改善建議" items={energy.recommendations.slice(0,3)}/></section>
 
         <section className="muji-card border-[#24483a]/25">
           <SectionTitle>水資源安全摘要</SectionTitle>
