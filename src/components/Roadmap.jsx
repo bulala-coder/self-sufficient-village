@@ -259,6 +259,17 @@ export default function Roadmap({ state, updateRoadmap }) {
   ]
   const roadmap = state.roadmap || {}
   const checks = roadmap.checks || {}
+  const immediateActions = [...new Set(fortressCore.recommendations)].slice(0, 3)
+  const weekActions = [...new Set([
+    summary.nextAbility?.suggestedAction,
+    water.recommendations[0],
+    energy.recommendations[0]
+  ].filter(Boolean))].filter((item) => !immediateActions.includes(item)).slice(0, 3)
+  const laterActions = [...new Set([
+    summary.stages.find((stage) => !stage.passed && stage !== summary.currentStage)?.abilities.find((ability) => !ability.completed)?.suggestedAction,
+    '完成一次跨水、能源、補給與通訊的家庭壓力測試。',
+    '建立每季盤點、輪替與演練日期。'
+  ].filter(Boolean))].filter((item) => !immediateActions.includes(item) && !weekActions.includes(item)).slice(0, 3)
 
   function toggleAbility(abilityId) {
     updateRoadmap({
@@ -297,6 +308,24 @@ export default function Roadmap({ state, updateRoadmap }) {
           <p className="summary-meta font-black">下一個最重要能力</p>
           <h2 className="mt-2 text-xl font-black text-bark">{summary.nextAbility?.title || '全部階段已達標，進入年度壓力測試。'}</h2>
           <p className="summary-text mt-2">{summary.nextAbility?.suggestedAction || '持續做年度補給、種植、修繕與社區互助系統檢查。'}</p>
+        </div>
+      </section>
+
+      <section className="muji-card border-[#8b2f25]/20">
+        <div className="muji-section-title"><Target size={18}/><span>優先行動排序</span></div>
+        <div className="mt-3 grid gap-3 lg:grid-cols-3">
+          {[
+            ['立即處理', immediateActions, 'critical-point'],
+            ['本週處理', weekActions, 'action-point'],
+            ['之後強化', laterActions, 'emphasis-underline']
+          ].map(([title, items, titleClass]) => (
+            <article key={title} className="compact-card">
+              <h3 className={`font-black ${titleClass}`}>{title}</h3>
+              <ol className="dense-list mt-2 list-decimal pl-5 text-sm font-bold leading-6 text-soil/75">
+                {(items.length ? items : ['目前沒有新增項目，維持既有輪替與演練。']).map((item) => <li key={item}>{item}</li>)}
+              </ol>
+            </article>
+          ))}
         </div>
       </section>
 

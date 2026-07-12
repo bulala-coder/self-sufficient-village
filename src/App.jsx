@@ -124,7 +124,7 @@ export default function App() {
         <button className="btn-secondary text-sm" onClick={reset}><RotateCcw size={14} className="inline mr-1"/>重新開始</button>
       </div>
     </header>
-    <main className="max-w-6xl mx-auto px-4 py-6">
+    <main className="app-main max-w-6xl mx-auto px-4 py-6">
       {page === 'dashboard' && <Dashboard {...commonProps}/>} 
       {page === 'tasks' && <TaskList {...commonProps}/>} 
       {page === 'preparedness' && <Preparedness {...commonProps}/>} 

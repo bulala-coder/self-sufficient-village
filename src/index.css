@@ -361,6 +361,36 @@ button { cursor: pointer; }
   box-shadow: 0 -12px 28px rgba(37, 30, 20, .08);
 }
 
+.app-main {
+  min-height: 100vh;
+  padding-bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.ink-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.app-main .muji-card {
+  padding: clamp(0.9rem, 2vw, 1.15rem);
+}
+
+.muji-dashboard > :not([hidden]) ~ :not([hidden]),
+.water-system-page > :not([hidden]) ~ :not([hidden]),
+.energy-system > :not([hidden]) ~ :not([hidden]),
+.report-page > :not([hidden]) ~ :not([hidden]),
+.roadmap-page > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.9rem !important;
+}
+
+.compact-grid { display: grid; gap: 0.65rem; }
+.metric-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.dense-list { display: grid; gap: 0.45rem; }
+.action-row { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.compact-card { padding: 0.85rem !important; }
+.compact-card p { margin-top: 0.35rem; }
+.quick-entry-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.6rem; }
+.quick-entry-grid button { min-height: 3rem; text-align: left; }
+
 @media (max-width: 768px) {
   .shanshui-hero { min-height: 610px; }
   .ink-birds { right: 8%; top: 5rem; }
@@ -1180,10 +1210,26 @@ textarea {
 }
 
 @media (max-width: 768px) {
+  html { scroll-padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px)); }
+
   body {
     font-size: 16px;
     line-height: 1.7;
+    min-height: 100dvh;
+    overflow-x: hidden;
   }
+
+  #root { min-height: 100dvh; }
+
+  .app-main {
+    padding-top: 1rem !important;
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .app-main > *,
+  .app-main input,
+  .app-main select,
+  .app-main textarea { min-width: 0; max-width: 100%; }
 
   .muji-hero {
     flex-direction: column;
@@ -1211,8 +1257,15 @@ textarea {
 
   .muji-card {
     border-radius: 18px;
-    padding: 17px;
+    padding: 14px;
   }
+
+  .app-main .muji-section-title { font-size: 1.08rem; }
+  .app-main .core-weakness-card,
+  .app-main .core-scenario-card,
+  .app-main .core-roadmap-card,
+  .app-main .energy-roadmap-card,
+  .app-main .compound-roadmap-card { padding: 0.75rem; }
 
   .muji-stat strong {
     font-size: 1.45rem !important;
@@ -1278,6 +1331,8 @@ textarea {
 
 @media (min-width: 900px) {
   .core-domain-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .metric-strip { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .quick-entry-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
 }
 
 @media print {
