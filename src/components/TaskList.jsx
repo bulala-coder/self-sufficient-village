@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { AlertTriangle, CheckCircle2, Circle, ClipboardList, Filter, Target } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Circle, ClipboardList, Filter, Target } from 'lucide-react'
 import { getCompletedMap, getRecommendedTask, taskSystemLabels, taskSystems } from '../data/tasks.js'
 
 const riskFilters = [
@@ -23,8 +23,8 @@ function riskClass(level) {
 }
 
 export default function TaskList({ state, tasks, completeTask }) {
-  const [selected, setSelected] = useState(null)
-  const [reflection, setReflection] = useState('')
+  const [openTasks, setOpenTasks] = useState({})
+  const [reflections, setReflections] = useState({})
   const [systemFilter, setSystemFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
   const completed = getCompletedMap(state.completed)
@@ -38,14 +38,17 @@ export default function TaskList({ state, tasks, completeTask }) {
   }, [tasks, systemFilter, riskFilter])
 
   function openTask(task) {
-    setSelected(task)
-    setReflection('')
+    setOpenTasks((current) => ({ ...current, [task.id]: true }))
     setTimeout(() => {
-      document.getElementById('task-detail-panel')?.scrollIntoView({
+      document.getElementById(`task-${task.id}`)?.scrollIntoView({
         behavior: 'smooth',
-        block: 'start',
+        block: 'center',
       })
     }, 50)
+  }
+
+  function toggleTask(taskId) {
+    setOpenTasks((current) => ({ ...current, [taskId]: !current[taskId] }))
   }
 
   return (
@@ -129,19 +132,20 @@ export default function TaskList({ state, tasks, completeTask }) {
         <div className="mt-5 space-y-3">
           {filteredTasks.map((task) => {
             const done = Boolean(completed[task.id])
+            const open = Boolean(openTasks[task.id])
+            const detailId = `task-details-${task.id}`
 
             return (
-              <button
+              <article
                 key={task.id}
-                type="button"
-                onClick={() => openTask(task)}
-                className={`w-full rounded-2xl border p-4 text-left transition ${
+                id={`task-${task.id}`}
+                className={`task-card ${
                   done
-                    ? 'border-[#24483a]/25 bg-[#24483a]/10'
-                    : 'border-soil/10 bg-white/70 hover:bg-[#fbf7ec]'
+                    ? 'task-card-complete'
+                    : ''
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="task-summary-row">
                   {done ? (
                     <CheckCircle2 className="mt-1 shrink-0 text-[#24483a]" />
                   ) : (
@@ -159,12 +163,51 @@ export default function TaskList({ state, tasks, completeTask }) {
                     </div>
 
                     <h2 className="mt-3 font-black text-lg text-bark">{task.title}</h2>
-                    <p className="mt-2 text-sm font-bold text-soil/70">{task.relatedGap}</p>
+                    {task.relatedGap && <p className="mt-2 font-bold text-soil/70">{task.relatedGap}</p>}
                   </div>
 
                   <span className="shrink-0 text-sm font-black text-soil/70">{task.xp} XP</span>
                 </div>
-              </button>
+
+                <button
+                  type="button"
+                  className="task-detail-toggle"
+                  aria-expanded={open}
+                  aria-controls={detailId}
+                  onClick={() => toggleTask(task.id)}
+                >
+                  <span>{open ? '收起詳情' : '任務詳情'}</span>
+                  {open ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
+                </button>
+
+                <div id={detailId} className="task-detail-panel" hidden={!open}>
+                  <TaskDetails task={task}/>
+
+                  <div className="task-safety-note">
+                    XP：{task.xp}。任務只要求安全範圍內的盤點、測試、記錄與補缺口，不要求冒險行動。
+                  </div>
+
+                  {done ? (
+                    <p className="font-bold text-[#24483a]">已完成。這個任務已經加入你的自足日誌，仍可隨時查看詳情。</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <textarea
+                        value={reflections[task.id] || ''}
+                        onChange={(event) => setReflections((current) => ({ ...current, [task.id]: event.target.value }))}
+                        placeholder="寫下完成結果、發現的缺口、下一個補強動作。"
+                        className="min-h-32 w-full rounded-2xl border border-soil/15 bg-white p-4 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
+                      />
+                      <button
+                        type="button"
+                        className="btn-primary w-full"
+                        onClick={() => completeTask(task, reflections[task.id] || '完成任務，已記錄可驗證結果與後續缺口。')}
+                      >
+                        完成任務
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </article>
             )
           })}
         </div>
@@ -180,106 +223,31 @@ export default function TaskList({ state, tasks, completeTask }) {
         )}
       </section>
 
-      <section id="task-detail-panel" className="muji-card scroll-mt-6">
-        <div className="muji-section-title">
-          <ClipboardList size={20} />
-          <span>任務詳情</span>
-        </div>
-
-        {selected ? (
-          <div className="mt-4 space-y-5">
-            <div>
-              <div className="flex flex-wrap gap-2">
-                <span className="badge">{taskSystemLabels[selected.system]}</span>
-                <span className={`rounded-full px-3 py-1 text-xs font-black ${riskClass(selected.riskLevel)}`}>
-                  Level {selected.riskLevel}
-                </span>
-                <span className="badge">{selected.estimatedMinutes} 分鐘</span>
-              </div>
-              <h3 className="mt-3 text-2xl font-black text-bark">{selected.title}</h3>
-              <p className="mt-2 text-sm font-bold text-[#8b2f25]"><span className="critical-point">對應缺口</span>：{selected.relatedGap}</p>
-            </div>
-
-            <TaskBlock title="目的">
-              <p>{selected.purpose}</p>
-            </TaskBlock>
-
-            <TaskBlock title="需要工具">
-              <TagList items={selected.tools} />
-            </TaskBlock>
-
-            <TaskBlock title="步驟">
-              <ol className="list-decimal space-y-2 pl-5">
-                {selected.steps.map((step, index) => (
-                  <li key={index}>{step}</li>
-                ))}
-              </ol>
-            </TaskBlock>
-
-            <TaskBlock title="完成標準">
-              <p>{selected.completion}</p>
-            </TaskBlock>
-
-            <TaskBlock title="失敗條件">
-              <ul className="list-disc space-y-2 pl-5">
-                {selected.failureConditions.map((condition, index) => (
-                  <li key={index}>{condition}</li>
-                ))}
-              </ul>
-            </TaskBlock>
-
-            <TaskBlock title="對應演練">
-              {selected.relatedDrills.length > 0 ? (
-                <TagList items={selected.relatedDrills} />
-              ) : (
-                <p>無直接對應演練。</p>
-              )}
-            </TaskBlock>
-
-            <div className="rounded-2xl border border-soil/15 bg-[#fbf7ec] p-4 text-sm font-bold leading-7 text-soil/75">
-              XP：{selected.xp}。任務只要求安全範圍內的盤點、測試、記錄與補缺口，不要求冒險行動。
-            </div>
-
-            {completed[selected.id] ? (
-              <p className="font-bold text-[#24483a]">已完成。這個任務已經加入你的自足日誌。</p>
-            ) : (
-              <>
-                <textarea
-                  value={reflection}
-                  onChange={(event) => setReflection(event.target.value)}
-                  placeholder="寫下完成結果、發現的缺口、下一個補強動作。"
-                  className="min-h-36 w-full rounded-2xl border border-soil/10 bg-white/80 p-4 text-base font-semibold text-bark outline-none focus:border-[#3d5143]"
-                />
-
-                <button
-                  type="button"
-                  className="btn-primary w-full"
-                  onClick={() =>
-                    completeTask(
-                      selected,
-                      reflection || '完成任務，已記錄可驗證結果與後續缺口。'
-                    )
-                  }
-                >
-                  完成任務
-                </button>
-              </>
-            )}
-          </div>
-        ) : (
-          <p className="mt-4 text-soil/70">請先選擇上方任務，任務詳情會顯示在這裡。</p>
-        )}
-      </section>
     </div>
   )
+}
+
+function hasContent(value) {
+  return Array.isArray(value) ? value.length > 0 : value !== undefined && value !== null && String(value).trim() !== ''
+}
+
+function TaskDetails({ task }) {
+  return <div className="space-y-4">
+    {hasContent(task.purpose) && <TaskBlock title="任務說明"><p>{task.purpose}</p></TaskBlock>}
+    {hasContent(task.steps) && <TaskBlock title="執行步驟"><ol className="task-detail-list list-decimal">{task.steps.map((step, index) => <li key={`${task.id}-step-${index}`}>{step}</li>)}</ol></TaskBlock>}
+    {hasContent(task.completion) && <TaskBlock title="完成標準"><p>{task.completion}</p></TaskBlock>}
+    {hasContent(task.tools) && <TaskBlock title="所需物品"><TagList items={task.tools}/></TaskBlock>}
+    {hasContent(task.failureConditions) && <TaskBlock title="注意事項"><ul className="task-detail-list list-disc">{task.failureConditions.map((condition, index) => <li key={`${task.id}-condition-${index}`}>{condition}</li>)}</ul></TaskBlock>}
+    {hasContent(task.relatedDrills) && <TaskBlock title="相關演練"><TagList items={task.relatedDrills}/></TaskBlock>}
+  </div>
 }
 
 function TaskBlock({ title, children }) {
   const titleClass = title === '完成標準' ? 'action-point' : title === '失敗條件' ? 'critical-point' : ''
 
   return (
-    <div className="rounded-2xl border border-soil/10 bg-white/65 p-4 leading-7 text-soil">
-      <h4 className={`mb-2 font-black text-bark ${titleClass}`}>{title}</h4>
+    <div className="task-detail-section">
+      <h4 className={`task-detail-title ${titleClass}`}>{title}</h4>
       {children}
     </div>
   )
@@ -288,7 +256,7 @@ function TaskBlock({ title, children }) {
 function TagList({ items }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
+      {(Array.isArray(items) ? items : []).filter(hasContent).map((item) => (
         <span key={item} className="badge">{item}</span>
       ))}
     </div>
