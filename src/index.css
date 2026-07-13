@@ -1264,6 +1264,8 @@ textarea {
 .communication-score-card { display:grid;min-width:11rem;padding:.85rem;border-radius:1rem;color:#fff9ea;background:#365665 }.communication-score-card span,.communication-score-card small{font-size:.82rem;font-weight:900}.communication-score-card strong{font-size:2.65rem;line-height:1}
 .communication-form{margin-top:.85rem;padding:.85rem;border:1px solid rgba(86,72,53,.18);border-radius:1rem;background:rgba(255,255,255,.58)}.communication-form-grid,.communication-card-grid{display:grid;gap:.75rem}.communication-card-grid{margin-top:.85rem}.communication-form input,.communication-form select,.communication-form textarea,.communication-system select,.communication-system input{width:100%}.communication-item-card,.communication-roadmap-card{min-width:0;padding:.8rem;border:1px solid rgba(86,72,53,.16);border-radius:1rem;background:rgba(255,255,255,.64)}.communication-item-card h3,.communication-roadmap-card h3{font-size:1rem;font-weight:900;color:#3c3428}.communication-item-card small{display:block;font-size:.86rem;line-height:1.5}
 
+.readiness-dashboard{background:linear-gradient(145deg,rgba(219,231,220,.94),rgba(255,249,234,.95));border-color:rgba(36,72,58,.28)}.readiness-score-card{display:grid;min-width:11rem;padding:.85rem;border-radius:1rem;color:#fff9ea;background:#24483a}.readiness-score-card span,.readiness-score-card small{font-size:.82rem;font-weight:900}.readiness-score-card strong{font-size:2.8rem;line-height:1}.stress-test-card,.cross-alert-card,.completion-checklist-card,.final-roadmap-card,.readiness-action-card{min-width:0;padding:.75rem;border:1px solid rgba(86,72,53,.16);border-radius:.9rem;background:rgba(255,255,255,.66)}.stress-test-card h3,.cross-alert-card h3,.completion-checklist-card h3,.final-roadmap-card h3{font-size:1rem;font-weight:900;color:#3c3428}.stress-test-card>strong{display:block;margin-top:.35rem;font-size:1.2rem}.cross-alert-critical{border-color:rgba(139,47,37,.45);background:#f2dfd4}.cross-alert-warning{border-color:rgba(194,162,92,.55);background:#f5edda}.final-roadmap-card ol{margin-top:.5rem;padding-left:1.2rem;list-style:decimal}.final-roadmap-card li{margin-top:.35rem;font-size:.95rem;font-weight:700;line-height:1.5}.completion-checklist-card p{margin-top:.35rem}.readiness-action-card{font-size:.95rem;font-weight:800;line-height:1.5}
+
 @media (min-width: 640px) {
   .energy-form-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .energy-card-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -1453,4 +1455,60 @@ textarea {
   .badge {
     border: 1px solid rgba(60, 52, 40, 0.25) !important;
   }
+}
+/* v5.8 Compact readability pass */
+.collapsible-section {
+  overflow: hidden;
+  border: 1px solid rgba(90, 70, 45, 0.2);
+  border-radius: 1.5rem;
+  background: rgba(255, 253, 247, 0.96);
+  box-shadow: 0 8px 24px rgba(65, 48, 30, 0.07);
+}
+.collapsible-header {
+  min-height: 56px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  color: #2f291f;
+  text-align: left;
+  background: #f4ede1;
+}
+.collapsible-header:hover { background: #eee3d2; }
+.collapsible-heading { min-width: 0; display: grid; gap: 0.2rem; }
+.collapsible-title { font-size: 1.05rem; font-weight: 900; line-height: 1.45; }
+.collapsible-subtitle { color: #655744; font-size: 0.92rem; font-weight: 650; line-height: 1.5; }
+.collapsible-toggle { flex: 0 0 auto; display: flex; align-items: center; gap: 0.4rem; color: #24483a; font-size: 0.9rem; font-weight: 900; }
+.collapsible-content { padding: 1.25rem; color: #3d3428; }
+.collapsible-section-alert .collapsible-header { background: #f2dfd4; }
+
+.muji-card,
+.card,
+.energy-device-card,
+.energy-source-card,
+.energy-fuel-card,
+.energy-plan-card,
+.sanitation-plan-card,
+.medical-item-card,
+.food-item-card,
+.communication-item-card {
+  background-color: rgba(255, 253, 247, 0.94);
+}
+.description,
+.collapsible-content p,
+.muji-card p { line-height: 1.55; }
+.text-soil\/60 { color: rgba(73, 60, 43, 0.78); }
+.text-soil\/65,
+.text-soil\/70 { color: rgba(73, 60, 43, 0.84); }
+
+@media (max-width: 430px) {
+  .collapsible-header { align-items: flex-start; padding: 0.9rem 1rem; }
+  .collapsible-toggle { padding-top: 0.1rem; }
+  .collapsible-content { padding: 1rem; }
+}
+@media print {
+  .collapsible-content[hidden] { display: block !important; }
+  .collapsible-toggle { display: none; }
 }

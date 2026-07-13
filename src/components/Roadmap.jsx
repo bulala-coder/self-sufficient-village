@@ -1,7 +1,7 @@
 import React from 'react'
 import { CheckCircle2, Circle, Flag, Route, Target } from 'lucide-react'
-import { getInventorySummary } from './Inventory.jsx'
-import { getFoodProductionSummary } from './Plants.jsx'
+import { getInventorySummary } from '../utils/inventorySummaries.js'
+import { getFoodProductionSummary } from '../utils/plantSummaries.js'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getCompletedMap } from '../data/tasks.js'
 import { getWaterIntelligenceSummary } from '../utils/waterStorage.js'
@@ -12,6 +12,7 @@ import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 import { getFoodSystemSummary } from '../utils/foodStorage.js'
 import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
+import { getFortressFinalizationSummary } from '../utils/readinessFinalization.js'
 
 export const abilityDomains = {
   water: '水',
@@ -221,6 +222,7 @@ export default function Roadmap({ state, updateRoadmap }) {
   const medical = getMedicalSystemSummary()
   const food=getFoodSystemSummary()
   const communication=getCommunicationSystemSummary()
+  const finalization=getFortressFinalizationSummary({water,energy,sanitation,medical,food,communication})
   const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food, communication)
   const ownedTreatments = (water.data.treatments || []).filter((item) => item?.owned === true)
   const hasNonElectricTreatment = ownedTreatments.some((item) => !item?.requiresElectricity)
@@ -328,6 +330,8 @@ export default function Roadmap({ state, updateRoadmap }) {
           <p className="summary-text mt-2">{summary.nextAbility?.suggestedAction || '持續做年度補給、種植、修繕與社區互助系統檢查。'}</p>
         </div>
       </section>
+
+      <section className="muji-card readiness-dashboard"><div className="muji-section-title"><Target size={18}/><span>Fortress Final Roadmap｜堡壘最短完成路線</span></div><div className="mt-3 grid gap-3 lg:grid-cols-3">{[['立即處理',finalization.actions.slice(0,2)],['本週處理',finalization.actions.slice(2,4)],['之後強化',[...finalization.checklist[2].items.filter((x)=>!x.complete).map((x)=>`強化 ${x.label} 至 14 天`),...finalization.alerts.map((x)=>x.action)].slice(0,3)]].map(([title,items])=><article key={title} className="final-roadmap-card"><h3>{title}</h3><ol>{(items.length?items:['維持現有輪替與演練']).map((item)=><li key={item}>{item}</li>)}</ol></article>)}</div></section>
 
       <section className="muji-card border-[#8b2f25]/20">
         <div className="muji-section-title"><Target size={18}/><span>優先行動排序</span></div>

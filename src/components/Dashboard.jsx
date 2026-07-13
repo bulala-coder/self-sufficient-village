@@ -1,8 +1,8 @@
 import React from 'react'
 import { AlertTriangle, Backpack, BarChart3, BookOpen, Calculator, ClipboardCheck, Droplets, FileText, HeartPulse, Leaf, ListChecks, Map, Package, PawPrint, Route, ShieldCheck, Utensils, Zap } from 'lucide-react'
 import { getDrillCompletion } from './Drills.jsx'
-import { getInventorySummary } from './Inventory.jsx'
-import { getFoodProductionSummary } from './Plants.jsx'
+import { getInventorySummary } from '../utils/inventorySummaries.js'
+import { getFoodProductionSummary } from '../utils/plantSummaries.js'
 import { getHighestRisk, riskLevelClass } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
@@ -16,6 +16,7 @@ import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 import { getFoodSystemSummary } from '../utils/foodStorage.js'
 import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
+import { getFortressFinalizationSummary } from '../utils/readinessFinalization.js'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -119,6 +120,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
   const medical = getMedicalSystemSummary()
   const food=getFoodSystemSummary()
   const communication=getCommunicationSystemSummary()
+  const finalization=getFortressFinalizationSummary({water,energy,sanitation,medical,food,communication})
   const core = getCoreSystemSummary(state, water, energy, sanitation, medical, food, communication)
   const statuses = getSystemStatus(state)
   const highestGap = statuses.find((item) => item.status === '缺口')
@@ -166,6 +168,10 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
           {routeLabels[state.routeType] || '未指定環境'}
         </div>
       </section>
+
+      <section className="muji-card readiness-dashboard"><p className="muji-kicker">Fortress Readiness</p><div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"><div><h2 className="text-2xl font-black">堡壘總準備度</h2><p>六大核心系統的可執行準備狀態。</p></div><div className="readiness-score-card"><span>Overall Score</span><strong>{finalization.readiness.overallScore}</strong><small>{finalization.readiness.status}</small></div></div><div className="metric-strip mt-3"><div className="metric-card"><p className="metric-label">六系統平均</p><strong className="metric-value">{finalization.readiness.averageScore}</strong></div><div className="metric-card"><p className="metric-label">系統覆蓋率</p><strong className="metric-value">{finalization.readiness.systemCoverage}%</strong></div><div className="metric-card"><p className="metric-label">最弱系統</p><strong className="metric-value">{finalization.readiness.weakestDomains.map((x)=>x.label).join('、')}</strong></div></div><ol className="dense-list mt-3">{finalization.actions.slice(0,3).map((item,index)=><li key={item} className="readiness-action-card"><strong>{index+1}.</strong> {item}</li>)}</ol></section>
+      <section className="muji-card"><div className="muji-section-title"><AlertTriangle size={18}/><span>跨系統警示</span></div><div className="mt-3 grid gap-3 lg:grid-cols-3">{finalization.alerts.slice(0,3).map((item)=><article key={item.title} className={`cross-alert-card cross-alert-${item.level}`}><h3>{item.title}</h3><p>{item.description}</p><small>{item.action}</small></article>)}</div>{!finalization.alerts.length&&<p className="empty-state mt-3">目前沒有跨系統重大警示。</p>}</section>
+      <section className="muji-card"><div className="muji-section-title"><ListChecks size={18}/><span>壓力測試</span></div><div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{finalization.tests.map((item)=><article key={item.name} className="stress-test-card"><div className="flex justify-between gap-2"><h3>{item.name}</h3><span className="badge">{item.result}</span></div><strong>{item.score} 分</strong><p>{item.failures[0]||'條件已通過'}</p></article>)}</div></section>
 
       <section className="muji-card core-summary-card border-[#24483a]/25"><p className="muji-kicker">Fortress Core</p><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><h2 className="text-2xl font-black text-bark">家庭核心生存狀態</h2><p className="mt-2 text-soil/70">六大核心域總控快照；六個正式核心系統已完成整合。</p></div><div className="core-score-card"><span>Core Survival Score</span><strong>{core.totalScore}</strong><small>{core.readinessLevel.level}｜{core.readinessLevel.label}</small></div></div><div className="mt-3 grid gap-2 sm:grid-cols-3"><div className="rounded-xl border border-soil/15 bg-white/60 p-3"><p className="text-xs font-black">最弱核心域</p><strong className="text-sm">{core.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}</strong></div>{core.scenarioReadiness.filter((item)=>['water-power-72h','supply-7d'].includes(item.id)).map((item)=><div key={item.id} className="rounded-xl border border-soil/15 bg-white/60 p-3"><p className="text-xs font-black">{item.name}</p><strong className="text-sm">{item.label} · {item.score}</strong></div>)}</div><div className="core-domain-grid mt-3">{Object.entries(core.domains).map(([id,domain])=><button type="button" key={id} className={`core-domain-card core-domain-${id}`} onClick={id==='water'?()=>setPage('waterSystem'):id==='energy'?()=>setPage('energySystem'):id==='sanitation'?()=>setPage('sanitationSystem'):id==='medical'?()=>setPage('medicalSystem'):id==='food'?()=>setPage('foodSystem'):id==='communication'?()=>setPage('communicationSystem'):undefined}><div className="flex items-start justify-between gap-2"><h3>{CORE_DOMAIN_LABELS[id]}</h3><span>{domain.confidence}</span></div><strong>{domain.score}</strong><p>{domain.status}</p><small>{domain.topRecommendation}</small></button>)}</div></section>
 

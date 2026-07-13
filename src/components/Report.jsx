@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react'
 import { Clipboard, FileText, Printer, RefreshCw, ShieldAlert } from 'lucide-react'
 import { DRILLS, getDrillCompletion } from './Drills.jsx'
-import { getFoodRotationList, getInventorySummary, normalizeInventoryItem } from './Inventory.jsx'
-import { getFoodProductionSummary } from './Plants.jsx'
+import { getFoodRotationList, getInventorySummary, normalizeInventoryItem } from '../utils/inventorySummaries.js'
+import { getFoodProductionSummary } from '../utils/plantSummaries.js'
 import { getHighestRisk, getRiskCounts, residenceLabels } from './RiskMatrix.jsx'
 import { getEvacuationKitSummary } from './EvacuationKit.jsx'
 import { getRoadmapSummary } from './Roadmap.jsx'
@@ -16,6 +16,8 @@ import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 import { getFoodSystemSummary } from '../utils/foodStorage.js'
 import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
+import { getFortressFinalizationSummary } from '../utils/readinessFinalization.js'
+import CollapsibleSection from './CollapsibleSection.jsx'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -154,12 +156,20 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, energy, sanitation, medical, food, communication, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, energy, sanitation, medical, food, communication, finalization, priorityAction }) {
   const executiveActions = uniqueItems([priorityAction, ...fortressCore.recommendations]).slice(0, 3)
   return [
     'Fortress OS｜自足堡壘 作戰報告',
     `報告時間：${generatedAt}`,
     `Survival Readiness Score：${score}｜${title}`,
+    '',
+    `Fortress Readiness：${finalization.readiness.overallScore}｜${finalization.readiness.status}`,
+    `最弱系統：${finalization.readiness.weakestDomains.map((x)=>x.label).join('、')}`,
+    `最強系統：${finalization.readiness.strongestDomains.map((x)=>x.label).join('、')}`,
+    ...finalization.tests.map((x)=>`壓力測試 ${x.name}：${x.result}｜${x.score} 分｜${x.failures.join('、')||'通過'}`),
+    ...finalization.actions.map((x,i)=>`準備度行動 ${i+1}：${x}`),
+    ...finalization.alerts.map((x)=>`跨系統警示：${x.title}｜${x.description}｜${x.action}`),
+    ...finalization.checklist.flatMap((tier)=>[tier.name,...tier.items.map((x)=>`${x.label}：${x.status}`)]),
     '',
     'Executive Summary｜決策摘要',
     `Core Survival Score：${fortressCore.totalScore} / 100｜${fortressCore.readinessLevel.level}・${fortressCore.readinessLevel.label}`,
@@ -344,6 +354,7 @@ export default function Report({ state, tasks }) {
   const medical = getMedicalSystemSummary()
   const food=getFoodSystemSummary()
   const communication=getCommunicationSystemSummary()
+  const finalization=getFortressFinalizationSummary({water,energy,sanitation,medical,food,communication},roadmapSummary)
   const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food, communication)
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
@@ -374,6 +385,7 @@ export default function Report({ state, tasks }) {
     medical,
     food,
     communication,
+    finalization,
     priorityAction
   })
 
@@ -429,12 +441,17 @@ export default function Report({ state, tasks }) {
         <section className="muji-card core-summary-card border-[#24483a]/25">
           <SectionTitle>Executive Summary｜決策摘要</SectionTitle>
           <div className="metric-strip mt-3">
-            <Metric label="Core Survival Score" value={`${fortressCore.totalScore} / 100`} />
-            <Metric label="Readiness" value={`${fortressCore.readinessLevel.level}｜${fortressCore.readinessLevel.label}`} />
-            <Metric label="最弱核心域" value={fortressCore.weakestDomains.map((id) => CORE_DOMAIN_LABELS[id]).join('、')} />
+            <Metric label="Fortress Readiness" value={`${finalization.readiness.overallScore} / 100`} />
+            <Metric label="狀態" value={finalization.readiness.status} />
+            <Metric label="最弱系統" value={finalization.readiness.weakestDomains.map((x)=>x.label).join('、')} />
+            <Metric label="最強系統" value={finalization.readiness.strongestDomains.map((x)=>x.label).join('、')} />
           </div>
-          <ReportList title="優先行動 3 項" items={executiveActions} />
+          <ReportList title="Top 5 Readiness Actions" items={finalization.actions} />
+          <ReportList title="Cross-System Alerts" items={finalization.alerts.map((x)=>`${x.title}：${x.description}｜${x.action}`)} empty="目前沒有跨系統警示。" />
         </section>
+
+        <section className="muji-card"><SectionTitle>Readiness Stress Test Summary｜壓力測試摘要</SectionTitle><div className="mt-3 grid gap-3 lg:grid-cols-2">{finalization.tests.map((item)=><article key={item.name} className="stress-test-card"><div className="flex justify-between gap-2"><h3>{item.name}</h3><span className="badge">{item.result} · {item.score}</span></div><p>失敗項：{item.failures.join('、')||'無'}</p><p>行動：{item.actions.join('、')||'維持輪替與演練'}</p></article>)}</div></section>
+        <section className="muji-card"><SectionTitle>Completion Checklist｜自給自足完成度</SectionTitle><div className="mt-3 grid gap-3 lg:grid-cols-3">{finalization.checklist.map((tier)=><article key={tier.name} className="completion-checklist-card"><h3>{tier.name}</h3>{tier.items.map((item)=><p key={item.label}>{item.label}：<strong>{item.status}</strong></p>)}</article>)}</div></section>
 
         <section className="muji-card">
           <SectionTitle>補給摘要</SectionTitle>
@@ -468,6 +485,7 @@ export default function Report({ state, tasks }) {
 
         <section className="muji-card communication-summary-card"><SectionTitle>通訊安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Communication Score" value={`${communication.score} / 100`}/><Metric label="狀態" value={communication.status}/><Metric label="聯絡人／關鍵" value={`${communication.totals.contactCount} / ${communication.totals.criticalContactCount}`}/><Metric label="紙本聯絡清單" value={`${communication.totals.paperContactCount} 份`}/><Metric label="設備／離線設備" value={`${communication.totals.deviceCount} / ${communication.totals.offlineDeviceCount}`}/><Metric label="離線資訊來源" value={`${communication.totals.informationSourceCount} 個`}/><Metric label="集合地點" value={`${communication.totals.meetingPointCount} 個`}/><Metric label="通訊計畫" value={`${communication.totals.messagePlanCount} 個`}/><Metric label="離線文件" value={`${communication.totals.offlineDocumentCount} 項`}/><Metric label="家人／鄰居聯絡" value={`${communication.capabilities.hasFamilyContact?'有':'無'} / ${communication.capabilities.hasNeighborContact?'有':'無'}`}/><Metric label="醫療／獸醫聯絡" value={`${communication.capabilities.hasMedicalContact?'有':'無'} / ${communication.capabilities.hasVetContact?'有':'無'}`}/><Metric label="收音機／離線地圖" value={`${communication.capabilities.hasRadio?'有':'無'} / ${communication.capabilities.hasOfflineMap?'有':'無'}`}/><Metric label="外地聯絡人" value={communication.capabilities.hasOutOfAreaContact?'有':'無'}/></div><ReportList title="前 3 條通訊改善建議" items={uniqueItems(communication.recommendations).slice(0,3)}/></section>
 
+        <CollapsibleSection title="水資源詳細章節" subtitle="儲水、需求、用水趨勢與事件模擬">
         <section className="muji-card border-[#24483a]/25">
           <SectionTitle>水資源安全摘要</SectionTitle>
           <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -506,6 +524,7 @@ export default function Report({ state, tasks }) {
           <ReportList title="複合災害推演摘要" items={compoundEvents.map(compoundEventLine)} />
           <ReportList title="前 3 條用水警告" items={uniqueItems(water.usage.warnings).slice(0, 3)} />
         </section>
+        </CollapsibleSection>
 
         <section className="muji-card">
           <SectionTitle>演練摘要</SectionTitle>

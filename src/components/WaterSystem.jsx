@@ -7,6 +7,7 @@ import { usageCategories, usageSourceTypes } from '../utils/waterUsage.js'
 import WaterUsageCharts from './WaterUsageCharts.jsx'
 import { buildPresetWaterEvents, simulateWaterEvent } from '../utils/waterEventSimulator.js'
 import { buildPresetCompoundEvents, compoundHazards, compoundHazardLabels, simulateCompoundDisaster } from '../utils/compoundDisasterSimulator.js'
+import CollapsibleSection from './CollapsibleSection.jsx'
 
 const emptyStorage = { name: '', volumeLiters: '', category: 'bottled', potable: true, requiresTreatment: false, location: '', storedAt: '', expiresAt: '', notes: '' }
 const emptySource = { name: '', type: 'tap', distance: '', estimatedVolume: '', stable: false, potable: false, requiresTreatment: false, dependsOnElectricity: false, dependsOnTransport: false, notes: '' }
@@ -69,7 +70,7 @@ function CrudForm({ kind, initial, options, onSave, onCancel }) {
 function CrudSection({ title, icon, kind, items, empty, options, onChange, extra }) {
   const [editing, setEditing] = useState(null)
   const save = (item) => { onChange(editing?.id ? items.map((x) => x.id === editing.id ? { ...item, id: editing.id } : x) : [{ ...item, id: uid() }, ...items]); setEditing(null) }
-  return <section className="muji-card">
+  return <CollapsibleSection title={`管理${title}`} subtitle={`${items.length} 筆資料`}>
     <div className="flex items-center justify-between gap-3"><SectionTitle icon={icon}>{title}</SectionTitle><button className="btn-secondary" type="button" onClick={() => setEditing({ ...empty })}><Plus size={16} className="inline"/> 新增</button></div>
     {extra}
     {editing && <CrudForm kind={kind} initial={editing} options={options} onSave={save} onCancel={() => setEditing(null)}/>} 
@@ -79,7 +80,7 @@ function CrudSection({ title, icon, kind, items, empty, options, onChange, extra
       {kind === 'treatment' && <p className="mt-2 text-sm">每日 {fmt(item.dailyCapacity)} L · {item.owned ? '已擁有' : '尚未擁有'}</p>}
     </article>)}</div>
     {!items.length && <p className="mt-4 rounded-2xl border border-dashed border-soil/25 p-5 text-center text-soil/60">尚無資料</p>}
-  </section>
+  </CollapsibleSection>
 }
 
 export default function WaterSystem({ setPage }) {
