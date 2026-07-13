@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { AlertTriangle, BookOpen, CheckCircle2, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react'
+import { HOUSEHOLD_CAPABILITIES } from '../data/householdCapabilities.js'
+import CollapsibleSection from './CollapsibleSection.jsx'
 
 const filters = [
   ['all', '全部'],
@@ -202,6 +204,17 @@ export default function Manual() {
           內容內建於 App，可在斷網時閱讀。手冊用於安全流程、盤點與決策，不取代現場專業判斷。
         </div>
       </section>
+
+      <CollapsibleSection title="家庭能力手冊" subtitle="十類家庭能力的離線安全要點" badge="10 類" className="household-manual-section">
+        <div className="household-manual-grid">
+          {HOUSEHOLD_CAPABILITIES.map((capability) => <article key={capability.id} className="household-manual-card">
+            <h3>{capability.label}</h3>
+            <p>{capability.summary}</p>
+            <ul>{capability.manualItems.map((item)=><li key={item}>{item}</li>)}</ul>
+          </article>)}
+        </div>
+        <div className="task-safety-note mt-4">醫療與急救內容僅供家庭韌性準備，不取代醫師、護理師或獸醫的診斷與治療。修繕遇到配電、瓦斯、承重結構、高處或其他不確定風險時，應停止並尋求合格專業協助。</div>
+      </CollapsibleSection>
 
       <section className="muji-card">
         <div className="muji-section-title">

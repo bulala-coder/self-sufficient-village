@@ -55,8 +55,8 @@ const tools = [
   },
   {
     id: 'skills',
-    title: '技能樹與能力任務',
-    description: '查看各系統能力進度，並在每個任務卡片內展開完整任務詳情。',
+    title: '技能樹與能力任務', subtitle: 'Household Capability',
+    description: '以 10 個家庭能力分支、30 項可執行任務與安全演練，補強家庭的實作、判斷、交接與維護能力。',
     button: '打開能力任務',
     icon: ListChecks
   },

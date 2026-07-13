@@ -13,6 +13,8 @@ import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 import { getFoodSystemSummary } from '../utils/foodStorage.js'
 import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
 import { getFortressFinalizationSummary } from '../utils/readinessFinalization.js'
+import { HOUSEHOLD_CAPABILITY_ROADMAP } from '../data/householdCapabilities.js'
+import CollapsibleSection from './CollapsibleSection.jsx'
 
 export const abilityDomains = {
   water: '水',
@@ -216,6 +218,7 @@ function domainClass(domain) {
 
 export default function Roadmap({ state, updateRoadmap }) {
   const summary = getRoadmapSummary(state)
+  const completedTasks = getCompletedMap(state.completed)
   const water = getWaterIntelligenceSummary()
   const energy = getEnergySystemSummary()
   const sanitation = getSanitationSystemSummary()
@@ -330,6 +333,23 @@ export default function Roadmap({ state, updateRoadmap }) {
           <p className="summary-text mt-2">{summary.nextAbility?.suggestedAction || '持續做年度補給、種植、修繕與社區互助系統檢查。'}</p>
         </div>
       </section>
+
+      <CollapsibleSection title="Household Capability Roadmap" subtitle="家庭能力三階段完成路線" badge="3 Stages" className="household-roadmap-section">
+        <div className="household-roadmap-grid">
+          {HOUSEHOLD_CAPABILITY_ROADMAP.map((stage, stageIndex) => {
+            const completedCount = stage.taskIds.filter((taskId)=>completedTasks[taskId]).length
+            const complete = completedCount === stage.taskIds.length
+            const priorComplete = stageIndex === 0 || HOUSEHOLD_CAPABILITY_ROADMAP.slice(0,stageIndex).every((prior)=>prior.taskIds.every((taskId)=>completedTasks[taskId]))
+            const status = complete ? '已完成' : priorComplete ? '優先處理' : '需要加強'
+            const statusClass = complete ? 'bg-[#24483a] text-[#fff9ea]' : priorComplete ? 'bg-[#8b2f25] text-[#fff9ea]' : 'bg-[#c2a25c] text-[#241b10]'
+            return <article key={stage.id} className="household-roadmap-card">
+              <div className="flex items-start justify-between gap-3"><h3>{stage.title}</h3><span className={`status-pill ${statusClass}`}>{status}</span></div>
+              <p className="mt-2 font-bold text-soil/70">能力任務 {completedCount}/{stage.taskIds.length}</p>
+              <ul>{stage.items.map((item)=><li key={item}>{item}</li>)}</ul>
+            </article>
+          })}
+        </div>
+      </CollapsibleSection>
 
       <section className="muji-card readiness-dashboard"><div className="muji-section-title"><Target size={18}/><span>Fortress Final Roadmap｜堡壘最短完成路線</span></div><div className="mt-3 grid gap-3 lg:grid-cols-3">{[['立即處理',finalization.actions.slice(0,2)],['本週處理',finalization.actions.slice(2,4)],['之後強化',[...finalization.checklist[2].items.filter((x)=>!x.complete).map((x)=>`強化 ${x.label} 至 14 天`),...finalization.alerts.map((x)=>x.action)].slice(0,3)]].map(([title,items])=><article key={title} className="final-roadmap-card"><h3>{title}</h3><ol>{(items.length?items:['維持現有輪替與演練']).map((item)=><li key={item}>{item}</li>)}</ol></article>)}</div></section>
 

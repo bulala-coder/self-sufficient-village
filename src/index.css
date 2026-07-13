@@ -1557,3 +1557,38 @@ textarea {
   .collapsible-content[hidden] { display: block !important; }
   .collapsible-toggle { display: none; }
 }
+
+/* v5.9 Household capability upgrade */
+.household-capability-intro,
+.household-capability-summary,
+.household-drill-intro { border-color: rgba(36, 72, 58, 0.28); }
+.household-skill-branch .collapsible-content { padding-top: 1rem; }
+.household-skill-branch .skill-system-summary { padding-bottom: 0.25rem; }
+.household-manual-grid,
+.household-roadmap-grid { display: grid; gap: 0.9rem; }
+.household-manual-card,
+.household-roadmap-card {
+  min-width: 0;
+  border: 1px solid rgba(90, 70, 45, 0.16);
+  border-radius: 1rem;
+  background: #fffdf7;
+  padding: 1rem;
+  color: #3d3428;
+}
+.household-manual-card h3,
+.household-roadmap-card h3 { color: #2f302b; font-size: 1.05rem; font-weight: 900; line-height: 1.5; }
+.household-manual-card p { margin-top: 0.45rem; color: #655744; font-weight: 700; }
+.household-manual-card ul,
+.household-roadmap-card ul { display: grid; gap: 0.45rem; margin-top: 0.75rem; padding-left: 1.25rem; list-style: disc; line-height: 1.6; }
+
+@media (min-width: 700px) {
+  .household-manual-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .household-roadmap-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 430px) {
+  .household-skill-branch .collapsible-toggle .badge { display: none; }
+  .household-manual-card,
+  .household-roadmap-card { padding: 0.9rem; }
+  .household-capability-summary .btn-primary { min-height: 44px; width: 100%; }
+}

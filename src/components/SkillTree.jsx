@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { CheckCircle2, ChevronDown, ChevronUp, Circle } from 'lucide-react'
 import { getCompletedMap, taskSystemLabels, taskSystems } from '../data/tasks.js'
+import { HOUSEHOLD_CAPABILITY_SYSTEMS } from '../data/householdCapabilities.js'
+import CollapsibleSection from './CollapsibleSection.jsx'
 
 const skillSystems = taskSystems.filter(([id]) => id !== 'all')
+const capabilitySystemIds = new Set(HOUSEHOLD_CAPABILITY_SYSTEMS.map(([id]) => id))
 
 function hasContent(value) {
   return Array.isArray(value) ? value.length > 0 : value !== undefined && value !== null && String(value).trim() !== ''
@@ -80,6 +83,12 @@ export default function SkillTree({ state, tasks = [] }) {
       <p className="mt-2 text-soil/70">完成不同系統的能力任務，累積 XP 並提升對應能力等級。</p>
     </section>
 
+    <section className="muji-card compact-card household-capability-intro">
+      <p className="muji-kicker">Household Capability</p>
+      <h2 className="text-xl font-black text-bark">家庭能力升級</h2>
+      <p className="mt-2 text-soil/70">十個能力分支共 30 項任務。各分支與任務詳情預設收合，可在原卡片內查看，不會跳離目前位置。</p>
+    </section>
+
     {skillSystems.map(([system,label]) => {
       const systemTasks = tasks.filter((task) => task.system === system)
       if (!systemTasks.length) return null
@@ -87,7 +96,7 @@ export default function SkillTree({ state, tasks = [] }) {
       const totalXp = systemTasks.reduce((sum,task) => sum + safeNumber(task.xp), 0)
       const level = Math.max(1, Math.floor(xp / 50) + 1)
       const percent = totalXp > 0 ? Math.min(100, Math.round((xp / totalXp) * 100)) : 0
-      return <section key={system} className="muji-card skill-system-section">
+      const content = <>
         <div className="skill-system-summary">
           <div><span className="badge">Lv.{level}</span><h2 className="mt-2 text-xl font-black text-bark">{label}</h2><p>{xp} / {totalXp} XP · 完成 {systemTasks.filter((task)=>completed[task.id]).length}/{systemTasks.length}</p></div>
           <strong>{percent}%</strong>
@@ -96,7 +105,15 @@ export default function SkillTree({ state, tasks = [] }) {
         <div className="mt-4 space-y-3">
           {systemTasks.map((task)=><SkillTaskCard key={task.id} task={task} completed={Boolean(completed[task.id])} open={Boolean(expandedTaskIds[task.id])} toggle={()=>toggleTaskDetails(task.id)}/>) }
         </div>
-      </section>
+      </>
+
+      if (capabilitySystemIds.has(system)) {
+        return <CollapsibleSection key={system} title={label} subtitle={`Lv.${level} · ${xp}/${totalXp} XP · 完成 ${systemTasks.filter((task)=>completed[task.id]).length}/${systemTasks.length}`} badge={`${percent}%`} className="skill-system-section household-skill-branch">
+          {content}
+        </CollapsibleSection>
+      }
+
+      return <section key={system} className="muji-card skill-system-section">{content}</section>
     })}
   </div>
 }

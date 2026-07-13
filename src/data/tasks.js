@@ -1,3 +1,5 @@
+import { HOUSEHOLD_CAPABILITY_SYSTEMS, HOUSEHOLD_CAPABILITY_TASKS } from './householdCapabilities.js'
+
 export const taskSystems = [
   ['all', '全部'],
   ['water', '水系統'],
@@ -7,7 +9,8 @@ export const taskSystems = [
   ['animal', '動物照護'],
   ['terrain', '地形風險'],
   ['evacuation', '撤離規劃'],
-  ['longterm', '長期自給']
+  ['longterm', '長期自給'],
+  ...HOUSEHOLD_CAPABILITY_SYSTEMS
 ]
 
 export const taskSystemLabels = Object.fromEntries(taskSystems)
@@ -480,6 +483,8 @@ const missionTasks = [
   }
 ]
 
+const allTasks = [...missionTasks, ...HOUSEHOLD_CAPABILITY_TASKS]
+
 export function getCompletedMap(completed = {}) {
   if (Array.isArray(completed)) {
     return completed.reduce((map, item) => {
@@ -498,7 +503,7 @@ export function isTaskCompleted(completed, taskId) {
   return Boolean(getCompletedMap(completed)[taskId])
 }
 
-export function getRecommendedTask(tasks = missionTasks, state = {}) {
+export function getRecommendedTask(tasks = allTasks, state = {}) {
   const completed = getCompletedMap(state.completed)
   const preparedness = state.preparedness || {}
   const unfinished = (task) => task && !completed[task.id]
@@ -525,5 +530,5 @@ export function getRecommendedTask(tasks = missionTasks, state = {}) {
 }
 
 export function getTasks() {
-  return missionTasks
+  return allTasks
 }
