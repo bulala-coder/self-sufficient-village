@@ -1,33 +1,34 @@
-import React, { useMemo, useState } from 'react'
+import React, { lazy, Suspense, useMemo, useState } from 'react'
 import { Sprout, Home, ListChecks, Wrench, RotateCcw, AlertTriangle, Package, ClipboardCheck, FileText, Route } from 'lucide-react'
 import Welcome from './components/Welcome.jsx'
 import Onboarding from './components/Onboarding.jsx'
 import Dashboard from './components/Dashboard.jsx'
-import TaskList from './components/TaskList.jsx'
-import SkillTree from './components/SkillTree.jsx'
-import SelfScore from './components/SelfScore.jsx'
-import HealthSafety from './components/HealthSafety.jsx'
-import Preparedness from './components/Preparedness.jsx'
-import RiskMatrix from './components/RiskMatrix.jsx'
-import Inventory from './components/Inventory.jsx'
-import Plants from './components/Plants.jsx'
 import Tools from './components/Tools.jsx'
-import Drills from './components/Drills.jsx'
-import Calculators from './components/Calculators.jsx'
-import EvacuationKit from './components/EvacuationKit.jsx'
-import Report from './components/Report.jsx'
-import Manual from './components/Manual.jsx'
-import Roadmap from './components/Roadmap.jsx'
-import Journal from './components/Journal.jsx'
-import VillageElder from './components/VillageElder.jsx'
-import WaterSystem from './components/WaterSystem.jsx'
-import EnergySystem from './components/EnergySystem.jsx'
-import SanitationSystem from './components/SanitationSystem.jsx'
-import MedicalSystem from './components/MedicalSystem.jsx'
-import FoodSystem from './components/FoodSystem.jsx'
-import CommunicationSystem from './components/CommunicationSystem.jsx'
 import { getCompletedMap, getTasks, taskSystemLabels } from './data/tasks.js'
 import { decideRoute } from './data/routes.js'
+
+const TaskList = lazy(() => import('./components/TaskList.jsx'))
+const SkillTree = lazy(() => import('./components/SkillTree.jsx'))
+const SelfScore = lazy(() => import('./components/SelfScore.jsx'))
+const HealthSafety = lazy(() => import('./components/HealthSafety.jsx'))
+const Preparedness = lazy(() => import('./components/Preparedness.jsx'))
+const RiskMatrix = lazy(() => import('./components/RiskMatrix.jsx'))
+const Inventory = lazy(() => import('./components/Inventory.jsx'))
+const Plants = lazy(() => import('./components/Plants.jsx'))
+const Drills = lazy(() => import('./components/Drills.jsx'))
+const Calculators = lazy(() => import('./components/Calculators.jsx'))
+const EvacuationKit = lazy(() => import('./components/EvacuationKit.jsx'))
+const Report = lazy(() => import('./components/Report.jsx'))
+const Manual = lazy(() => import('./components/Manual.jsx'))
+const Roadmap = lazy(() => import('./components/Roadmap.jsx'))
+const Journal = lazy(() => import('./components/Journal.jsx'))
+const VillageElder = lazy(() => import('./components/VillageElder.jsx'))
+const WaterSystem = lazy(() => import('./components/WaterSystem.jsx'))
+const EnergySystem = lazy(() => import('./components/EnergySystem.jsx'))
+const SanitationSystem = lazy(() => import('./components/SanitationSystem.jsx'))
+const MedicalSystem = lazy(() => import('./components/MedicalSystem.jsx'))
+const FoodSystem = lazy(() => import('./components/FoodSystem.jsx'))
+const CommunicationSystem = lazy(() => import('./components/CommunicationSystem.jsx'))
 
 const STORAGE_KEY = 'self_sufficient_village_v1'
 const defaultState = { started: false, onboarded: false, profile: null, routeType: null, completed: {}, journal: [], xp: 0, preparedness: {}, riskProfile: {}, inventory: [], plants: [], drills: {}, calculators: {}, evacuationKit: {}, roadmap: {} }
@@ -129,6 +130,7 @@ export default function App() {
       </div>
     </header>
     <main className="app-main max-w-6xl mx-auto px-4 py-6">
+      <Suspense fallback={<div className="card p-5 text-center text-soil/70" role="status">系統載入中...</div>}>
       {page === 'dashboard' && <Dashboard {...commonProps}/>} 
       {page === 'tasks' && <TaskList {...commonProps}/>} 
       {page === 'preparedness' && <Preparedness {...commonProps}/>} 
@@ -153,6 +155,7 @@ export default function App() {
       {page === 'health' && <HealthSafety/>} 
       {page === 'journal' && <Journal entries={state.journal}/>} 
       {page === 'elder' && <VillageElder state={state}/>} 
+      </Suspense>
     </main>
     <nav className="ink-nav fixed bottom-0 inset-x-0">
       <div className="max-w-6xl mx-auto grid grid-cols-4 sm:grid-cols-8 gap-1 px-2 py-2">
