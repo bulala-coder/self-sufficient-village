@@ -28,7 +28,7 @@ function DetailSection({ title, value, ordered = false }) {
   </section>
 }
 
-function SkillTaskCard({ task, completed, open, toggle }) {
+function SkillTaskCard({ task, completed, open, toggleDetails, toggleCompletion }) {
   const detailId = `skill-task-details-${task.id}`
   return <article className={`task-card skill-task-card ${completed ? 'task-card-complete' : ''}`}>
     <div className="task-summary-row skill-task-summary-row">
@@ -46,7 +46,19 @@ function SkillTaskCard({ task, completed, open, toggle }) {
       <strong className="shrink-0 text-sm text-soil/70">{safeNumber(task.xp)} XP</strong>
     </div>
 
-    <button type="button" className="task-detail-toggle skill-task-detail-toggle" aria-expanded={open} aria-controls={detailId} onClick={toggle}>
+    <div className="task-completion-row skill-task-completion-row">
+      <button
+        type="button"
+        className={`task-complete-button skill-task-complete-button ${completed ? 'is-complete' : ''}`}
+        aria-pressed={completed}
+        onClick={toggleCompletion}
+      >
+        {completed ? <CheckCircle2 size={20}/> : <Circle size={20}/>}
+        <span>{completed ? '取消完成' : '標記完成'}</span>
+      </button>
+    </div>
+
+    <button type="button" className="task-detail-toggle skill-task-detail-toggle" aria-expanded={open} aria-controls={detailId} onClick={toggleDetails}>
       <span>{open ? '收起詳情' : '任務詳情'}</span>
       {open ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
     </button>
@@ -63,12 +75,12 @@ function SkillTaskCard({ task, completed, open, toggle }) {
         <DetailSection title="對應缺口" value={task.relatedGap || task.gap}/>
       </div>
       <div className="task-safety-note">完成可獲得 {safeNumber(task.xp)} XP。只在安全範圍內執行盤點、測試與記錄，不要求冒險行動。</div>
-      <p className={completed ? 'font-bold text-[#24483a]' : 'font-bold text-soil/70'}>{completed ? '此任務已完成，詳情仍可隨時查看。' : '前往「任務」頁完成並記錄此能力任務。'}</p>
+      <p className={completed ? 'font-bold text-[#24483a]' : 'font-bold text-soil/70'}>{completed ? '此任務已完成，詳情仍可隨時查看。' : '可直接在此卡片標記完成；完成狀態會與「任務」頁同步。'}</p>
     </div>
   </article>
 }
 
-export default function SkillTree({ state, tasks = [] }) {
+export default function SkillTree({ state, tasks = [], toggleTaskCompletion }) {
   const [expandedTaskIds, setExpandedTaskIds] = useState({})
   const completed = getCompletedMap(state.completed)
 
@@ -103,7 +115,7 @@ export default function SkillTree({ state, tasks = [] }) {
         </div>
         <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#d5c9b4]"><div className="h-full rounded-full bg-[#24483a]" style={{width:`${percent}%`}}/></div>
         <div className="mt-4 space-y-3">
-          {systemTasks.map((task)=><SkillTaskCard key={task.id} task={task} completed={Boolean(completed[task.id])} open={Boolean(expandedTaskIds[task.id])} toggle={()=>toggleTaskDetails(task.id)}/>) }
+          {systemTasks.map((task)=><SkillTaskCard key={task.id} task={task} completed={Boolean(completed[task.id])} open={Boolean(expandedTaskIds[task.id])} toggleDetails={()=>toggleTaskDetails(task.id)} toggleCompletion={()=>toggleTaskCompletion(task, '從技能樹完成能力任務。')}/>) }
         </div>
       </>
 

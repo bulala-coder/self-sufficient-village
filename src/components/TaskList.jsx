@@ -22,7 +22,7 @@ function riskClass(level) {
   return 'bg-[#24483a] text-[#fff9ea]'
 }
 
-export default function TaskList({ state, tasks, completeTask }) {
+export default function TaskList({ state, tasks, toggleTaskCompletion }) {
   const [openTasks, setOpenTasks] = useState({})
   const [reflections, setReflections] = useState({})
   const [systemFilter, setSystemFilter] = useState('all')
@@ -163,6 +163,18 @@ export default function TaskList({ state, tasks, completeTask }) {
                   <span className="shrink-0 text-sm font-black text-soil/70">{task.xp} XP</span>
                 </div>
 
+                <div className="task-completion-row">
+                  <button
+                    type="button"
+                    className={`task-complete-button ${done ? 'is-complete' : ''}`}
+                    aria-pressed={done}
+                    onClick={() => toggleTaskCompletion(task, reflections[task.id] || '完成任務，已記錄可驗證結果與後續缺口。')}
+                  >
+                    {done ? <CheckCircle2 size={20}/> : <Circle size={20}/>}
+                    <span>{done ? '取消完成' : '標記完成'}</span>
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   className="task-detail-toggle"
@@ -194,7 +206,7 @@ export default function TaskList({ state, tasks, completeTask }) {
                       <button
                         type="button"
                         className="btn-primary w-full"
-                        onClick={() => completeTask(task, reflections[task.id] || '完成任務，已記錄可驗證結果與後續缺口。')}
+                        onClick={() => toggleTaskCompletion(task, reflections[task.id] || '完成任務，已記錄可驗證結果與後續缺口。')}
                       >
                         完成任務
                       </button>

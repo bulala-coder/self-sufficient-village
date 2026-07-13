@@ -104,11 +104,23 @@ export default function App() {
     update({ ...state, roadmap: values || {} })
   }
 
-  function completeTask(task, reflection) {
+  function toggleTaskCompletion(task, reflection = '') {
     const completedMap = getCompletedMap(state.completed)
-    if (completedMap[task.id]) return
+    const taskXp = Number.isFinite(Number(task?.xp)) ? Math.max(0, Number(task.xp)) : 0
+
+    if (completedMap[task.id]) {
+      const nextCompleted = { ...completedMap }
+      delete nextCompleted[task.id]
+      update({
+        ...state,
+        completed: nextCompleted,
+        xp: Math.max(0, (Number(state.xp) || 0) - taskXp)
+      })
+      return
+    }
+
     const entry = { id: Date.now(), taskId: task.id, title: task.title, category: taskSystemLabels[task.system] || task.category || '任務', reflection, date: new Date().toLocaleDateString('zh-TW') }
-    update({ ...state, completed: { ...completedMap, [task.id]: true }, journal: [entry, ...(state.journal || [])], xp: state.xp + task.xp })
+    update({ ...state, completed: { ...completedMap, [task.id]: true }, journal: [entry, ...(state.journal || [])], xp: (Number(state.xp) || 0) + taskXp })
   }
   function reset() {
     if (confirm('確定要清除本機資料，重新開始嗎？')) { localStorage.removeItem(STORAGE_KEY); setState(defaultState); setPage('dashboard') }
@@ -117,7 +129,7 @@ export default function App() {
   if (!state.started) return <Welcome onStart={start} />
   if (!state.onboarded) return <Onboarding onFinish={finishOnboarding} />
 
-  const commonProps = { state, tasks, completedCount, completeTask, setPage, togglePreparedness, updateRiskProfile, addInventoryItem, deleteInventoryItem, updateInventoryItem, addPlant, deletePlant, updatePlant, waterPlant, toggleDrillItem, updateCalculator, updateEvacuationKit, updateRoadmap }
+  const commonProps = { state, tasks, completedCount, toggleTaskCompletion, setPage, togglePreparedness, updateRiskProfile, addInventoryItem, deleteInventoryItem, updateInventoryItem, addPlant, deletePlant, updatePlant, waterPlant, toggleDrillItem, updateCalculator, updateEvacuationKit, updateRoadmap }
 
   return <div className="ink-page min-h-screen pb-28">
     <header className="ink-header sticky top-0 z-20">
