@@ -1,5 +1,5 @@
 import React from 'react'
-import { Apple, Backpack, Battery, BookOpen, Calculator, Droplets, HeartPulse, Leaf, ShieldCheck, Trash2 } from 'lucide-react'
+import { Apple, Backpack, Battery, BookOpen, Calculator, Droplets, HeartPulse, Leaf, Radio, ShieldCheck, Trash2 } from 'lucide-react'
 
 const tools = [
   {
@@ -31,6 +31,7 @@ const tools = [
     icon: HeartPulse
   },
   { id:'foodSystem', title:'食物系統', subtitle:'Food System 1.0', description:'管理家庭與寵物食物、熱量、份數、保存期限、免烹調食物與配給方案。', button:'打開食物系統', icon:Apple },
+  { id:'communicationSystem', title:'通訊系統', subtitle:'Communication System 1.0', description:'管理緊急聯絡人、通訊設備、離線資訊、集合地點、紙本文件與家庭報平安計畫。', button:'打開通訊系統', icon:Radio },
   {
     id: 'evacuationKit',
     title: '撤離包',

@@ -8,6 +8,7 @@ import { getEnergySystemSummary } from '../utils/energyStorage.js'
 import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 import { getFoodSystemSummary } from '../utils/foodStorage.js'
+import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
 
 const compoundFailureLabels = { drinking: '飲用水', utility: '生活用水', total: '總水量', purification: '淨水能力', water: '水資源', power: '電力', logistics: '交通補給', contamination: '水質', sanitation: '衛生', none: '無' }
 
@@ -163,7 +164,8 @@ export default function Drills({ state, toggleDrillItem }) {
   const sanitation = getSanitationSystemSummary()
   const medical = getMedicalSystemSummary()
   const food=getFoodSystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food)
+  const communication=getCommunicationSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food, communication)
   const [openDrills, setOpenDrills] = useState({ 'water-24h': true })
   const drills = state.drills || {}
   const summary = getDrillCompletion(drills)
@@ -206,6 +208,8 @@ export default function Drills({ state, toggleDrillItem }) {
       <section className="muji-card medical-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>醫療演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{[{name:'24 小時家庭急救',days:1},{name:'72 小時醫療支撐',days:3},{name:'7 天慢性需求與寵物照護',days:7}].map((target)=>{const first=medical.days.firstAidDays>=target.days,meds=medical.days.medicineDays>=target.days,chronic=!medical.data.chronicNeeds.length||medical.days.chronicDays>=target.days,pet=medical.data.household.pets<=0||medical.days.petMedicalDays>=target.days,contacts=medical.capabilities.medicalContactCount>0;const passed=[first,meds,chronic,pet,contacts].filter(Boolean).length,result=passed===5?'通過':passed>=3?'部分不足':'失敗',badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={target.days} className="medical-item-card"><div className="flex justify-between gap-2"><h3>{target.name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 font-bold"><p>急救用品：{first?'足夠':'不足'}</p><p>常備藥：{meds?'足夠':'不足'}</p><p>慢性需求：{chronic?'足夠':'不足'}</p><p>寵物醫療：{pet?'足夠':'不足'}</p><p>聯絡人：{contacts?'具備':'不足'}</p><p>建議：{medical.recommendations[0]}</p></div></article>})}</div></section>
 
       <section className="muji-card food-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>食物演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{[{name:'24 小時食物支撐',days:1},{name:'72 小時補給中斷',days:3},{name:'7 天食物配給',days:7}].map((target)=>{const calories=food.days.foodDays>=target.days,ready=food.days.readyToEatDays>=Math.min(target.days,3),cooking=food.capabilities.cookingPlanCount>0||food.capabilities.readyToEatItemCount>0,pet=food.data.household.pets<=0||food.days.petFoodDays>=target.days,passed=[calories,ready,cooking,pet].filter(Boolean).length,result=passed===4?'通過':passed>=2?'部分不足':'失敗',badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={target.days} className="food-item-card"><div className="flex justify-between gap-2"><h3>{target.name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 font-bold"><p>食物熱量：{calories?'足夠':'不足'}</p><p>免烹調食物：{ready?'足夠':'不足'}</p><p>烹調方案：{cooking?'具備':'不足'}</p><p>寵物食物：{pet?'足夠':'不足'}</p><p>建議：{food.recommendations[0]}</p></div></article>})}</div></section>
+
+      <section className="muji-card communication-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>通訊演練情報</span></div><div className="mt-4 grid gap-3 lg:grid-cols-3">{['24 小時斷網通訊','72 小時停電通訊','7 天家庭報平安'].map((name)=>{const contacts=communication.totals.criticalContactCount>0,info=communication.totals.informationSourceCount>0,devices=communication.totals.offlineDeviceCount>0||communication.capabilities.hasRadio,meeting=communication.totals.meetingPointCount>0,plan=communication.totals.messagePlanCount>0,passed=[contacts,info,devices,meeting,plan].filter(Boolean).length,result=passed===5?'通過':passed>=3?'部分不足':'失敗',badge=result==='通過'?'bg-[#24483a] text-[#fff9ea]':result==='部分不足'?'bg-[#c2a25c] text-[#241b10]':'bg-[#8b2f25] text-[#fff9ea]';return <article key={name} className="communication-item-card"><div className="flex justify-between gap-2"><h3>{name}</h3><span className={`badge ${badge}`}>{result}</span></div><div className="mt-3 space-y-1 font-bold"><p>聯絡人：{contacts?'足夠':'不足'}</p><p>離線資訊：{info?'足夠':'不足'}</p><p>通訊設備：{devices?'足夠':'不足'}</p><p>集合地點：{meeting?'具備':'不足'}</p><p>報平安計畫：{plan?'具備':'不足'}</p><p>建議：{communication.recommendations[0]}</p></div></article>})}</div></section>
 
       <section className="muji-card border-[#24483a]/25">
         <div className="muji-section-title"><ClipboardCheck size={18}/><span>停水演練情報</span></div>

@@ -15,6 +15,7 @@ import { getEnergySystemSummary } from '../utils/energyStorage.js'
 import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 import { getFoodSystemSummary } from '../utils/foodStorage.js'
+import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
 
 function scoreTitle(score) {
   if (score <= 20) return '高風險'
@@ -153,7 +154,7 @@ function getPriorityAction({ coreStatuses, supplySummary, drillDetails }) {
   return '進行 7 天補給中斷壓力測試'
 }
 
-function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, energy, sanitation, medical, food, priorityAction }) {
+function buildTextReport({ generatedAt, score, title, supplySummary, rotationList, productionSummary, drillSummary, drillDetails, taskSummary, recommendation, coreStatuses, riskSummary, kitSummary, roadmapSummary, water, waterEvents, compoundEvents, fortressCore, energy, sanitation, medical, food, communication, priorityAction }) {
   const executiveActions = uniqueItems([priorityAction, ...fortressCore.recommendations]).slice(0, 3)
   return [
     'Fortress OS｜自足堡壘 作戰報告',
@@ -201,6 +202,13 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     `食物／免烹調／寵物／整體支撐：${formatNumber(food.days.foodDays)} / ${formatNumber(food.days.readyToEatDays)} / ${formatNumber(food.days.petFoodDays)} / ${formatNumber(food.days.overallDays)} 天`,
     `食物／免烹調／常溫／低用水／烹調方案／室內安全／配給／效期缺口：${food.capabilities.foodItemCount} / ${food.capabilities.readyToEatItemCount} / ${food.capabilities.shelfStableItemCount} / ${food.capabilities.lowWaterItemCount} / ${food.capabilities.cookingPlanCount} / ${food.capabilities.indoorSafeCookingPlanCount} / ${food.capabilities.rationPlanCount} / ${food.capabilities.expiringItemCount}`,
     ...uniqueItems(food.recommendations).slice(0,3).map((item,index)=>`食物建議 ${index+1}：${item}`),
+    '',
+    '通訊安全摘要',
+    `Communication Score：${communication.score} / 100｜${communication.status}`,
+    `聯絡人／關鍵／紙本／設備／離線設備：${communication.totals.contactCount} / ${communication.totals.criticalContactCount} / ${communication.totals.paperContactCount} / ${communication.totals.deviceCount} / ${communication.totals.offlineDeviceCount}`,
+    `資訊來源／集合點／通訊計畫／離線文件：${communication.totals.informationSourceCount} / ${communication.totals.meetingPointCount} / ${communication.totals.messagePlanCount} / ${communication.totals.offlineDocumentCount}`,
+    `家人／鄰居／醫療／獸醫／收音機／離線地圖／外地聯絡：${communication.capabilities.hasFamilyContact?'有':'無'} / ${communication.capabilities.hasNeighborContact?'有':'無'} / ${communication.capabilities.hasMedicalContact?'有':'無'} / ${communication.capabilities.hasVetContact?'有':'無'} / ${communication.capabilities.hasRadio?'有':'無'} / ${communication.capabilities.hasOfflineMap?'有':'無'} / ${communication.capabilities.hasOutOfAreaContact?'有':'無'}`,
+    ...uniqueItems(communication.recommendations).slice(0,3).map((item,index)=>`通訊建議 ${index+1}：${item}`),
     '',
     '補給摘要',
     `飲水總量：${formatNumber(supplySummary.waterLiters)} L`,
@@ -335,7 +343,8 @@ export default function Report({ state, tasks }) {
   const sanitation = getSanitationSystemSummary()
   const medical = getMedicalSystemSummary()
   const food=getFoodSystemSummary()
-  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food)
+  const communication=getCommunicationSystemSummary()
+  const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food, communication)
   const coreStatuses = getCoreStatuses({ state, supplySummary, normalizedInventory })
   const score = calculateReadinessScore({ state, tasks, completedMap, drillSummary })
   const title = scoreTitle(score)
@@ -364,6 +373,7 @@ export default function Report({ state, tasks }) {
     sanitation,
     medical,
     food,
+    communication,
     priorityAction
   })
 
@@ -455,6 +465,8 @@ export default function Report({ state, tasks }) {
         <section className="muji-card medical-summary-card"><SectionTitle>醫療安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Medical Score" value={`${medical.score} / 100`}/><Metric label="狀態" value={medical.status}/><Metric label="家庭人數" value={`${formatNumber(medical.totals.householdSize)} 人`}/><Metric label="急救支撐" value={`${formatNumber(medical.days.firstAidDays)} 天`}/><Metric label="常備藥支撐" value={`${formatNumber(medical.days.medicineDays)} 天`}/><Metric label="慢性需求支撐" value={`${formatNumber(medical.days.chronicDays)} 天`}/><Metric label="寵物醫療支撐" value={`${formatNumber(medical.days.petMedicalDays)} 天`}/><Metric label="整體醫療支撐" value={`${formatNumber(medical.days.overallDays)} 天`}/><Metric label="急救用品" value={`${medical.data.firstAidItems.length} 項`}/><Metric label="常備藥" value={`${medical.totals.medicineItemCount} 項`}/><Metric label="慢性需求" value={`${medical.totals.chronicNeedCount} 項`}/><Metric label="寵物醫療用品" value={`${medical.totals.petMedicalItemCount} 項`}/><Metric label="醫療／獸醫聯絡人" value={`${medical.capabilities.medicalContactCount} / ${medical.capabilities.vetContactCount}`}/><Metric label="照護方案" value={`${medical.capabilities.carePlanCount} 個`}/><Metric label="即期或缺效期" value={`${medical.capabilities.expiringItemCount} 項`}/></div><ReportList title="前 3 條醫療改善建議" items={uniqueItems(medical.recommendations).slice(0,3)}/></section>
 
         <section className="muji-card food-summary-card"><SectionTitle>食物安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Food Score" value={`${food.score} / 100`}/><Metric label="狀態" value={food.status}/><Metric label="家庭人數" value={`${formatNumber(food.totals.householdSize)} 人`}/><Metric label="每日熱量需求" value={`${formatNumber(food.totals.dailyCaloriesNeed)} kcal`}/><Metric label="總食物熱量" value={`${formatNumber(food.totals.totalCalories)} kcal`}/><Metric label="食物支撐" value={`${formatNumber(food.days.foodDays)} 天`}/><Metric label="免烹調支撐" value={`${formatNumber(food.days.readyToEatDays)} 天`}/><Metric label="寵物食物支撐" value={`${formatNumber(food.days.petFoodDays)} 天`}/><Metric label="整體食物支撐" value={`${formatNumber(food.days.overallDays)} 天`}/><Metric label="食物／免烹調品項" value={`${food.capabilities.foodItemCount} / ${food.capabilities.readyToEatItemCount}`}/><Metric label="常溫／低用水品項" value={`${food.capabilities.shelfStableItemCount} / ${food.capabilities.lowWaterItemCount}`}/><Metric label="烹調／室內安全方案" value={`${food.capabilities.cookingPlanCount} / ${food.capabilities.indoorSafeCookingPlanCount}`}/><Metric label="配給方案" value={`${food.capabilities.rationPlanCount} 個`}/><Metric label="即期或缺效期" value={`${food.capabilities.expiringItemCount} 項`}/></div><ReportList title="前 3 條食物改善建議" items={uniqueItems(food.recommendations).slice(0,3)}/></section>
+
+        <section className="muji-card communication-summary-card"><SectionTitle>通訊安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Communication Score" value={`${communication.score} / 100`}/><Metric label="狀態" value={communication.status}/><Metric label="聯絡人／關鍵" value={`${communication.totals.contactCount} / ${communication.totals.criticalContactCount}`}/><Metric label="紙本聯絡清單" value={`${communication.totals.paperContactCount} 份`}/><Metric label="設備／離線設備" value={`${communication.totals.deviceCount} / ${communication.totals.offlineDeviceCount}`}/><Metric label="離線資訊來源" value={`${communication.totals.informationSourceCount} 個`}/><Metric label="集合地點" value={`${communication.totals.meetingPointCount} 個`}/><Metric label="通訊計畫" value={`${communication.totals.messagePlanCount} 個`}/><Metric label="離線文件" value={`${communication.totals.offlineDocumentCount} 項`}/><Metric label="家人／鄰居聯絡" value={`${communication.capabilities.hasFamilyContact?'有':'無'} / ${communication.capabilities.hasNeighborContact?'有':'無'}`}/><Metric label="醫療／獸醫聯絡" value={`${communication.capabilities.hasMedicalContact?'有':'無'} / ${communication.capabilities.hasVetContact?'有':'無'}`}/><Metric label="收音機／離線地圖" value={`${communication.capabilities.hasRadio?'有':'無'} / ${communication.capabilities.hasOfflineMap?'有':'無'}`}/><Metric label="外地聯絡人" value={communication.capabilities.hasOutOfAreaContact?'有':'無'}/></div><ReportList title="前 3 條通訊改善建議" items={uniqueItems(communication.recommendations).slice(0,3)}/></section>
 
         <section className="muji-card border-[#24483a]/25">
           <SectionTitle>水資源安全摘要</SectionTitle>
