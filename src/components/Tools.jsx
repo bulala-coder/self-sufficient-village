@@ -1,5 +1,5 @@
 import React from 'react'
-import { Apple, Backpack, Battery, BookOpen, Calculator, Droplets, HeartPulse, Leaf, Radio, ShieldCheck, Trash2 } from 'lucide-react'
+import { Apple, Backpack, Battery, BookOpen, Calculator, Droplets, HeartPulse, Leaf, ListChecks, Radio, ShieldCheck, Trash2 } from 'lucide-react'
 
 const tools = [
   {
@@ -52,6 +52,13 @@ const tools = [
     description: '檢查基本飲水、食物、照明、醫療、文件與動物用品。',
     button: '打開備災',
     icon: ShieldCheck
+  },
+  {
+    id: 'skills',
+    title: '技能樹與能力任務',
+    description: '查看各系統能力進度，並在每個任務卡片內展開完整任務詳情。',
+    button: '打開能力任務',
+    icon: ListChecks
   },
   {
     id: 'plants',

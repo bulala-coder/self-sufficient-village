@@ -39,12 +39,6 @@ export default function TaskList({ state, tasks, completeTask }) {
 
   function openTask(task) {
     setOpenTasks((current) => ({ ...current, [task.id]: true }))
-    setTimeout(() => {
-      document.getElementById(`task-${task.id}`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      })
-    }, 50)
   }
 
   function toggleTask(taskId) {
