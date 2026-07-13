@@ -204,7 +204,7 @@ export default function Inventory({ state, addInventoryItem, deleteInventoryItem
   return (
     <div className="space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Supply Inventory</p>
+        <p className="muji-kicker">庫存管理｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">補給庫存系統</h1>
         <p className="text-soil/70 mt-2 leading-7">
           盤點飲水、免冷藏食物、醫療、電力與動物補給。庫存資料會用來判斷最低補給線、保存期限與替換優先序。

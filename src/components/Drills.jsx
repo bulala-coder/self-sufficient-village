@@ -172,7 +172,7 @@ export default function Drills({ state, toggleDrillItem }) {
   const communication=getCommunicationSystemSummary()
   const finalization=getFortressFinalizationSummary({water,energy,sanitation,medical,food,communication})
   const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food, communication)
-  const [openDrills, setOpenDrills] = useState({ 'water-24h': true })
+  const [openDrills, setOpenDrills] = useState({})
   const drills = state.drills || {}
   const summary = getDrillCompletion(drills)
 
@@ -183,7 +183,7 @@ export default function Drills({ state, toggleDrillItem }) {
   return (
     <div className="space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Scenario Drills</p>
+        <p className="muji-kicker">情境演練｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">情境演練</h1>
         <p className="text-soil/70 mt-2 leading-7">
           安全範圍內的壓力測試。目標不是冒險，而是提前暴露缺口、修正清單、建立停止條件。

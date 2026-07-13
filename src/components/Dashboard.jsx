@@ -18,6 +18,7 @@ import { getFoodSystemSummary } from '../utils/foodStorage.js'
 import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
 import { getFortressFinalizationSummary } from '../utils/readinessFinalization.js'
 import { getHouseholdCapabilitySummary } from '../data/householdCapabilities.js'
+import CollapsibleSection from './CollapsibleSection.jsx'
 
 const routeLabels = {
   balcony_beginner: '城市陽台環境',
@@ -159,10 +160,10 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
     <div className="muji-dashboard space-y-5 pb-32">
       <section className="muji-hero border-[#2f3d35]/30 bg-[#e7dfd0]">
         <div>
-          <p className="muji-kicker">Fortress OS｜自足堡壘</p>
-          <h1>Fortress OS</h1>
+          <p className="muji-kicker">Fortress OS｜v6.0 RC</p>
+          <h1>作戰總控台</h1>
           <p className="muji-subtitle">
-            自足堡壘：家庭韌性、風險矩陣、補給管理與生存任務系統
+            家庭韌性與自給自足作戰系統
           </p>
         </div>
 
@@ -179,7 +180,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
 
       <section className="muji-card compact-card household-capability-summary">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div><p className="muji-kicker">Household Capability</p><h2 className="text-xl font-black text-bark">家庭能力升級</h2><p className="mt-1 text-soil/70">已完成 {capabilitySummary.done}/{capabilitySummary.total} · 最弱分支：{capabilitySummary.weakest?.label || '尚無資料'}</p></div>
+          <div><p className="muji-kicker">家庭能力｜Household Capability</p><h2 className="text-xl font-black text-bark">家庭能力摘要</h2><p className="mt-1 text-soil/70">已完成 {capabilitySummary.done}/{capabilitySummary.total} · 最弱分支：{capabilitySummary.weakest?.label || '尚無資料'}</p></div>
           <strong className="text-3xl text-[#24483a]">{capabilitySummary.percent}%</strong>
         </div>
         <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#d5c9b4]"><div className="h-full rounded-full bg-[#24483a]" style={{width:`${capabilitySummary.percent}%`}}/></div>
@@ -190,6 +191,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
 
       <section className="muji-card compact-card"><div className="muji-section-title"><Route size={18}/><span>常用入口</span></div><div className="quick-entry-grid mt-3">{quickEntries.map(([page,label,subtitle])=><button key={page} className="quick-entry-button" onClick={()=>setPage(page)}><strong>{label}</strong><small>{subtitle}</small></button>)}</div><div className="mt-4 grid gap-2 sm:grid-cols-2"><p className="rounded-xl bg-[#edf1e9] p-3 text-sm font-bold">已具備：水、能源、衛生、醫療、食物、通訊與各情報工具</p><p className="rounded-xl bg-[#f5edda] p-3 text-sm font-bold">下一步：跨系統壓力測試與輪替</p></div></section>
 
+      <CollapsibleSection title="六大核心系統詳細摘要" subtitle="需要時展開查看各系統支撐、缺口與首要建議" badge="6 系統" className="dashboard-system-details">
       <section className="muji-card border-[#24483a]/25">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 lg:max-w-xl">
@@ -226,6 +228,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
       <section className="muji-card food-summary-card"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="muji-section-title"><ShieldCheck size={18}/><span>食物系統狀態</span></div><div className="mt-3 flex flex-wrap gap-5"><div><p className="metric-label">Food Score</p><strong className="text-4xl text-[#24483a]">{food.score} / 100</strong></div><div><p className="metric-label">狀態</p><strong className="text-xl">{food.status}</strong></div><div><p className="metric-label">整體支撐</p><strong className="text-xl">{formatSupplyNumber(food.days.overallDays)} 天</strong></div></div><p className="mt-3 font-bold">總食物 {formatSupplyNumber(food.days.foodDays)} 天 · 免烹調 {formatSupplyNumber(food.days.readyToEatDays)} 天 · 寵物 {food.data.household.pets>0?`${formatSupplyNumber(food.days.petFoodDays)} 天`:'無需求'}</p><p className="recommendation mt-2">{food.recommendations[0]}</p></div><button className="btn-primary" onClick={()=>setPage('foodSystem')}>打開食物系統</button></div></section>
 
       <section className="muji-card communication-summary-card"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="muji-section-title"><ShieldCheck size={18}/><span>通訊系統狀態</span></div><div className="mt-3 flex flex-wrap gap-5"><div><p className="metric-label">Communication Score</p><strong className="text-4xl text-[#24483a]">{communication.score} / 100</strong></div><div><p className="metric-label">狀態</p><strong className="text-xl">{communication.status}</strong></div><div><p className="metric-label">關鍵聯絡人</p><strong className="text-xl">{communication.totals.criticalContactCount}</strong></div></div><p className="mt-3 font-bold">離線資訊 {communication.totals.informationSourceCount} · 通訊計畫 {communication.totals.messagePlanCount}</p><p className="recommendation mt-2">{communication.recommendations[0]}</p></div><button className="btn-primary" onClick={()=>setPage('communicationSystem')}>打開通訊系統</button></div></section>
+      </CollapsibleSection>
 
       <section className="grid lg:grid-cols-3 gap-4">
         <div className="muji-card lg:col-span-2">
@@ -366,12 +369,12 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             className="muji-primary mt-4"
             onClick={() => setPage('tasks')}
           >
-            進入任務系統
+            打開任務系統
           </button>
         </section>
       </section>
 
-      <section className="muji-card">
+      <CollapsibleSection title="全部作戰工具" subtitle="需要時展開完整工具清單；常用入口已列於上方" badge="14 項">
         <div className="muji-section-title">
           <Package size={18} />
           <span>作戰工具</span>
@@ -380,7 +383,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
         <div className="muji-tool-grid">
           <button onClick={() => setPage('waterSystem')}>
             <Droplets size={18} />
-            <span>Water System 2.0</span>
+            <span>水資源系統</span>
           </button>
 
           <button onClick={() => setPage('tasks')}>
@@ -448,7 +451,7 @@ export default function Dashboard({ state, tasks, completedCount, setPage }) {
             <span>韌性評分</span>
           </button>
         </div>
-      </section>
+      </CollapsibleSection>
     </div>
   )
 }

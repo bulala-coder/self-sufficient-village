@@ -90,13 +90,13 @@ export default function SkillTree({ state, tasks = [], toggleTaskCompletion }) {
 
   return <div className="space-y-5 pb-32">
     <section className="muji-card">
-      <p className="muji-kicker">Skill Progress</p>
+      <p className="muji-kicker">能力進度｜v6.0 RC</p>
       <h1 className="text-2xl font-black text-bark">技能樹與能力任務</h1>
       <p className="mt-2 text-soil/70">完成不同系統的能力任務，累積 XP 並提升對應能力等級。</p>
     </section>
 
     <section className="muji-card compact-card household-capability-intro">
-      <p className="muji-kicker">Household Capability</p>
+      <p className="muji-kicker">家庭能力｜Household Capability</p>
       <h2 className="text-xl font-black text-bark">家庭能力升級</h2>
       <p className="mt-2 text-soil/70">十個能力分支共 30 項任務。各分支與任務詳情預設收合，可在原卡片內查看，不會跳離目前位置。</p>
     </section>

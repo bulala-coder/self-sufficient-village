@@ -307,7 +307,7 @@ export default function Roadmap({ state, updateRoadmap }) {
   return (
     <div className="roadmap-page space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Self-Reliance Roadmap v4.0</p>
+        <p className="muji-kicker">能力路線圖｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">自給能力路線圖</h1>
         <p className="mt-2 leading-7 text-soil/70">
           從 72 小時生存、7 天補給中斷，到 30 天家庭韌性與 90 天半自給計畫。

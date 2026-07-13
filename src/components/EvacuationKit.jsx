@@ -314,7 +314,7 @@ export default function EvacuationKit({ state, updateEvacuationKit, setPage }) {
   return (
     <div className="evacuation-kit-page space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Evacuation Kit v3.4</p>
+        <p className="muji-kicker">撤離包｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">撤離包</h1>
         <p className="mt-2 leading-7 text-soil/70">
           管理人用、動物用、醫療、文件、通訊與防護物資，確認能拿了就走。

@@ -48,7 +48,7 @@ export default function TaskList({ state, tasks, toggleTaskCompletion }) {
   return (
     <div className="space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Mission System v3.0</p>
+        <p className="muji-kicker">任務系統｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">硬核任務系統</h1>
         <p className="text-soil/70 mt-2 leading-7">
           根據水、食物、電力、醫療、動物、地形與撤離缺口，建立可驗證的生存能力。

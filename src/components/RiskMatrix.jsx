@@ -9,6 +9,7 @@ import { getSanitationSystemSummary } from '../utils/sanitationStorage.js'
 import { getMedicalSystemSummary } from '../utils/medicalStorage.js'
 import { getFoodSystemSummary } from '../utils/foodStorage.js'
 import { getCommunicationSystemSummary } from '../utils/communicationStorage.js'
+import { getFortressFinalizationSummary } from '../utils/readinessFinalization.js'
 
 export const residenceLabels = {
   apartment: '公寓',
@@ -249,6 +250,7 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
   const medical = getMedicalSystemSummary()
   const food=getFoodSystemSummary()
   const communication=getCommunicationSystemSummary()
+  const finalization=getFortressFinalizationSummary({water,energy,sanitation,medical,food,communication})
   const fortressCore = getCoreSystemSummary(state, water, energy, sanitation, medical, food, communication)
   const waterRisk = water.days.overallDays < 1 ? 'Critical' : water.days.overallDays < 3 ? 'High' : water.days.overallDays < 7 ? 'Moderate' : 'Lower'
   const riskProfile = state.riskProfile || {}
@@ -268,7 +270,7 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
   return (
     <div className="space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Risk Matrix v3.3</p>
+        <p className="muji-kicker">風險矩陣｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">家庭風險矩陣</h1>
         <p className="mt-2 leading-7 text-soil/70">
           依照住所、地形、補給與醫療距離，找出最需要優先處理的風險。
@@ -335,6 +337,8 @@ export default function RiskMatrix({ state, updateRiskProfile }) {
       <section className="muji-card food-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>食物風險情報</span></div><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><WaterRiskMetric label="整體食物支撐" value={`${Number(food.days.overallDays.toFixed(1))} 天`}/><WaterRiskMetric label="72 小時食物" value={food.days.overallDays>=3?'可承受':'不可承受'}/><WaterRiskMetric label="7 天補給中斷" value={food.days.overallDays>=7?'可承受':'不可承受'}/><WaterRiskMetric label="免烹調食物" value={food.capabilities.readyToEatItemCount>0?'有':'無'}/><WaterRiskMetric label="低用水食物" value={food.capabilities.lowWaterItemCount>0?'有':'無'}/><WaterRiskMetric label="烹調方案" value={food.capabilities.cookingPlanCount>0?'有':'無'}/><WaterRiskMetric label="寵物食物" value={food.data.household.pets<=0?'無需求':food.data.petFoodItems.length>0?'有':'無'}/></div><p className="recommendation mt-4">首要食物弱點：{food.recommendations[0]}</p></section>
 
       <section className="muji-card communication-risk-card"><div className="muji-section-title"><ShieldAlert size={18}/><span>通訊風險情報</span></div><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><WaterRiskMetric label="通訊分數" value={`${communication.score} / 100`}/><WaterRiskMetric label="關鍵聯絡人" value={communication.totals.criticalContactCount>0?'有':'無'}/><WaterRiskMetric label="紙本聯絡清單" value={communication.capabilities.hasPrintedContactList?'有':'無'}/><WaterRiskMetric label="離線資訊來源" value={communication.totals.informationSourceCount>0?'有':'無'}/><WaterRiskMetric label="非網路通訊" value={communication.capabilities.hasRadio||communication.capabilities.hasWalkieTalkie?'有':'無'}/><WaterRiskMetric label="集合地點" value={communication.totals.meetingPointCount>0?'有':'無'}/><WaterRiskMetric label="報平安計畫" value={communication.totals.messagePlanCount>0?'有':'無'}/></div><p className="recommendation mt-4">首要通訊弱點：{communication.recommendations[0]}</p></section>
+
+      <section className="muji-card readiness-dashboard"><div className="muji-section-title"><ShieldAlert size={18}/><span>Fortress Cross-System Risk｜跨系統風險</span></div><div className="metric-strip mt-3"><WaterRiskMetric label="總準備度" value={`${finalization.readiness.overallScore} / 100`}/><WaterRiskMetric label="最弱系統" value={finalization.readiness.weakestDomains.map((x)=>x.label).join('、')}/><WaterRiskMetric label="失敗測試" value={`${finalization.tests.filter((x)=>x.result==='失敗').length} 個`}/></div><div className="mt-3 grid gap-3 lg:grid-cols-3">{finalization.alerts.slice(0,3).map((item)=><article key={item.title} className="cross-alert-card"><h3>{item.title}</h3><p>{item.description}</p><small>{item.action}</small></article>)}</div><p className="recommendation mt-3">最重要行動：{finalization.actions[0]}</p></section>
 
       <section className="muji-card border-[#8b2f25]/20"><div className="muji-section-title"><ShieldAlert size={18}/><span>複合災害風險情報</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{compoundRisks.map((event)=><article key={event.id} className="rounded-2xl border border-soil/15 bg-white/60 p-4"><h3 className="font-black text-bark">{event.name}</h3><p className="mt-2 text-sm font-black">{event.simulation.result.label} · {event.simulation.result.riskLevel}</p><p className="mt-1 text-sm">總風險 {event.simulation.riskBreakdown.overallRisk} · 分數 {event.simulation.result.score}</p></article>)}</div><div className="mt-4 grid gap-3 sm:grid-cols-2"><WaterRiskMetric label="最高風險情境" value={highestCompoundRisk?.name||'無資料'}/><WaterRiskMetric label="主要共通弱點" value={waterFailureLabels[commonCompoundWeakness]||commonCompoundWeakness}/></div><p className="mt-4 rounded-2xl bg-[#f2dfd4] p-4 text-sm font-bold">{highestCompoundRisk?.simulation.recommendations[0]}</p></section>
 

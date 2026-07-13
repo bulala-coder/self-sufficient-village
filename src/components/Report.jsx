@@ -171,7 +171,7 @@ function buildTextReport({ generatedAt, score, title, supplySummary, rotationLis
     ...finalization.alerts.map((x)=>`跨系統警示：${x.title}｜${x.description}｜${x.action}`),
     ...finalization.checklist.flatMap((tier)=>[tier.name,...tier.items.map((x)=>`${x.label}：${x.status}`)]),
     '',
-    'Executive Summary｜決策摘要',
+    '決策摘要｜Executive Summary',
     `Core Survival Score：${fortressCore.totalScore} / 100｜${fortressCore.readinessLevel.level}・${fortressCore.readinessLevel.label}`,
     `最弱核心域：${fortressCore.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`,
     ...executiveActions.map((item, index) => `優先行動 ${index + 1}：${item}`),
@@ -401,7 +401,7 @@ export default function Report({ state, tasks }) {
   return (
     <div className="report-page space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Export Report v3.1</p>
+        <p className="muji-kicker">作戰報告｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">作戰報告</h1>
         <p className="mt-2 leading-7 text-soil/70">
           整合補給、演練、任務與核心缺口，產生家庭韌性檢查報告。
@@ -414,11 +414,11 @@ export default function Report({ state, tasks }) {
           </button>
           <button type="button" className="btn-primary inline-flex items-center justify-center gap-2" onClick={copyReport}>
             <Clipboard size={16} />
-            複製文字報告
+            複製報告
           </button>
           <button type="button" className="btn-secondary inline-flex items-center justify-center gap-2" onClick={() => window.print()}>
             <Printer size={16} />
-            列印 / 存成 PDF
+            列印報告／存成 PDF
           </button>
         </div>
         {copyStatus && <p className="report-actions mt-3 text-sm font-black text-[#24483a]">{copyStatus}</p>}
@@ -439,7 +439,7 @@ export default function Report({ state, tasks }) {
         </section>
 
         <section className="muji-card core-summary-card border-[#24483a]/25">
-          <SectionTitle>Executive Summary｜決策摘要</SectionTitle>
+          <SectionTitle>決策摘要｜Executive Summary</SectionTitle>
           <div className="metric-strip mt-3">
             <Metric label="Fortress Readiness" value={`${finalization.readiness.overallScore} / 100`} />
             <Metric label="狀態" value={finalization.readiness.status} />
@@ -450,8 +450,8 @@ export default function Report({ state, tasks }) {
           <ReportList title="Cross-System Alerts" items={finalization.alerts.map((x)=>`${x.title}：${x.description}｜${x.action}`)} empty="目前沒有跨系統警示。" />
         </section>
 
-        <section className="muji-card"><SectionTitle>Readiness Stress Test Summary｜壓力測試摘要</SectionTitle><div className="mt-3 grid gap-3 lg:grid-cols-2">{finalization.tests.map((item)=><article key={item.name} className="stress-test-card"><div className="flex justify-between gap-2"><h3>{item.name}</h3><span className="badge">{item.result} · {item.score}</span></div><p>失敗項：{item.failures.join('、')||'無'}</p><p>行動：{item.actions.join('、')||'維持輪替與演練'}</p></article>)}</div></section>
-        <section className="muji-card"><SectionTitle>Completion Checklist｜自給自足完成度</SectionTitle><div className="mt-3 grid gap-3 lg:grid-cols-3">{finalization.checklist.map((tier)=><article key={tier.name} className="completion-checklist-card"><h3>{tier.name}</h3>{tier.items.map((item)=><p key={item.label}>{item.label}：<strong>{item.status}</strong></p>)}</article>)}</div></section>
+        <section className="muji-card"><SectionTitle>壓力測試摘要｜Readiness Stress Test</SectionTitle><div className="mt-3 grid gap-3 lg:grid-cols-2">{finalization.tests.map((item)=><article key={item.name} className="stress-test-card"><div className="flex justify-between gap-2"><h3>{item.name}</h3><span className="badge">{item.result} · {item.score}</span></div><p>失敗項：{item.failures.join('、')||'無'}</p><p>行動：{item.actions.join('、')||'維持輪替與演練'}</p></article>)}</div></section>
+        <section className="muji-card"><SectionTitle>自給自足完成度｜Completion Checklist</SectionTitle><div className="mt-3 grid gap-3 lg:grid-cols-3">{finalization.checklist.map((tier)=><article key={tier.name} className="completion-checklist-card"><h3>{tier.name}</h3>{tier.items.map((item)=><p key={item.label}>{item.label}：<strong>{item.status}</strong></p>)}</article>)}</div></section>
 
         <section className="muji-card">
           <SectionTitle>補給摘要</SectionTitle>
@@ -473,7 +473,8 @@ export default function Report({ state, tasks }) {
           </div>
         </section>
 
-        <section className="muji-card core-summary-card border-[#24483a]/25"><SectionTitle>Fortress Core Summary｜家庭核心生存摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="資料時間" value={new Date(fortressCore.generatedAt).toLocaleString('zh-TW')}/>{Object.entries(fortressCore.domains).map(([id,domain])=><Metric key={id} label={CORE_DOMAIN_LABELS[id]} value={`${domain.score}｜${domain.status}｜${domain.confidence}｜${domain.source}`}/>)}</div><ReportList title="核心情境準備度" items={fortressCore.scenarioReadiness.map((item)=>`${item.name}：${item.label}｜${item.score}｜最弱 ${item.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`)}/></section>
+        <CollapsibleSection title="六大核心系統報告" subtitle="展開查看各核心系統的完整指標與改善建議" badge="詳細資料">
+        <section className="muji-card core-summary-card border-[#24483a]/25"><SectionTitle>家庭核心生存摘要｜Fortress Core</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="資料時間" value={new Date(fortressCore.generatedAt).toLocaleString('zh-TW')}/>{Object.entries(fortressCore.domains).map(([id,domain])=><Metric key={id} label={CORE_DOMAIN_LABELS[id]} value={`${domain.score}｜${domain.status}｜${domain.confidence}｜${domain.source}`}/>)}</div><ReportList title="核心情境準備度" items={fortressCore.scenarioReadiness.map((item)=>`${item.name}：${item.label}｜${item.score}｜最弱 ${item.weakestDomains.map((id)=>CORE_DOMAIN_LABELS[id]).join('、')}`)}/></section>
 
         <section className="muji-card energy-summary-card border-[#c2a25c]/40"><SectionTitle>能源安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Energy Score" value={`${energy.score} / 100`}/><Metric label="狀態" value={energy.status}/><Metric label="可用電量" value={`${formatNumber(energy.totals.usablePowerWh)} Wh`}/><Metric label="每日耗電" value={`${formatNumber(energy.totals.dailyWh)} Wh`}/><Metric label="必要設備支撐" value={`${formatNumber(energy.days.essentialElectricDays)} 天`}/><Metric label="烹調支撐" value={`${formatNumber(energy.days.cookingDays)} 天`}/><Metric label="非市電來源" value={`${energy.capabilities.nonGridPowerSourceCount} 個`}/><Metric label="能源方案" value={`${energy.capabilities.planCount} 個`}/></div><ReportList title="前 3 條能源改善建議" items={uniqueItems(energy.recommendations).slice(0,3)}/></section>
 
@@ -484,6 +485,7 @@ export default function Report({ state, tasks }) {
         <section className="muji-card food-summary-card"><SectionTitle>食物安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Food Score" value={`${food.score} / 100`}/><Metric label="狀態" value={food.status}/><Metric label="家庭人數" value={`${formatNumber(food.totals.householdSize)} 人`}/><Metric label="每日熱量需求" value={`${formatNumber(food.totals.dailyCaloriesNeed)} kcal`}/><Metric label="總食物熱量" value={`${formatNumber(food.totals.totalCalories)} kcal`}/><Metric label="食物支撐" value={`${formatNumber(food.days.foodDays)} 天`}/><Metric label="免烹調支撐" value={`${formatNumber(food.days.readyToEatDays)} 天`}/><Metric label="寵物食物支撐" value={`${formatNumber(food.days.petFoodDays)} 天`}/><Metric label="整體食物支撐" value={`${formatNumber(food.days.overallDays)} 天`}/><Metric label="食物／免烹調品項" value={`${food.capabilities.foodItemCount} / ${food.capabilities.readyToEatItemCount}`}/><Metric label="常溫／低用水品項" value={`${food.capabilities.shelfStableItemCount} / ${food.capabilities.lowWaterItemCount}`}/><Metric label="烹調／室內安全方案" value={`${food.capabilities.cookingPlanCount} / ${food.capabilities.indoorSafeCookingPlanCount}`}/><Metric label="配給方案" value={`${food.capabilities.rationPlanCount} 個`}/><Metric label="即期或缺效期" value={`${food.capabilities.expiringItemCount} 項`}/></div><ReportList title="前 3 條食物改善建議" items={uniqueItems(food.recommendations).slice(0,3)}/></section>
 
         <section className="muji-card communication-summary-card"><SectionTitle>通訊安全摘要</SectionTitle><div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Communication Score" value={`${communication.score} / 100`}/><Metric label="狀態" value={communication.status}/><Metric label="聯絡人／關鍵" value={`${communication.totals.contactCount} / ${communication.totals.criticalContactCount}`}/><Metric label="紙本聯絡清單" value={`${communication.totals.paperContactCount} 份`}/><Metric label="設備／離線設備" value={`${communication.totals.deviceCount} / ${communication.totals.offlineDeviceCount}`}/><Metric label="離線資訊來源" value={`${communication.totals.informationSourceCount} 個`}/><Metric label="集合地點" value={`${communication.totals.meetingPointCount} 個`}/><Metric label="通訊計畫" value={`${communication.totals.messagePlanCount} 個`}/><Metric label="離線文件" value={`${communication.totals.offlineDocumentCount} 項`}/><Metric label="家人／鄰居聯絡" value={`${communication.capabilities.hasFamilyContact?'有':'無'} / ${communication.capabilities.hasNeighborContact?'有':'無'}`}/><Metric label="醫療／獸醫聯絡" value={`${communication.capabilities.hasMedicalContact?'有':'無'} / ${communication.capabilities.hasVetContact?'有':'無'}`}/><Metric label="收音機／離線地圖" value={`${communication.capabilities.hasRadio?'有':'無'} / ${communication.capabilities.hasOfflineMap?'有':'無'}`}/><Metric label="外地聯絡人" value={communication.capabilities.hasOutOfAreaContact?'有':'無'}/></div><ReportList title="前 3 條通訊改善建議" items={uniqueItems(communication.recommendations).slice(0,3)}/></section>
+        </CollapsibleSection>
 
         <CollapsibleSection title="水資源詳細章節" subtitle="儲水、需求、用水趨勢與事件模擬">
         <section className="muji-card border-[#24483a]/25">

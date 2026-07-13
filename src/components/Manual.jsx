@@ -181,7 +181,7 @@ function renderEmphasisText(text, terms = manualEmphasisTerms, maxMatches = 3) {
 
 export default function Manual() {
   const [filter, setFilter] = useState('all')
-  const [openSections, setOpenSections] = useState({ 'water-outage': true })
+  const [openSections, setOpenSections] = useState({})
   const sections = useMemo(() => {
     if (filter === 'all') return manualSections
     if (filter === 'typhoon') return manualSections.filter((section) => section.filter === 'typhoon' || section.id === 'coastal-typhoon-surge')
@@ -195,7 +195,7 @@ export default function Manual() {
   return (
     <div className="space-y-5 pb-32">
       <section className="muji-card">
-        <p className="muji-kicker">Offline Survival Manual v3.2</p>
+        <p className="muji-kicker">離線手冊｜v6.0 RC</p>
         <h1 className="text-2xl font-black text-bark">離線生存手冊</h1>
         <p className="mt-2 leading-7 text-soil/70">
           停水、停電、地震、颱風、地形風險與補給中斷時的硬核流程。
